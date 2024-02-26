@@ -27,11 +27,14 @@ module.exports = {
           const compare = await bcrypt.compare(data.password , user.password);
           // console.log(compare);
           if(compare){
+            //setting the token
             const payload = {
               email : data.email
             }
             const token = jwt.sign(payload,'secretKeyUser',{expiresIn : '24h'});
-            res.cookie('UserToken', token, { httpOnly: true, secure: true, sameSite: 'strict' });
+            res.cookie('UserToken', token, { httpOnly: true, secure: true, sameSite: 'strict' });//adding to the cookie
+            //finished setting the token
+            req.session.user = user;
             res.redirect('/');
           }else{
             req.flash('passError',`Incorrect Password or Password Doesn't Match`);

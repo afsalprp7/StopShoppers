@@ -5,7 +5,7 @@ module.exports = {
 getHomePage : async(req,res)=>{
   try{
     const products = await productModel.find({ isDeleted : false});
-    res.render('users/userHome',{allProducts : products , title : 'Home'});
+    res.render('users/userHome',{allProducts : products , title : 'Home', user : req.session.user});
   }catch(error){
   console.log(error);
   }
