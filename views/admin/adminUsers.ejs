@@ -1,0 +1,115 @@
+<%- include('../includes/admin/adminHead') %>
+<div class="container   container1">
+  <h3>USERS</h3>
+</div>
+<div class="container container1 pt-5 pb-5 border ">
+  
+  <table id="tableUsers" class="table p-1 table-striped table-content">
+    <thead>
+      <tr>
+        <th scope="col">Username</th>
+        <th scope="col">phone</th>
+        <th scope="col">Email</th>
+        <th scope="col">Order</th>
+        <th scope="col">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% data.forEach((item)=>{%>
+      <tr>
+        <td><%= item.firstname%> <%= item.lastname%></td>
+        <td><%= item.phone%></td>
+        <td><%= item.email%></td>
+        <td><a href="#">Orders</a></td>
+        <td class="d-flex"><a href="#"><span><i  class="fa-solid fa-circle-info me-3"></i></a>
+          <!-- <form action="/blockUser/<%=item._id%>?_method=PATCH" method="post"> -->
+            <% if(item.is_blocked === true){ %>
+            <button onclick="blockUser('<%=item._id%>','<%=item.is_blocked%>')" id="block-btn-<%=item._id%>" type="submit" style="border: none;background: none;">
+              <i style="color: rgb(212, 0, 0);" class="fa-solid fa-lock"></i>
+              <% }else { %>
+                <button onclick="blockUser('<%=item._id%>','<%=item.is_blocked%>')" id="block-btn-<%=item._id%>" type="submit" style="border: none;background: none;">
+                <i style="color: rgb(6, 194, 0);" class="fa-solid fa-unlock"></i>
+                <%}%>
+            </button>
+            
+        <!-- </form> -->
+        </span></td>
+      </tr>
+      <% }); %>
+    </tbody>
+  </table>
+</div>
+
+</div>
+
+
+
+
+
+
+
+<script>
+
+function blockUser(id, status) {
+  let message;
+  if (status === 'true') {
+    message = "Are you sure you want to unblock this user?";
+  } else {
+    message = "Are you sure you want to block this user?";
+  }
+
+  Swal.fire({
+    title: message,
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#3085d6",
+    cancelButtonColor: "#d33",
+    confirmButtonText: "Yes"
+  }).then((result) => {
+    if (result.isConfirmed) {
+      fetch(`http://localhost:7000/blockUser/${id}?_method=PATCH`, {
+        method: 'PATCH',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: 'working'
+        })
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          console.log(data.message);
+          const button = document.getElementById(`block-btn-${id}`);
+          const icon = button.querySelector('i');
+          if (data.message === 'blocked') {
+            icon.classList.remove('fa-unlock');
+            icon.classList.add('fa-lock');
+            icon.style.color = 'rgb(212, 0, 0)';
+            window.location.reload();
+          } else {
+            icon.classList.remove('fa-lock');
+            icon.classList.add('fa-unlock');
+            icon.style.color = 'rgb(6, 194, 0)';
+            window.location.reload();
+          }
+        });
+    }
+  });
+}
+
+ 
+</script>
+
+<script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
+<script>
+  new DataTable('#tableUsers', {
+              responsive: true
+          });
+  </script>
+
+
+<%- include('../includes/admin/adminEnd') %>

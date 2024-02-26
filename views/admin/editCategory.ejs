@@ -1,0 +1,151 @@
+<%- include('../includes/admin/adminHead.ejs') %>
+
+<div class="container mt-5 mb-5">
+  <h3>EDIT CATEGORY</h3>
+</div>
+<div class="container border p-5">
+  <h6 style="color: crimson;"><%= error %></h6>
+  <form
+    id="form"
+    method="post"
+    enctype="multipart/form-data"
+    action="/editCategory/<%= data._id%>?_method=PATCH"
+  >
+    <div class="row">
+      <div class="col-md-6 mt-4">
+        <div class="mb-3 me-2">
+          <label  for="productName" class="form-label">Category name</label>
+          <input
+            type="text"
+            class="form-control p-3"
+            id="catName"
+            name="name"
+            placeholder="Name of the category"
+            value="<%=data.categoryName%>"
+          />
+        </div>
+      </div>
+      <div class="col-md-6 mt-4">
+        <div class="mb-3">
+          <label for="productPhoto" class="form-label">Upload Photo</label>
+          <input
+            id="fileInp"
+            type="file"
+            class="form-control p-3"
+            id="productPhoto"
+            name="productPhoto"
+            onchange="previewImage(this)"
+          />
+          <div style="max-height: 180px;display:none ;max-width:fit-content;" class="border mt-3 p-2" id="displayContainer">
+            <div class="d-flex justify-content-center align-items-center">
+              <div>
+                <img id="displayedImage" style="width:120px;max-height: 100px;max-width: 120px;" src="" alt="">
+                <p id="displayName" class="mb-1 " style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></p>
+                <button  type="button" class="btn btn-danger btn-sm ms-auto p-1 mb-3 mt-0" onclick="cancelSelection(event)">Delete</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12 d-flex justify-content-end mt-4">
+        <button id="submit-btn" type="submit" class="btn btn-primary">Make Changes</button>
+        
+      </div>
+    </div>
+  </form>
+</div>
+
+
+
+<script>
+  const form = document.getElementById("form");
+  const catName = document.getElementById("catName");
+  const fileInput = document.getElementById("fileInp");
+
+  form.addEventListener("submit", async (e) => {
+    if (fileInput.value === "" && catName.value === "") {
+      e.preventDefault();
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Both fields cannot be empty you Have to add atleast One field to add changes",
+      });
+    } else {
+      e.preventDefault();
+      form.submit();
+    }
+  });
+  function previewImage(input) {
+    var file = input.files[0];
+    var reader = new FileReader();
+    
+    reader.onload = function(e) {
+        document.getElementById('displayedImage').src = e.target.result;
+        document.getElementById('displayContainer').style.display = 'block';
+    };
+    
+    reader.readAsDataURL(file);
+
+    var name = file.name;
+    document.getElementById('displayName').innerText = name;
+}
+
+function cancelSelection(event) {
+
+  Swal.fire({
+  title: "Are you sure?",
+  text: "You won't be able to revert this!",
+  icon: "warning",
+  showCancelButton: true,
+  confirmButtonColor: "#3085d6",
+  cancelButtonColor: "#d33",
+  confirmButtonText: "Yes, delete it!"
+}).then((result) => {
+  if (result.isConfirmed) {
+    const id = "<%= data._id %>";
+  const image = "<%= data._image %>"
+  console.log(id);
+    fileInput.value = ''; // Reset file input
+    document.getElementById('displayedImage').src = ''; // Reset displayed image
+    document.getElementById('displayContainer').style.display = 'none'; // Hide display container
+    document.getElementById('displayName').innerText = ''; // Reset displayed name
+    
+      fetch(`http://localhost:7000/deleteEditCat/${id}?_method=PATCH`,{
+      method:'POST',
+      headers : {
+        'content-type' : 'application/json',
+
+      },
+      body : JSON.stringify({
+        message : 'work done'
+      })
+
+    });
+    Swal.fire({
+      title: "Deleted!",
+      text: "Your file has been deleted.",
+      icon: "success"
+    });
+  }
+});
+
+  // event.preventDefault(); // Prevent form submission
+  // event.stopPropagation();
+ 
+}
+    
+
+window.onload = function() {
+
+    let existingImage = "<%= data.image %>";
+    if (existingImage) {
+      document.getElementById('displayedImage').src = '/categoryImg/' + existingImage;
+      document.getElementById('displayContainer').style.display = 'block';
+      document.getElementById('displayName').innerText = existingImage;
+    }
+  }
+
+</script>
+<%- include('../includes/admin/adminEnd') %>

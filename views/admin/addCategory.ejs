@@ -1,0 +1,115 @@
+<%- include('../includes/admin/adminHead.ejs') %>
+<div class="container mt-5 mb-5">
+  <h3>ADD CATEGORY</h3>
+</div>
+<div class="container border p-5">
+  <h5 style="color: crimson;"><%= error %></h5>
+  <form
+    id="form"
+    enctype="multipart/form-data"
+    method="POST"
+    action="/addCategory"
+  >
+    <div class="row">
+      <div class="col-md-6 mt-4">
+        <div class="mb-3 me-2">
+          <label for="productName" class="form-label">Category name</label>
+          <input
+            type="text"
+            class="form-control p-3"
+            id="catName"
+            name="name"
+            placeholder="Name of the Category"
+          />
+        </div>
+      </div>
+      <div class="col-md-6 mt-4">
+        <div class="mb-3">
+          <label for="fileInp" class="form-label">Upload Photo</label>
+          <input
+            type="file"
+            class="form-control p-3"
+            id="fileInp"
+            name="productPhoto"
+            onchange="previewImage(this)"
+          />
+          <div style="max-height: 180px;display:none ;max-width: fit-content;" class="border mt-3 p-2" id="displayContainer">
+            <div class="d-flex justify-content-center align-items-center">
+              <div>
+                <img id="displayedImage" style="width:120px;max-height: 100px;max-width: 120px;" src="" alt="">
+                <p id="displayName" class="mb-1 "></p>
+                <button type="button" class="btn btn-danger btn-sm ms-auto p-1 mb-3 mt-0" onclick="cancelSelection()">Cancel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12 d-flex justify-content-end mt-4">
+        <button type="submit" class="btn btn-primary">Add Category</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+
+<script>
+
+  const form = document.getElementById("form");
+  const catName = document.getElementById("catName");
+  const fileInput = document.getElementById("fileInp");
+  form.addEventListener("submit", async (e) => {
+    if (fileInput.value === "" && catName.value === "") {
+      e.preventDefault();
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Both fields are empty",
+      });
+    } else if (fileInput.value && !catName.value) {
+      e.preventDefault();
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Category name is empty",
+      });
+    } else if (!fileInput.value && catName.value) {
+      e.preventDefault();
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "You dont have any file to upload",
+      });
+    } 
+    else {
+      e.preventDefault();
+      form.submit();
+    }
+  });
+
+  function previewImage(input) {
+    var file = input.files[0];
+    var reader = new FileReader();
+    
+    reader.onload = function(e) {
+        document.getElementById('displayedImage').src = e.target.result;
+        document.getElementById('displayContainer').style.display = 'block';
+    };
+    
+    reader.readAsDataURL(file);
+
+    var name = file.name;
+    document.getElementById('displayName').innerText = name;
+}
+
+function cancelSelection() {
+    fileInput.value = ''; // Reset file input
+    document.getElementById('displayedImage').src = ''; // Reset displayed image
+    document.getElementById('displayContainer').style.display = 'none'; // Hide display container
+    document.getElementById('displayName').innerText = ''; // Reset displayed name
+}
+
+</script>
+
+<%- include('../includes/admin/adminEnd') %>

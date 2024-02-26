@@ -1,0 +1,98 @@
+<%- include('../includes/admin/adminHead') %>
+
+<div class="container mt-5">
+  <div class="row g-3 p-3">
+    <% data.forEach(function(item) { %>
+    <div style="max-width: 350px;" class="card col-12 col-sm-6 col-md-6 col-lg-3 mt-3 p-2">
+      <div class="d-flex justify-content-center">
+        <img
+          src="/categoryImg/<%= item.image %>"
+          style="width: 100%x; height: 250px"
+          class="card-img-top"
+          alt="..."
+        />
+      </div>
+      <div class="card-body">
+        <div class="d-flex justify-content-center">
+          <h5 style="text-transform: capitalize;" class="card-title"><%= item.categoryName %></h5>
+        </div>
+        <a
+          href="/editCategory/<%=item._id%>"
+          class="btn btn-primary d-flex justify-content-center mt-3"
+          >EDIT</a
+        >
+        <form
+          id="Form"
+          action="/deleteCategory/<%=item._id%>?_method=PATCH"
+          method="post"
+        >
+          <button
+            onclick="giveAlert('<%= item.categoryName %>')"
+            
+            type="submit"
+            style="width: 100%"
+            class="btn btn-danger d-flex justify-content-center mt-3 deleteBtn"
+          >
+            UNLIST
+          </button>
+        </form>
+      </div>
+    </div>
+    <% }); %>
+  </div>
+</div>
+
+<script>
+  let success = '<%=success%>'
+  window.addEventListener('load',()=>{
+    if(success){
+    Swal.fire({
+    position: "center",
+    icon: "success",
+    title: "Your changes has been saved",
+    showConfirmButton: false,
+    timer: 2000
+});
+  }
+  })
+   
+  
+
+  document.querySelectorAll('.deleteBtn').forEach(deleteBtn => {
+    deleteBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const form = this.parentElement; // Get the parent form element
+        const categoryName = this.getAttribute('data-category-name');
+        giveAlert(form, categoryName);
+    });
+});
+
+function giveAlert(form, categoryName) {
+    Swal.fire({
+        title: "Are you sure?",
+        text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes, delete it!",
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            await Swal.fire({
+                title: "Deleted!",
+                text: "Your file has been deleted.",
+                icon: "success",
+            });
+            form.submit();
+        }
+    });
+}
+
+
+
+ 
+
+
+</script>
+
+<%- include('../includes/admin/adminEnd') %>

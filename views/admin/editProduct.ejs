@@ -1,0 +1,301 @@
+
+
+<%- include('../includes/admin/adminHead.ejs') %>
+<div class="container mt-5 mb-5">
+  <h3>EDIT PRODUCTS</h3>
+</div>
+<div class="container border p-5">
+  <h4><%= error %></h4>
+  <form id="form" action="/editProduct/<%= data._id %>?_method=PATCH" method="POST" enctype="multipart/form-data">
+    <div class="row">
+      <div class="col-md-6 mt-4">
+        <div class="mb-3 me-2">
+          <label for="productName" enctype="multipart/form-data" class="form-label">Product Name</label>
+          <input value="<%= data.productName%>" type="text" class="form-control p-3" id="productName" name="productName" placeholder="Name of the Product" />
+          <div class="mt-1">
+            <p style="font-size: small; color: red" class="warn"></p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6 mt-4">
+        <div class="mb-3">
+          <label for="productPrice" class="form-label">Price</label>
+          <input value="<%= data.productPrice %>" class="form-control p-3" id="Price" name="productPrice" placeholder="Price of the Product" />
+          <div class="mt-1">
+            <p style="font-size: small; color: red" class="warn"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6 mt-4">
+        <div class="mb-3">
+          <label for="userType" class="form-label">Category</label>
+          <select class="form-select p-3" id="userType" name="category">
+            <% catData.forEach(function(item) { %>
+            <option value="<%= item.categoryName %>">
+              <%= item.categoryName %>
+            </option>
+            <% }); %>
+          </select>
+        </div>
+      </div>
+      <div class="col-md-6 mt-4">
+        <div class="mb-3">
+          <label for="userType" class="form-label">User Type</label>
+          <select class="form-select p-3" id="userType" name="userType">
+            <option value="male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Unisex">Unisex</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6 mt-4">
+        <div class="mb-3 me-2">
+          <label for="productDescription" class="form-label">Description</label>
+          <textarea class="form-control" id="Description" name="productDescription" placeholder="Description"><%= data.description %></textarea>
+          <div class="mt-1">
+            <p style="font-size: small; color: red" class="warn"></p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6 mt-4">
+        <div class="mb-3 me-2">
+          <label for="productName" enctype="multipart/form-data" class="form-label">Color</label>
+          <input value="<%= data.color%>" type="text" class="form-control p-3" id="color" name="color" placeholder="Color" />
+          <div class="mt-1">
+            <p style="font-size: small; color: red" class="warn"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6 mt-4">
+        <div class="mb-3 me-2">
+          <div>
+            <label for="">Available Sizes</label>
+          </div>
+          <div class="d-flex mt-4" id="parent">
+            <div>
+              <input type="checkbox" value="S" name="Sizes" class="btn-check sizes-tag" id="small-S" autocomplete="off" />
+              <label for="small-S" class="btn btn-outline-primary ms-2">S</label>
+            </div>
+            <div class="ms-3">
+              <input type="checkbox" value="M" name="Sizes" class="btn-check sizes-tag" id="medium-M" autocomplete="off" />
+              <label for="medium-M" class="btn btn-outline-primary ms-2">M</label>
+            </div>
+            <div class="ms-3">
+              <input type="checkbox" value="L" name="Sizes" class="btn-check sizes-tag" id="large-L" autocomplete="off" />
+              <label for="large-L" class="btn btn-outline-primary ms-2">L</label>
+            </div>
+            <div class="ms-3">
+              <input type="checkbox" value="XL" name="Sizes" class="btn-check sizes-tag" id="extra-large-XL" autocomplete="off" />
+              <label for="extra-large-XL" class="btn btn-outline-primary ms-2">XL</label>
+            </div>
+            <div class="ms-3">
+              <input type="checkbox" value="XXL" name="Sizes" class="btn-check sizes-tag" id="XXL" autocomplete="off" />
+              <label for="XXL" class="btn btn-outline-primary ms-2">XXL</label>
+            </div>
+          </div>
+          <div class="mt-1">
+            <p style="font-size: small; color: red" class="warn"></p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6 mt-4">
+        <div class="mb-3">
+          <label for="productPrice" class="form-label">Quantity</label>
+          <input value="<%= data.quantity %>" type="number" class="form-control p-3" id="Quantity" name="Quantity" placeholder="Quantity of the Product" />
+          <div class="mt-0">
+            <p style="font-size: small; color: red" class="warn"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6 mt-4">
+        <div class="mb-3 " id="photoParent">
+          <label for="productPhoto" class="form-label">Upload Photo</label>
+          <input value="<%= data.image %>" type="file" class="form-control p-3" id="photoProduct" name="productPhoto" multiple onchange="displaySelectedImages(this)"/>
+          <div class="mt-1">
+            <p style="font-size: small; color: red" class="warn"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row ">
+      
+        <div style="width: fit-content;" class="col d-flex p-2" id="previewImage">
+          <!-- <div class="me-2">
+            <img style="max-width: 120px;max-height: 100px;" src="/categoryImg/1707679484892afsal.png" alt="">
+            <p>dfhgaj</p>
+          </div>
+          <div class="me-2">
+            <img style="max-width: 120px;max-height: 100px;" src="/categoryImg/1707679484892afsal.png" alt="">
+            <p>dfhgaj</p>
+          </div> -->
+        </div>
+        <div class="col d-flex p-2" id="imagePreviewSelected">
+
+        </div>
+      
+      <!-- <button id="deletebtn" style="display: none;" class="btn btn-danger btn-sm ms-auto mt-3" type="button" onclick="clearSelectedImages()">Clear Selection</button> -->
+    </div>
+    <div class="row">
+      <div  class="col-md-12 d-flex justify-content-end mt-3">
+        <button type="submit" class="btn btn-primary">Make Changes</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+
+let existingSizes = "<%= data.sizes %>";
+const inputSizes = document.getElementsByName('Sizes');
+let sizes = existingSizes.split(",");
+console.log(sizes);
+inputSizes.forEach((checkbox)=>{
+  if(sizes.includes(checkbox.value)){
+    checkbox.checked = true;
+  }else{
+    checkbox.checked = false;
+  }
+});
+
+const image = '<%=data.image %>';
+const imageArray = image.split(",");
+console.log(imageArray);
+const imagePreview = document.getElementById('previewImage');
+const file = document.getElementById('photoProduct');
+
+imageArray.forEach((element)=>{
+  const imageContainer = document.createElement('div');
+  imageContainer.classList.add('me-2');
+  const imageElement = document.createElement('img');
+  imageElement.setAttribute('src',`/productImg/${element}`);
+  imageElement.style.cssText = 'max-width: 120px;height: 100px';
+  const imageName = document.createElement('p');
+  imageName.style.cssText = 'max-width: 120px;overflow : hidden';
+  imageName.textContent = element;
+
+  const deleteBtn = document.createElement('button');
+          deleteBtn.setAttribute('type','button');
+          deleteBtn.textContent = 'Delete';
+          deleteBtn.classList.add('btn','btn-danger','btn-sm' ,'ms-auto');
+          deleteBtn.onclick = function() {
+            console.log(element);
+          // Handle deletion here
+          deleteImage(element);
+          // Remove image container from DOM
+          imageContainer.remove();
+        };
+  imageContainer.append(imageElement);
+  imageContainer.append(imageName);
+  imageContainer.appendChild(deleteBtn);
+  imagePreview.append(imageContainer);
+});
+
+
+function displaySelectedImages(input) {
+  
+    const container = document.getElementById('imagePreviewSelected');
+    container.innerText = '';
+    
+    if (input.files) {
+      const files = input.files;
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const reader = new FileReader();
+  
+        reader.onload = function(e) {
+          const imageContainer = document.createElement('div');
+          imageContainer.classList.add('me-1');
+          imageContainer.setAttribute('id','content-div');
+          const img = document.createElement('img');
+          img.src = e.target.result;
+          img.style.cssText = 'max-width: 120px;height: 100px';
+          img.classList.add('selected-image');
+
+
+          const p_tag = document.createElement('p');
+          p_tag.style.cssText = 'max-width: 120px;overflow : hidden'
+          p_tag.textContent = file.name;
+
+          const deleteBtn = document.createElement('button');
+          deleteBtn.classList.add('btn','btn-primary','btn-sm','ms-auto');
+          deleteBtn.innerText = 'cancel';
+          deleteBtn.addEventListener('click',(e)=>{
+            e.preventDefault();
+            clearSelectedImages(file,imageContainer);
+          })
+
+
+          imageContainer.appendChild(img);
+          imageContainer.appendChild(p_tag);
+          imageContainer.appendChild(deleteBtn);
+          container.appendChild(imageContainer);
+        }
+  
+        reader.readAsDataURL(file);
+      }
+    }
+  }
+  
+  function clearSelectedImages(file, imageContainer) {
+  const input = document.getElementById('photoProduct');
+  const container = document.getElementById('selectedImagesContainer');
+  const files = Array.from(input.files);
+  const index = files.indexOf(file);
+  if (index !== -1) {
+    files.splice(index, 1);
+    const dataTransfer = new DataTransfer();
+    console.log(dataTransfer);
+    for (let i = 0; i < files.length; i++) {
+      dataTransfer.items.add(files[i]);
+    }
+    input.files = dataTransfer.files;
+    imageContainer.style.display = 'none';
+  }
+}
+
+
+let id = "<%= data._id %>";
+function deleteImage(imageName){
+  
+  fetch(`http://localhost:7000/deleteProductPrevImg/${id}?_method=PATCH`,{
+
+    method:'POST',
+    headers : {
+        'content-type' : 'application/json',
+
+      },
+      body : JSON.stringify({
+        filename : imageName
+      })
+
+
+
+  })
+
+}
+</script>
+<script src="/scripts/validation/editProductV.js"></script>
+<%- include('../includes/admin/adminEnd') %>
