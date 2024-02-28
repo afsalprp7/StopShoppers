@@ -8,6 +8,7 @@ const {validateUser} = require('../middleware/authMiddleware');
 
 router.get('/',validateUser,shopController.getHomePage);
 router.get('/productDetail/:id',shopController.getProductDetailpage);
+router.get('/userProfile/:id',shopController.getUserProfilePage)
 
 
 module.exports = router;

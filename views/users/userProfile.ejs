@@ -1,0 +1,139 @@
+
+
+
+<%- include('../includes/usersPartials/userHead.ejs') %>
+<style>
+ 
+    /*userprofile styles*/
+.container-main{
+      
+      margin-top: 100px;
+    }
+   .list{
+    list-style-type: none;
+   }
+
+   .list-container{
+    width: 40%;
+    background-color: rgb(211, 211, 211);
+   }
+    .list div:hover {
+      background-color: rgba(0, 0, 0, 0.1); 
+      margin-left: -25px;
+      transition: .5s;
+      cursor: pointer;
+    }
+    .list a{
+      text-decoration: none;
+      color: black;
+      font-size: larger;
+    }
+.details-container{
+  width: 100%;
+  height: fit-content;
+}
+.profile-content p{
+  line-height: 50px;
+}
+.list-phone{
+    list-style-type: none;
+   }
+   
+    .list-phone div:hover {
+      background-color: rgba(231, 231, 231, 0.1); 
+      margin-left: -25px;
+      transition: .5s;
+      cursor: pointer;
+    }
+    .list-phone a{
+      text-decoration: none;
+      color: black;
+      font-size: larger;
+    }  
+    .button-phone{
+      width: fit-content;
+      cursor: pointer;
+      position: absolute;
+      display: none;
+      top: 20px;
+      left: 20px;
+    }
+
+    @media (max-width : 768px){
+      .list-container{
+        display: none;
+      }
+      .button-phone{
+        display: block;
+      }
+      .offcanvas{
+        display: block !important;
+      }
+    }
+    /* end of userprofile */
+</style>
+<div style="display: none;" class="offcanvas offcanvas-start" data-bs-scroll="true" data-bs-backdrop="false" tabindex="-1" id="offcanvasScrolling" aria-labelledby="offcanvasScrollingLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="offcanvasScrollingLabel"></h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body">
+    <div  class="list-container-phone p-2">
+      <ul class="list-phone">
+        <strong>
+       <a href=""><div class=" mt-5 p-2 border-bottom"><li>Profile</li></div></a> 
+       <a href=""><div class=" mt-5 p-2 border-bottom"><li><li>Wallet</li></div></a> 
+       <a href=""><div class=" mt-5 p-2 border-bottom"><li>Coupon</li></div></a> 
+       <a href=""><div class=" mt-5 p-2 border-bottom"><li>My Orders</li></div></a> 
+      </strong>
+      </ul>
+    </div>
+  </div>
+</div>
+<div class="container container-main d-flex mb-5">
+  <div  class="border list-container p-2 ">
+    <ul class="list">
+      <a href=""><div class=" mt-5 p-2"><li>Profile</li></div></a>
+      <a href=""><div class=" mt-5 p-2"><li><li>Wallet</li></div></a>
+      <a href=""><div class=" mt-5 p-2"><li>Coupon</li></div></a>
+      <a href=""><div class=" mt-5 p-2"><li>My Orders</li></div></a>
+    </ul>
+  </div>
+  <div style="position: relative;" class="details-container border">
+    <div class="border rounded border-2 p-2 button-phone"  data-bs-toggle="offcanvas" data-bs-target="#offcanvasScrolling" aria-controls="offcanvasScrolling">
+      <i style="font-size: x-large;" class="fa-solid fa-bars"></i>
+    </div>
+    <div class="d-flex justify-content-center ">
+      <div class="mt-5">
+        <div class="d-flex justify-content-center">
+          <i style="font-size: 500%;" class="fa-regular fa-user"></i>
+        </div>
+        <div class="details-nav mt-3">
+          <h1>My Profile</h1>
+        </div>
+      </div>
+    </div>
+    <div class="profile-content mt-4 ms-5">
+      <p><strong>User Name : <%= userInfo.firstname%> <%= userInfo.lastname%></strong></p>
+      <p><strong>Email : <%= userInfo.email%> </strong></p>
+      <p><strong>Phone Number : <%= userInfo.phone%> </strong></p>
+      <p><strong>Address :-  </strong></p>
+        <div style="width: fit-content;" class="border border-4 rounded p-2">
+            <p>address sfhgsjdgldglk</p>
+            <div class="d-flex justify-content-end" >
+              <input style="width: 10px;"  type="radio"><span class="ms-1">Set as Primary</span>
+            </div>
+        </div>
+    </div>
+    <div class="d-flex m-5 justify-content-end">
+      <a href="">
+        <button style="background-color: #b04fff;" class="btn text-white ms px-4" type="button">Add Address</button>
+      </a>
+      <a href="">
+        <button style="background-color: #b04fff;" class="btn text-white ms px-4 ms-4" type="button">Edit Profile</button>
+      </a>
+      
+    </div>
+  </div>
+</div>
+<%- include('../includes/usersPartials/userEnd.ejs') %>
