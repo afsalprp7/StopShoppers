@@ -6,8 +6,8 @@
  
     /*userprofile styles*/
 .container-main{
-      
-      margin-top: 100px;
+      box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.5);
+      margin-top: 7%;
     }
    .list{
     list-style-type: none;
@@ -16,6 +16,7 @@
    .list-container{
     width: 40%;
     background-color: rgb(211, 211, 211);
+    margin-left: -15px;
    }
     .list div:hover {
       background-color: rgba(0, 0, 0, 0.1); 
@@ -70,7 +71,14 @@
         display: block !important;
       }
     }
+
     /* end of userprofile */
+    .btn:focus{
+      box-shadow: none;
+      outline: none;
+      border:none;
+
+    }
 </style>
 <div style="display: none;" class="offcanvas offcanvas-start" data-bs-scroll="true" data-bs-backdrop="false" tabindex="-1" id="offcanvasScrolling" aria-labelledby="offcanvasScrollingLabel">
   <div class="offcanvas-header">
@@ -91,7 +99,7 @@
   </div>
 </div>
 <div class="container container-main d-flex mb-5">
-  <div  class="border list-container p-2 ">
+  <div  class=" list-container p-2 ">
     <ul class="list">
       <a href=""><div class=" mt-5 p-2"><li>Profile</li></div></a>
       <a href=""><div class=" mt-5 p-2"><li><li>Wallet</li></div></a>
@@ -99,7 +107,7 @@
       <a href=""><div class=" mt-5 p-2"><li>My Orders</li></div></a>
     </ul>
   </div>
-  <div style="position: relative;" class="details-container border">
+  <div style="position: relative;" class="details-container">
     <div class="border rounded border-2 p-2 button-phone"  data-bs-toggle="offcanvas" data-bs-target="#offcanvasScrolling" aria-controls="offcanvasScrolling">
       <i style="font-size: x-large;" class="fa-solid fa-bars"></i>
     </div>
@@ -118,18 +126,25 @@
       <p><strong>Email : <%= userInfo.email%> </strong></p>
       <p><strong>Phone Number : <%= userInfo.phone%> </strong></p>
       <p><strong>Address :-  </strong></p>
-        <div style="width: fit-content;" class="border border-4 rounded p-2">
-            <p>address sfhgsjdgldglk</p>
-            <div class="d-flex justify-content-end" >
-              <input style="width: 10px;"  type="radio"><span class="ms-1">Set as Primary</span>
+        <div style="width: fit-content;box-shadow: 0px 0px 5px 0 rgba(0, 0, 0, 0.5);
+        " class="border rounded-3 p-3">
+            <p style="font-size: x-large;">address sfhgsjdgldglk</p>
+            <div style="display: inline-block;" class="d-flex justify-content-end">
+              <div class="d-flex justify-content-start">
+                <input style="width: 10px;" type="radio"><p class="ms-1">Primary</p>
+              </div>
+              <button class="btn text-danger">Remove</button>
+              <a href="">
+                <p>Edit</p>
+              </a>
             </div>
         </div>
     </div>
     <div class="d-flex m-5 justify-content-end">
-      <a href="">
+      <a href="/addAddress/<%=userInfo._id%>">
         <button style="background-color: #b04fff;" class="btn text-white ms px-4" type="button">Add Address</button>
       </a>
-      <a href="">
+      <a href="/editProfile/<%=userInfo._id%>">
         <button style="background-color: #b04fff;" class="btn text-white ms px-4 ms-4" type="button">Edit Profile</button>
       </a>
       

@@ -35,9 +35,10 @@ const userSchema = new mongoose.Schema({
   },
 
 
-  address_id:[{
-    type : mongoose.Schema.Types.ObjectId,
-  }],
+  address_id:{
+    type : Array,
+    required : true
+  },
 
   cart_id:{
     type : mongoose.Schema.Types.ObjectId ,

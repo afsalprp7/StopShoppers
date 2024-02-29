@@ -1,0 +1,58 @@
+<%- include('../includes/usersPartials/userHead.ejs') %>
+<style>
+  .form-input{
+  border: none;
+  border-bottom: 2px solid #717fe0;
+  border-radius: 0;
+}
+.form-control:focus{
+  box-shadow: none !important;
+}
+.container-main{
+  margin-top: 7%;
+}
+
+</style>
+<div class="container container-main mb-5 p-5 border">
+  <h2>EDIT PROFILE</h2>
+  <form action="/editProfile/<%= userDetails._id%>?_method=PATCH" method="post">
+  <div class="row">
+    <div class="col-md-6 mt-5">
+      <div>
+          <label for=""><strong>Firstname</strong></label>
+          <input type="text" value="<%= userDetails.firstname %>" name="firstname" class="form-control p-3 mt-1 form-input" placeholder="Enter the firstname">
+      </div>
+    </div>
+    <div class="col-md-6 mt-5">
+      <div>
+        <label for=""><strong>Lastname</strong></label>
+        
+          <input type="text" value="<%= userDetails.lastname %>" name="lastname" class="form-control p-3 mt-1 form-input" placeholder="Enter the lastname">
+
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6 mt-5">
+      <div>
+        <label for=""><strong>Email</strong></label>
+
+          <input type="text" value="<%= userDetails.email %>" name="email" class="form-control p-3 mt-1 form-input" placeholder="Enter the email">
+      </div>
+    </div>
+    <div class="col-md-6 mt-5">
+      <div>
+          <label for=""><strong>Phone No</strong></label>
+          <input type="text" value="<%= userDetails.phone %>" name="phone" class="form-control p-3 mt-1 form-input" placeholder="Enter your phone number">
+      </div>
+    </div>
+  </div>
+  <div class="d-flex justify-content-end">
+  <button type="submit" style="color: #ffffff;background-color: #b04fff;" class="btn mt-4">Make Changes</button>
+  <a href="/otpEmail">
+  <button type="button" style="color: #ffffff;background-color: hsl(0, 0%, 0%);" class="btn mt-4 ms-4">Change Password</button>
+</a>
+</div>
+</form>
+</div>
+<%- include('../includes/usersPartials/userEnd.ejs') %>
