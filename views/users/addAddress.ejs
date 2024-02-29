@@ -18,7 +18,7 @@
   <div class="row">
     <div class="col-md-6 mt-5">
       <div>
-          <input id="namefirst" type="text" name="firstname" class="form-control p-3 mt-1 form-input" placeholder="Enter the firstname">
+          <input id="firstname" type="text" name="firstname" class="form-control p-3 mt-1 form-input" placeholder="Enter the firstname">
           <p style="font-size: smaller;" class="mt-2 text-danger warn"></p>
         </div>
     </div>
@@ -89,7 +89,7 @@
 
 <script>
   const form = document.getElementById('form');
-  const firstname = document.getElementById('namefirst');
+  const firstname = document.getElementById('firstname');
   const lastname = document.getElementById('lastname');
   const address = document.getElementById('address');
   const state = document.getElementById('state');
@@ -120,13 +120,13 @@ function validateForm (){
   const firstnameVal = firstname.value.trim();
   console.log(firstnameVal);
   const lastnameVal = lastname.value.trim()
-  const addressVal = document.getElementById('address').value;
-  const stateVal = document.getElementById('state').value;
-  const districtVal = document.getElementById('district').value;
-  const cityVal = document.getElementById('city').value;
-  const localityVal = document.getElementById('locality').value;
-  const postalCodeVal = document.getElementById('postalCode').value;
-  const phoneVal = document.getElementById('phone').value;
+  const addressVal = address.value.trim();
+  const stateVal = state.value.trim();
+  const districtVal = district.value.trim();
+  const cityVal = city.value.trim();
+  const localityVal = locality.value.trim();
+  const postalCodeVal = postalCode.value.trim();
+  const phoneVal = phone.value.trim();
 let isError = false;
 let lettersOnlyRegex = /^[A-Za-z\s]*$/;
 

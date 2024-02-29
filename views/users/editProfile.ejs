@@ -15,20 +15,21 @@
 </style>
 <div class="container container-main mb-5 p-5 border">
   <h2>EDIT PROFILE</h2>
-  <form action="/editProfile/<%= userDetails._id%>?_method=PATCH" method="post">
+  <form id="form" action="/editProfile/<%= userDetails._id%>?_method=PATCH" method="post">
   <div class="row">
     <div class="col-md-6 mt-5">
       <div>
           <label for=""><strong>Firstname</strong></label>
-          <input type="text" value="<%= userDetails.firstname %>" name="firstname" class="form-control p-3 mt-1 form-input" placeholder="Enter the firstname">
-      </div>
+          <input id="firstname" type="text" value="<%= userDetails.firstname %>" name="firstname" class="form-control p-3 mt-1 form-input" placeholder="Enter the firstname">
+          <p style="font-size: smaller;" class="mt-2 text-danger warn"></p>
+        </div>
     </div>
     <div class="col-md-6 mt-5">
       <div>
         <label for=""><strong>Lastname</strong></label>
         
-          <input type="text" value="<%= userDetails.lastname %>" name="lastname" class="form-control p-3 mt-1 form-input" placeholder="Enter the lastname">
-
+          <input id="lastname" type="text" value="<%= userDetails.lastname %>" name="lastname" class="form-control p-3 mt-1 form-input" placeholder="Enter the lastname">
+          <p style="font-size: smaller;" class="mt-2 text-danger warn"></p>
       </div>
     </div>
   </div>
@@ -37,14 +38,16 @@
       <div>
         <label for=""><strong>Email</strong></label>
 
-          <input type="text" value="<%= userDetails.email %>" name="email" class="form-control p-3 mt-1 form-input" placeholder="Enter the email">
-      </div>
+          <input id="email" type="text" value="<%= userDetails.email %>" name="email" class="form-control p-3 mt-1 form-input" placeholder="Enter the email">
+          <p style="font-size: smaller;" class="mt-2 text-danger warn"></p>
+        </div>
     </div>
     <div class="col-md-6 mt-5">
       <div>
           <label for=""><strong>Phone No</strong></label>
-          <input type="text" value="<%= userDetails.phone %>" name="phone" class="form-control p-3 mt-1 form-input" placeholder="Enter your phone number">
-      </div>
+          <input id="phone" type="text" value="<%= userDetails.phone %>" name="phone" class="form-control p-3 mt-1 form-input" placeholder="Enter your phone number">
+          <p style="font-size: smaller;" class="mt-2 text-danger warn"></p>
+        </div>
     </div>
   </div>
   <div class="d-flex justify-content-end">
@@ -55,4 +58,67 @@
 </div>
 </form>
 </div>
+<script>
+  const form = document.getElementById('form');
+  const firstname = document.getElementById('firstname');
+  const lastname = document.getElementById('lastname');
+  const phone = document.getElementById('phone');
+  const email = document.getElementById('email');
+
+  form.addEventListener('submit',(e)=>{
+    e.preventDefault();
+
+    if(!validateForm()){
+      form.submit();
+    };
+  })
+
+function setError(element,message){
+  const inputDiv = element.parentElement;
+  const displayMessage = inputDiv.querySelector('.warn');
+  displayMessage.innerText = message; 
+}
+
+
+
+function validateForm(){
+  const firstnameVal = firstname.value.trim();
+  const lastnameVal = lastname.value.trim();
+  const phoneVal = phone.value.trim();
+  const emailVal = email.value.trim();
+  let isError = false;
+let lettersOnlyRegex = /^[A-Za-z\s]*$/;
+
+   if(!lettersOnlyRegex.test(firstnameVal)){
+    isError=true;
+    setError(firstname,'Invalid Entry');
+  }else{
+    setError(firstname,'');
+  }
+
+   if(!lettersOnlyRegex.test(lastnameVal)){
+    isError=true;
+    setError(lastname,'Invalid Entry');
+  }else{
+    setError(lastname,'');
+  }
+
+  let mobileRegex = /^\d{10}$/;
+   if(!mobileRegex.test(phoneVal)){
+    isError = true;
+    setError(phone,'Invalid Number');
+  }else{
+    setError(phone,'');
+  }
+
+  let emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if(!emailRegex.test(emailVal)){
+    isError = true
+    setError(email,'Invalid Email');
+  }else{
+    setError(email,'');
+  }
+  return isError;
+}
+</script>
 <%- include('../includes/usersPartials/userEnd.ejs') %>
