@@ -143,6 +143,38 @@ getEditAddress : async(req,res)=>{
     }
 },
 
+doDeleteAddress : async(req,res) =>{
+  try{
+    const id = req.params.id;
+    const userId = req.query.userId;
+    await addressModel.deleteOne({_id : id});
+    res.redirect(`/userProfile/${userId}`)
+  }catch(error){
+    console.log(error);
+
+  }
+},
+
+setAsPrimary : async(req,res)=>{
+  try{
+    const id = req.params.id;
+    const userid = req.query.userId;
+    const primaryExists = await addressModel.findOne({isPrimary : true});
+    console.log(id);
+    if(primaryExists){
+      console.log('exists');
+      await addressModel.updateOne({_id : primaryExists._id},{$set:{isPrimary : false}});
+      await addressModel.updateOne({_id : id},{$set : {isPrimary : true}});
+    }else{
+      await addressModel.updateOne({_id : id},{$set : {isPrimary : true}});
+    }
+    console.log('hi');
+    res.redirect(`/userProfile/${userid}`);
+  }catch(error){
+    console.log(error);
+  }
+
+},
 
 
   getEditProfilePage : async(req,res)=>{

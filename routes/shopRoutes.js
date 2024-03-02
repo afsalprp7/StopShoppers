@@ -16,7 +16,8 @@ router.get('/addAddress/:id',shopController.getAddAddressPage);
 router.post('/addAddress/:id',shopController.doAddAddress);
 router.get('/editAddress/:id',shopController.getEditAddress);
 router.patch('/editAddress/:id',shopController.doEditAddress);
-
+router.delete('/deleteAddress/:id',shopController.doDeleteAddress);
+router.patch('/setPrimary/:id',shopController.setAsPrimary);
 
 
 router.get('/editProfile/:id',shopController.getEditProfilePage);

@@ -101,10 +101,13 @@
 <div class="container container-main d-flex mb-5">
   <div  class=" list-container p-2 ">
     <ul class="list">
-      <a href=""><div class=" mt-5 p-2"><li>Profile</li></div></a>
-      <a href=""><div class=" mt-5 p-2"><li><li>Wallet</li></div></a>
-      <a href=""><div class=" mt-5 p-2"><li>Coupon</li></div></a>
-      <a href=""><div class=" mt-5 p-2"><li>My Orders</li></div></a>
+      <strong>
+        <a href=""><div class=" mt-5 p-2"><li>Profile</li></div></a>
+        <a href=""><div class=" mt-5 p-2"><li><li>Wallet</li></div></a>
+        <a href=""><div class=" mt-5 p-2"><li>Coupon</li></div></a>
+        <a href=""><div class=" mt-5 p-2"><li>My Orders</li></div></a>
+      </strong>
+     
     </ul>
   </div>
   <div style="position: relative;" class="details-container">
@@ -126,7 +129,7 @@
       <p><strong>Email : <%= userInfo.email%> </strong></p>
       <p><strong>Phone Number : <%= userInfo.phone%> </strong></p>
       <p><strong>Address :-  </strong></p>
-      <div class="row">
+      <div class="row me-3">
         <% userAddress.forEach((data) => { %>     
           <div style="width: fit-content;box-shadow: 0px 0px 5px 0 rgba(0, 0, 0, 0.5);
           " class="border rounded-3 p-3 col-md-6">
@@ -141,18 +144,22 @@
                 <%= data.userAddress.postalcode %>(Pin),
                 <%= data.userAddress.phone %>(PH).
               </p>
-              <div  class="d-flex justify-content-end">
-                <div class="d-flex justify-content-start">
-                  <input style="width: 10px;" type="radio"><p class="ms-1">Primary</p>
+              <div class="d-flex justify-content-between">
+                <form id="radioForm" action="/setPrimary/<%=data.userAddress._id%>?_method=PATCH&userId=<%= data._id %>" method="post">
+                <div style="cursor: pointer;" class="d-flex justify-content-start">
+                  <input   id="radio" style="width: 10px;" type="radio" <%= data.userAddress.isPrimary ? 'checked' : '' %>><p class="ms-1">Primary</p>
                 </div>
-                
-                  <form style="display: block;" action="/deleteAddress/<%= data.userAddress._id %>" method="post">
-                    <button class="btn text-danger mt-2">Remove</button>
-                  </form>
-                <a href="/editAddress/<%= data.userAddress._id %>?userId=<%= data._id%>">
-                  <p>Edit</p>
-                </a>
+              </form>
+                <div  class="d-flex justify-content-end">
+                    <form style="display: block;" action="/deleteAddress/<%= data.userAddress._id %>?_method=DELETE&userId=<%= data._id %>" method="post">
+                      <button class="btn text-danger mt-2">Delete</button>
+                    </form>
+                  <a href="/editAddress/<%= data.userAddress._id %>?userId=<%= data._id%>">
+                    <p>Edit</p>
+                  </a>
+                </div>
               </div>
+              
           </div>
           <%}) %>
       </div>
@@ -169,4 +176,26 @@
     </div>
   </div>
 </div>
+<script>
+ const radioForms = document.querySelectorAll('#radioForm');
+
+radioForms.forEach(form => {
+    const radioButton = form.querySelector('#radio');
+  if(!radioButton.checked){
+    radioButton.addEventListener('click', () => {
+      
+      form.submit();
+});
+}
+    
+});
+
+
+
+      
+  
+  
+    
+  
+</script>
 <%- include('../includes/usersPartials/userEnd.ejs') %>

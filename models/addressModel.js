@@ -40,6 +40,11 @@ postalcode : {
   required : true,
 },
 
+isPrimary :{
+  type : Boolean,
+  required : true,
+  default : false
+} 
 
 });
 
