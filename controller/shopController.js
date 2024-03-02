@@ -1,7 +1,7 @@
 const productModel = require("../models/productModel");
 const userModel = require("../models/userModel");
-
 const addressModel = require('../models/addressModel');
+const mongoose = require('mongoose');
 module.exports = {
 
 getHomePage : async(req,res)=>{
@@ -23,9 +23,39 @@ getProductDetailpage : async(req,res)=>{
 
 getUserProfilePage : async(req,res)=>{
   try{
-    const userId = req.params.id;
+    const Id = req.params.id;
+    const userId = new mongoose.Types.ObjectId(Id);
+    console.log(userId);
     const userDetails = await userModel.findOne({_id : userId});
-    res.render('users/userProfile',{title : 'User Profile', userInfo : userDetails,user : req.session.user});
+    const userAddress = await userModel.aggregate([
+
+      {
+        $match : {
+          _id : userId
+        }
+      },
+     
+      {
+        $lookup:{
+          from : "addresses",
+          localField : "address_id",
+          foreignField : "_id",
+          as : "userAddress"
+    }},
+
+    {
+      $unwind: "$userAddress" //unwinding the created array.
+    },
+   
+  ]);
+  
+    res.render('users/userProfile',
+    {
+      title : 'User Profile',
+       userInfo : userDetails,
+       user : req.session.user,
+       userAddress : userAddress
+      });
   }catch(error){
     console.log(error);
   }
@@ -66,6 +96,55 @@ doAddAddress : async(req,res)=>{
 
 },
 
+
+
+getEditAddress : async(req,res)=>{
+  try{
+    const id = req.params.id;
+    const userid = req.query.userId
+    console.log(userid);
+    const addressDetails = await addressModel.findOne({_id : id});
+    
+    res.render('users/editAddress',{
+      title : 'Edit Address',
+      addressDetails,
+      userid,
+      user : req.session.user,
+      
+    });
+  }catch(error){
+    console.log(error);
+  }
+},
+
+  doEditAddress :async(req,res)=>{
+    try{
+      const userid = req.query.id
+      const id = req.params.id;
+      const adrress = addressModel.findOne({_id : id});
+      const data  = req.body ;  //coming data
+
+      await addressModel.updateOne({_id : id },
+        {
+        $set : {
+          firstname : data.firstname !== '' ? data.firstname : undefined,
+          lastname : data.lastname !== '' ? data.lastname : undefined,
+          address : data.address !== '' ? data.address : undefined,
+          state : data.state !== '' ? data.state : undefined,
+          district : data.district !== '' ? data.district : undefined,
+          city : data.city !== '' ? data.city : undefined,
+          locality : data.locality !== '' ? data.locality : undefined,
+          postalcode : data.postalCode !== '' ? data.postalCode : undefined,
+          phone : data.phone !== '' ? data.phone : undefined
+        }});
+        res.redirect(`/userProfile/${userid}`)
+    }catch(error){
+      console.log(error);
+    }
+},
+
+
+
   getEditProfilePage : async(req,res)=>{
     try{
       const userId = req.params.id;
@@ -102,7 +181,4 @@ doAddAddress : async(req,res)=>{
     }
 
   }
-
-
-
 }

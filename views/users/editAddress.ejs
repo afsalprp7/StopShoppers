@@ -13,18 +13,20 @@
 }
 </style>
 <div class="container container-main p-5 border mb-5">
-  <div><h2>ADD ADDRESS</h2></div>
-  <form id="form" action="/addAddress/<%=userid%>" method="post">
+  <div><h2>EDIT ADDRESS</h2></div>
+  <form id="form" action="/editAddress/<%=addressDetails._id%>?_method=PATCH&id=<%= userid %>" method="post">
   <div class="row">
     <div class="col-md-6 mt-5">
       <div>
-          <input id="firstname" type="text" name="firstname" class="form-control p-3 mt-1 form-input" placeholder="Enter the firstname">
+          <label for=""><strong>First Name</strong></label>
+          <input value="<%=addressDetails.firstname%>" id="firstname" type="text" name="firstname" class="form-control p-3 mt-1 form-input" placeholder="Enter the firstname">
           <p style="font-size: smaller;" class="mt-2 text-danger warn"></p>
         </div>
     </div>
     <div class="col-md-6 mt-5">
       <div>
-          <input id="lastname" type="text" name="lastname" class="form-control p-3 mt-1 form-input" placeholder="Enter the lastname">
+          <label for=""><strong>Last Name</strong></label>
+          <input value="<%=addressDetails.lastname%>"  id="lastname" type="text" name="lastname"  class="form-control p-3 mt-1 form-input" placeholder="Enter the lastname">
           <p style="font-size: smaller;" class="mt-2 text-danger warn"></p>
         </div>
     </div>
@@ -32,7 +34,8 @@
   <div class="row">
     <div class="col mt-5">
       <div>
-          <input id="address" type="text" name="address" class="form-control p-3 mt-1 form-input" placeholder="Street/Home Address">
+        <label for=""><strong>Street/Home Address</strong></label>
+          <input value="<%=addressDetails.address%>" id="address" type="text" name="address" class="form-control p-3 mt-1 form-input" placeholder="Street/Home Address">
           <p style="font-size: smaller;" class="mt-2 text-danger warn"></p>
         </div>
     </div>
@@ -40,27 +43,17 @@
   <div class="row">
     <div class="col-md-6 mt-5">
       <div>
-          <input id="state" type="text" name="state" class="form-control p-3 mt-1 form-input" placeholder="State">
+        <label for=""><strong>State</strong></label>
+
+          <input value="<%=addressDetails.state%>" id="state" type="text" name="state" class="form-control p-3 mt-1 form-input" placeholder="State">
           <p style="font-size: smaller;" class="mt-2 text-danger warn"></p>
         </div>
     </div>
     <div class="col-md-6 mt-5">
       <div>
-          <input id="district" type="text" name="district" class="form-control p-3 mt-1 form-input" placeholder="Enter your District Name">
-          <p style="font-size: smaller;" class="mt-2 text-danger warn"></p>
-        </div>
-    </div>
-  </div>
-  <div class="row">
-    <div class="col-md-6 mt-5">
-      <div>
-          <input id="city" type="text" name="city" class="form-control p-3 mt-1 form-input" placeholder="Enter your city">
-          <p style="font-size: smaller;" class="mt-2 text-danger warn"></p>
-        </div>
-    </div>
-    <div class="col-md-6 mt-5">
-      <div>
-          <input id="locality" type="text" name="locality" class="form-control p-3 mt-1 form-input" placeholder="Enter your locality">
+        <label for=""><strong>District</strong></label>
+
+          <input value="<%=addressDetails.district%>" id="district" type="text" name="district" class="form-control p-3 mt-1 form-input" placeholder="Enter your District Name">
           <p style="font-size: smaller;" class="mt-2 text-danger warn"></p>
         </div>
     </div>
@@ -68,24 +61,40 @@
   <div class="row">
     <div class="col-md-6 mt-5">
       <div>
-          <input id="postalCode" type="text" name="postalCode" class="form-control p-3 mt-1 form-input" placeholder="Enter your Postal Code">
+        <label for=""><strong>City</strong></label>
+          <input value="<%=addressDetails.city%>" id="city" type="text" name="city" class="form-control p-3 mt-1 form-input" placeholder="Enter your city">
           <p style="font-size: smaller;" class="mt-2 text-danger warn"></p>
         </div>
     </div>
     <div class="col-md-6 mt-5">
       <div>
-          <input id="phone" type="text" name="phone" class="form-control p-3 mt-1 form-input" placeholder="Enter your Phone Number">
+        <label for=""><strong>Locality</strong></label>
+          <input value="<%=addressDetails.locality%>" id="locality" type="text" name="locality" class="form-control p-3 mt-1 form-input" placeholder="Enter your locality">
+          <p style="font-size: smaller;" class="mt-2 text-danger warn"></p>
+        </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6 mt-5">
+      <div>
+        <label for=""><strong>Pin Code</strong></label>
+          <input value="<%=addressDetails.postalcode%>" id="postalCode" type="text" name="postalCode" class="form-control p-3 mt-1 form-input" placeholder="Enter your Postal Code">
+          <p style="font-size: smaller;" class="mt-2 text-danger warn"></p>
+        </div>
+    </div>
+    <div class="col-md-6 mt-5">
+      <div>
+        <label for=""><strong>Phone No</strong></label>
+          <input value="<%=addressDetails.phone%>" id="phone" type="text" name="phone" class="form-control p-3 mt-1 form-input" placeholder="Enter your Phone Number">
           <p style="font-size: smaller;" class="mt-2 text-danger warn"></p>
         </div>
     </div>
   </div>
   <div class="d-flex justify-content-end">
-  <button type="submit" style="color: #ffffff;background-color: #b04fff;" class="btn mt-4">Add Address</button>
+  <button type="submit" style="color: #ffffff;background-color: #b04fff;" class="btn mt-4">Make Changes</button>
 </div>
 </form>
 </div>
-
-
 
 <script>
   const form = document.getElementById('form');
@@ -130,20 +139,14 @@ function validateForm (){
 let isError = false;
 let lettersOnlyRegex = /^[A-Za-z\s]*$/;
 
-  if(firstnameVal === ''){
-    isError = true ;
-    setError(firstname,'This Field Cannot be Empty');
-  }else if(!lettersOnlyRegex.test(firstnameVal)){
+  if(!lettersOnlyRegex.test(firstnameVal)){
     isError=true;
     setError(firstname,'Invalid Entry');
   }else{
     setError(firstname,'');
   }
 
-  if(lastnameVal === ''){
-    isError=true;
-    setError(lastname,'This Field Cannot be Empty')
-  }else if(!lettersOnlyRegex.test(lastnameVal)){
+  if(!lettersOnlyRegex.test(lastnameVal)){
     isError=true;
     setError(lastname,'Invalid Entry');
   }else{
@@ -151,36 +154,25 @@ let lettersOnlyRegex = /^[A-Za-z\s]*$/;
   }
 
   if(addressVal === ''){
-    isError = true;
-    setError(address,'This Field Cannot Be Empty')
-  }else{
+    isError = false;
     setError(address,'')
   }
 
-  if(stateVal === ''){
-    isError = true;
-    setError(state,'This Field Cannot Be Empty')
-  }else if(!lettersOnlyRegex.test(stateVal)){
+  if(!lettersOnlyRegex.test(stateVal)){
     isError = true;
     setError(state,'Invalid Entry');
   }else{
     setError(state,'');
   }
 
-  if(districtVal === ''){
-    isError =true;
-    setError(district,'This Field Cannot Be Empty')
-  }else if(!lettersOnlyRegex.test(districtVal)){
+   if(!lettersOnlyRegex.test(districtVal)){
     isError = true;
     setError(district,'Invalid Entry');
   }else{
     setError(district,'');
   }
 
-  if(cityVal === ''){
-    isError =true;
-    setError(city,'This Field Cannot Be Empty')
-  }else if(!lettersOnlyRegex.test(cityVal)){
+  if(!lettersOnlyRegex.test(cityVal)){
     isError = true;
     setError(city,'Invalid Entry');
   }else{
@@ -188,16 +180,13 @@ let lettersOnlyRegex = /^[A-Za-z\s]*$/;
   }
 
   if(localityVal === ''){
-    isError =true;
-    setError(locality,'This Field Cannot Be Empty')
+    isError = false;
+    setError(locality,'')
   }else{
     setError(locality,'');
   }
   const numbersOnlyRegex = /^[0-9]/ ;
-  if(postalCodeVal === ''){
-    isError =true;
-    setError(postalCode,'This Field Cannot Be Empty')
-  }else if(!numbersOnlyRegex.test(postalCodeVal)){
+  if(!numbersOnlyRegex.test(postalCodeVal)){
     isError = true;
     setError(postalCode,'Invalid Entry');
   }else{
@@ -205,10 +194,7 @@ let lettersOnlyRegex = /^[A-Za-z\s]*$/;
   }
 
   let mobileRegex = /^\d{10}$/;
-  if(phoneVal === ''){
-    isError =true;
-    setError(phone,'This Field Cannot Be Empty')
-  }else if(!mobileRegex.test(phoneVal)){
+  if(!mobileRegex.test(phoneVal)){
     isError = true;
     setError(phone,'Invalid Number');
   }else{

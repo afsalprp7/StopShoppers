@@ -6,7 +6,7 @@ firstname : {
   type : String,
   required : true,
 },
-firstname : {
+lastname : {
   type : String,
   required : true,
 },
@@ -35,7 +35,7 @@ postalcode : {
   required : true,
 },
 
- firstname : {
+ phone : {
   type : Number,
   required : true,
 },
