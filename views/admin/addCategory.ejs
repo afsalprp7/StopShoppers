@@ -3,7 +3,7 @@
   <h3>ADD CATEGORY</h3>
 </div>
 <div class="container border p-5">
-  <h5 style="color: crimson;"><%= error %></h5>
+  <h5 style="color: crimson"><%= error %></h5>
   <form
     id="form"
     enctype="multipart/form-data"
@@ -33,12 +33,27 @@
             name="productPhoto"
             onchange="previewImage(this)"
           />
-          <div style="max-height: 180px;display:none ;max-width: fit-content;" class="border mt-3 p-2" id="displayContainer">
+          <div
+            style="max-height: 180px; display: none; max-width: fit-content"
+            class="border mt-3 p-2"
+            id="displayContainer"
+          >
             <div class="d-flex justify-content-center align-items-center">
               <div>
-                <img id="displayedImage" style="width:120px;max-height: 100px;max-width: 120px;" src="" alt="">
-                <p id="displayName" class="mb-1 "></p>
-                <button type="button" class="btn btn-danger btn-sm ms-auto p-1 mb-3 mt-0" onclick="cancelSelection()">Cancel</button>
+                <img
+                  id="displayedImage"
+                  style="width: 120px; max-height: 100px; max-width: 120px"
+                  src=""
+                  alt=""
+                />
+                <p id="displayName" class="mb-1"></p>
+                <button
+                  type="button"
+                  class="btn btn-danger btn-sm ms-auto p-1 mb-3 mt-0"
+                  onclick="cancelSelection()"
+                >
+                  Cancel
+                </button>
               </div>
             </div>
           </div>
@@ -53,9 +68,7 @@
   </form>
 </div>
 
-
 <script>
-
   const form = document.getElementById("form");
   const catName = document.getElementById("catName");
   const fileInput = document.getElementById("fileInp");
@@ -81,8 +94,7 @@
         title: "Error",
         text: "You dont have any file to upload",
       });
-    } 
-    else {
+    } else {
       e.preventDefault();
       form.submit();
     }
@@ -91,25 +103,24 @@
   function previewImage(input) {
     var file = input.files[0];
     var reader = new FileReader();
-    
-    reader.onload = function(e) {
-        document.getElementById('displayedImage').src = e.target.result;
-        document.getElementById('displayContainer').style.display = 'block';
+
+    reader.onload = function (e) {
+      document.getElementById("displayedImage").src = e.target.result;
+      document.getElementById("displayContainer").style.display = "block";
     };
-    
+
     reader.readAsDataURL(file);
 
     var name = file.name;
-    document.getElementById('displayName').innerText = name;
-}
+    document.getElementById("displayName").innerText = name;
+  }
 
-function cancelSelection() {
-    fileInput.value = ''; // Reset file input
-    document.getElementById('displayedImage').src = ''; // Reset displayed image
-    document.getElementById('displayContainer').style.display = 'none'; // Hide display container
-    document.getElementById('displayName').innerText = ''; // Reset displayed name
-}
-
+  function cancelSelection() {
+    fileInput.value = ""; // Reset file input
+    document.getElementById("displayedImage").src = ""; // Reset displayed image
+    document.getElementById("displayContainer").style.display = "none"; // Hide display container
+    document.getElementById("displayName").innerText = ""; // Reset displayed name
+  }
 </script>
 
 <%- include('../includes/admin/adminEnd') %>

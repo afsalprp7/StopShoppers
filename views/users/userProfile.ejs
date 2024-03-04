@@ -15,7 +15,7 @@
 
    .list-container{
     width: 40%;
-    background-color: rgb(211, 211, 211);
+    background-color: rgb(176, 177, 129);
     margin-left: -15px;
    }
     .list div:hover {
@@ -132,7 +132,7 @@
       <div class="row me-3">
         <% userAddress.forEach((data) => { %>     
           <div style="width: fit-content;box-shadow: 0px 0px 5px 0 rgba(0, 0, 0, 0.5);
-          " class="border rounded-3 p-3 col-md-6">
+          " class="border rounded-3 p-3 col-md-6 mt-3">
               <p style="font-size: large;line-height: 5px;">
                 <%= data.userAddress.address %>,
                 <%= data.userAddress.locality %>,
@@ -151,8 +151,8 @@
                 </div>
               </form>
                 <div  class="d-flex justify-content-end">
-                    <form style="display: block;" action="/deleteAddress/<%= data.userAddress._id %>?_method=DELETE&userId=<%= data._id %>" method="post">
-                      <button class="btn text-danger mt-2">Delete</button>
+                    <form id="form-delete" style="display: block;" action="/deleteAddress/<%= data.userAddress._id %>?_method=DELETE&userId=<%= data._id %>" method="post">
+                      <button class="btn text-danger mt-2 btn-delete">Delete</button>
                     </form>
                   <a href="/editAddress/<%= data.userAddress._id %>?userId=<%= data._id%>">
                     <p>Edit</p>
@@ -177,20 +177,37 @@
   </div>
 </div>
 <script>
- const radioForms = document.querySelectorAll('#radioForm');
-
+const radioForms = document.querySelectorAll('#radioForm');
 radioForms.forEach(form => {
     const radioButton = form.querySelector('#radio');
   if(!radioButton.checked){
     radioButton.addEventListener('click', () => {
-      
       form.submit();
 });
 }
     
 });
 
-
+const deleteForms = document.querySelectorAll('#form-delete');
+deleteForms.forEach((form) => {
+  const button = form.querySelector('.btn-delete');
+  button.addEventListener('click', async (e) => {
+    e.preventDefault();
+    await Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Delete"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        form.submit(); 
+      }
+    });
+  });
+});
 
       
   

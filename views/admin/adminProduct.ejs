@@ -21,7 +21,7 @@
       <% products.forEach((item)=>{%>
       <tr>
         <td style="text-transform: capitalize;"><%= item.productName%></td>
-        <td><%= item.category%></td>
+        <td><%= item.categoryInfo.categoryName%></td>
         <td><%= item.quantity%></td>
         <% if (item.quantity > 0) {%>
         <td style="color: rgb(0, 176, 0);">In stock</td>
