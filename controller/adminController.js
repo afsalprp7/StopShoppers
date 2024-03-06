@@ -5,7 +5,7 @@ const userModel = require("../models/userModel");
 const flash = require("connect-flash");
 const fs = require("fs");
 const adminModel = require("../models/adminModel");
-const { name } = require("ejs");
+
 
 module.exports = {
   //get category pageṭ
@@ -72,6 +72,9 @@ module.exports = {
   //get edit category page
   getEditCategoryPage: async (req, res) => {
     try {
+      if(!req.cookies.token){
+        res.redirect('/admin');
+      }
       const id = req.params.id;
       // console.log(id);
       const data = await categoryModel.findOne({ _id: id });
@@ -212,6 +215,7 @@ module.exports = {
 
   //get add product page.
   getAddProductPage: async (req, res) => {
+   
     const catData = await categoryModel.find({ isDeleted: false });
     res.render("admin/addProduct", {
       title: "Add Product",
@@ -223,6 +227,9 @@ module.exports = {
 
   // get edit product page.
   getEditProductPage: async (req, res) => {
+    if(!req.cookies.token){
+      res.redirect('/admin');
+    }
     const catData = await categoryModel.find({ isDeleted: false });
     const paramId = req.params.id;
     const productData = await productModel.findOne({ _id: paramId });
@@ -324,6 +331,9 @@ module.exports = {
 
   doEditProduct: async (req, res) => {
     try {
+      if(!req.cookies.token){
+        res.redirect('/admin')
+      }
       const editData = req.body;
       const id = req.params.id;
       const product = await productModel.findOne({ _id: id });
@@ -432,6 +442,9 @@ module.exports = {
   //deleting the images from edit product page
   deleteImageEditProduct: async (req, res) => {
     try {
+      if(!req.cookies.token){
+        res.redirect('/admin');
+      }
       const filename = req.body.filename;
       console.log(filename);
       const id = req.params.id;
@@ -465,6 +478,9 @@ module.exports = {
 
   doBlockUsers: async (req, res) => {
     try {
+      if(!req.cookies.token){
+        res.redirect('/admin');
+      }
       const id = req.params.id;
       console.log(req.body);
       const data = await userModel.findOne({ _id: id });

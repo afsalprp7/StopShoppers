@@ -43,7 +43,7 @@ module.exports = {
             }); //adding to the cookie
             //finished setting the token
             req.session.user = user;
-            res.redirect("/");
+            res.redirect("/home");
           } else {
             req.flash(
               "passError",

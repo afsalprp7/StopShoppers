@@ -5,11 +5,35 @@ const mongoose = require("mongoose");
 module.exports = {
   getHomePage: async (req, res) => {
     try {
-      const products = await productModel.find({ isDeleted: false });
+      // Pagination parameters
+      const page = req.query.page ? parseInt(req.query.page) : 1;
+      const limit = req.query.limit ? parseInt(req.query.limit) : 8;
+
+      // Calculate skip
+      const skip = (page - 1) * limit;
+
+      // Fetch products with pagination
+      const products = await productModel
+        .find({ isDeleted: false })
+        .skip(skip)
+        .limit(limit);
+
+      // Count total number of products (for pagination)
+      const totalCount = await productModel.countDocuments({
+        isDeleted: false,
+      });
+
+      // Render the view with products and pagination data
       res.render("users/userHome", {
         allProducts: products,
         title: "Home",
         user: req.session.user,
+
+        pagination: {
+          currentPage: page,
+          totalPages: Math.ceil(totalCount / limit),
+          totalItems: totalCount,
+        },
       });
     } catch (error) {
       console.log(error);
@@ -226,6 +250,45 @@ module.exports = {
         }
       );
       res.redirect(`/userProfile/${id}`);
+    } catch (error) {
+      console.log(error);
+    }
+  },
+
+  //search product
+  searchProductHome: async (req, res) => {
+    try {
+      const string = req.body.string.toLowerCase();
+
+      if (string !== "") {
+        const result = await productModel.find({ productName: string });
+
+        if (result.length !== 0) {
+          res.json({
+            result,
+          });
+        } else {
+          res.json({
+            result: "Nothing Found",
+          });
+        }
+      } else {
+        // Pagination parameters
+        const page = req.query.page ? parseInt(req.query.page) : 1;
+        const limit = req.query.limit ? parseInt(req.query.limit) : 8;
+
+        // Calculate skip
+        const skip = (page - 1) * limit;
+
+        // Fetch products with pagination
+        const products = await productModel
+          .find({ isDeleted: false })
+          .skip(skip)
+          .limit(limit);
+        res.json({
+          result: products,
+        });
+      }
     } catch (error) {
       console.log(error);
     }
