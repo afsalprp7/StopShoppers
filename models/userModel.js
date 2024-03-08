@@ -34,14 +34,9 @@ const userSchema = new mongoose.Schema({
     require:true,
   },
 
-
   address_id:{
     type : Array,
     required : true
-  },
-
-  cart_id:{
-    type : mongoose.Schema.Types.ObjectId ,
   },
   
   wishlist_id:{

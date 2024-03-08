@@ -140,7 +140,7 @@
         
     // });
 
-    // init Isotope
+    // // init Isotope
     // $(window).on('load', function () {
     //     var $grid = $topeContainer.each(function () {
     //         $(this).isotope({

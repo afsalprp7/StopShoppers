@@ -44,6 +44,7 @@
 	<link rel="stylesheet" type="text/css" href="/css/main.css">
 <!--===============================================================================================-->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
 </head>
 <body class="animsition">
   <!--header-->
@@ -65,7 +66,7 @@
                 <a href="/home">Home</a>
               </li>
               <li>
-                <a href="product.html">Shop</a>
+                <a href="/shopPage">Shop</a>
               </li>
               <li class="label1" data-label1="hot">
                 <a href="shoping-cart.html">Features</a>
@@ -96,7 +97,10 @@
   
           
             <div class="icon-header-item cl2 hov-cl1 trans-04 p-l-22 p-r-11 icon-header-noti js-show-cart" data-notify="2">
-              <i class="zmdi zmdi-shopping-cart"></i>
+              <a style="color: #000000;" href="/cartPage">
+                <i class="zmdi zmdi-shopping-cart"></i>
+              </a>
+              
             </div>
   
             <a href="#" class="dis-block icon-header-item cl2 hov-cl1 trans-04 p-l-22 p-r-11 icon-header-noti" data-notify="0">
@@ -111,7 +115,7 @@
                   </button>
                   <ul class="dropdown-menu">
                       <li><a class="dropdown-item" href="/userProfile/<%= user._id %>">View Profile</a></li>
-                      <li><a class="dropdown-item" href="#">Logout</a></li>
+                      <li><a class="dropdown-item" href="/userLogout">Logout</a></li>
                   </ul>
               </div>
           <% } else { %>
@@ -145,7 +149,9 @@
         </div>
   
         <div class="icon-header-item cl2 hov-cl1 trans-04 p-r-11 p-l-10 icon-header-noti js-show-cart" data-notify="2">
-          <i class="zmdi zmdi-shopping-cart"></i>
+          <a style="color: #000000;" href="/cartPage">
+            <i class="zmdi zmdi-shopping-cart"></i>
+          </a>
         </div>
   
         <a href="#" class="dis-block icon-header-item cl2 hov-cl1 trans-04 p-r-11 p-l-10 icon-header-noti" data-notify="0">

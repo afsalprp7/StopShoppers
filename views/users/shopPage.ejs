@@ -1,0 +1,164 @@
+<%- include('../includes/usersPartials/userHead.ejs') %>
+
+<style>
+  .container-main{
+    margin-top: 5%;
+  }
+  .list {
+    list-style-type:none;
+    line-height: 60px;
+    align-items: center;
+  }
+ .a-tag{
+  text-decoration: none;
+  color: black;
+  font-size: larger;
+ }
+ .drop-content-div:hover{
+  background-color: rgb(245, 245, 245);
+ }
+</style>
+
+
+<div class="container-fluid container-main px-5">
+  <div class="row">
+    
+    <div  class="col-md-3 col-sm-3 col-xs-3">
+      <div style="position: static;" class="p-2">
+       <div class="drop mb-1">
+          <div class="btn  d-flex justify-content-between list border border-2 dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false"> 
+           <div>
+            <i  style="color: #717fe0;" class="fa-solid fa-layer-group"></i>
+            <strong class="ms-4">Categories</strong> 
+           </div>
+           
+          </div>
+          <div style="display: none;" class="border border-2 drop-content mt-1">
+            <% category.forEach((category)=>{ %>
+              <a class="a-tag" href=""><div style="text-transform: capitalize;" class="p-3 drop-content-div"><%=category.categoryName%></div></a>
+            <%})%>
+            
+            <!-- <a class="a-tag" href=""><div class="p-3 drop-content-div">fdfsd</div></a>
+            <a class="a-tag" href=""><div class="p-3 drop-content-div">fdfsd</div></a> -->
+          </div>
+        </div>
+
+
+
+        <div class="drop mb-1">
+          <div class="btn  d-flex justify-content-between list border border-2 dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false"> 
+          <div>
+            <i  style="color: #717fe0;" class="fa-solid fa-filter"></i>
+            <strong class="ms-4">Filter</strong>
+          </div>
+            
+          </div>
+          <div style="display: none;" class="border border-2 drop-content mt-1">
+            
+            <a class="a-tag" href=""><div class="p-3 drop-content-div">fdfsd</div></a>
+
+            <a class="a-tag" href=""><div class="p-3 drop-content-div">fdfsd</div></a>
+
+            <a class="a-tag" href=""><div class="p-3 drop-content-div">fdfsd</div></a>
+
+        
+          </div>
+        </div>           
+        <div class="drop mb-1">
+          <div class="btn  d-flex justify-content-between list border border-2 dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false"> 
+           <div>
+            <i  style="color: #717fe0;" class="fa-solid fa-palette"></i>
+            <strong class="ms-4">Colors</strong> 
+           </div>
+            
+          </div>
+          <div style="display: none;" class="border border-2 drop-content mt-1">
+           
+            <a class="a-tag" href=""><div class="p-3 drop-content-div">
+              Blue</div></a>
+
+            <a class="a-tag" href=""><div class="p-3 drop-content-div">Green</div></a>
+
+            <a class="a-tag" href=""><div class="p-3 drop-content-div">
+              <span class="color-block" style="background-color: red; width: 10px; height: 10px; margin-right: 5px;"></span>
+              Red
+            </div></a>
+
+          
+          </div>
+        </div>
+           
+           
+         
+        
+      </div>
+    </div>
+    <div class="col-md-9 col-sm-9 col-xs-9 border-start border-2">
+      <div class="row isotope-grid productList">
+        <% allProducts.forEach((item)=>{ %>
+        <div class="col-sm-6 col-md-4 col-lg-3 p-b-35 isotope-item women">
+          <!-- Block2 -->
+          <div class="block2">
+            <div style="max-height: 350px;" class="block2-pic hov-img0">
+              <a href="/productDetail/<%= item._id %>">
+              <img src="/productImg/<%= item.image[0]%>" alt="IMG-PRODUCT">
+            </a>
+            </div>
+  
+            <div class="block2-txt flex-w flex-t p-t-14">
+              <div class="block2-txt-child1 flex-col-l ">
+                <a  class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
+                  <%= item.productName %>
+                </a>
+  
+                <span class="stext-105 cl3">
+                  ₹<%= item.productPrice%>
+                  
+                </span>
+              </div>
+              <div class="block2-txt-child2 flex-r p-t-3">
+                <a href="#" class="btn-addwish-b2 dis-block pos-relative js-addwish-b2">
+                  <img class="icon-heart1 dis-block trans-04" src="images/icons/icon-heart-01.png" alt="ICON">
+                  <img class="icon-heart2 dis-block trans-04 ab-t-l" src="images/icons/icon-heart-02.png" alt="ICON">
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <%});%>
+          </div>
+    </div>
+
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+const category = document.querySelectorAll('.drop');
+category.forEach((element)=>{
+  element.addEventListener('click',()=>{
+  const content = element.querySelector('.drop-content');
+  if(content.style.display === 'block'){
+    content.style.display = 'none';
+  }else{
+    content.style.display = 'block';
+
+  }
+  
+
+})
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+<%- include('../includes/usersPartials/userEnd.ejs') %>

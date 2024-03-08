@@ -33,7 +33,7 @@
           <label for="userType" class="form-label">Category</label>
           <select class="form-select p-3" id="userType" name="category">
             <% catData.forEach(function(item) { %>
-            <option value="<%= item.categoryName %>">
+            <option value="<%= item._id %>">
               <%= item.categoryName %>
             </option>
             <% }); %>

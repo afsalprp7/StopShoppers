@@ -139,14 +139,20 @@ function validateForm (){
 let isError = false;
 let lettersOnlyRegex = /^[A-Za-z\s]*$/;
 
-  if(!lettersOnlyRegex.test(firstnameVal)){
+if(firstnameVal === ''){
+    isError = true ;
+    setError(firstname,'This Field Cannot be Empty');
+  }else if(!lettersOnlyRegex.test(firstnameVal)){
     isError=true;
     setError(firstname,'Invalid Entry');
   }else{
     setError(firstname,'');
   }
 
-  if(!lettersOnlyRegex.test(lastnameVal)){
+  if(lastnameVal === ''){
+    isError=true;
+    setError(lastname,'This Field Cannot be Empty')
+  }else if(!lettersOnlyRegex.test(lastnameVal)){
     isError=true;
     setError(lastname,'Invalid Entry');
   }else{
@@ -154,25 +160,36 @@ let lettersOnlyRegex = /^[A-Za-z\s]*$/;
   }
 
   if(addressVal === ''){
-    isError = false;
+    isError = true;
+    setError(address,'This Field Cannot Be Empty')
+  }else{
     setError(address,'')
   }
 
-  if(!lettersOnlyRegex.test(stateVal)){
+  if(stateVal === ''){
+    isError = true;
+    setError(state,'This Field Cannot Be Empty')
+  }else if(!lettersOnlyRegex.test(stateVal)){
     isError = true;
     setError(state,'Invalid Entry');
   }else{
     setError(state,'');
   }
 
-   if(!lettersOnlyRegex.test(districtVal)){
+  if(districtVal === ''){
+    isError =true;
+    setError(district,'This Field Cannot Be Empty')
+  }else if(!lettersOnlyRegex.test(districtVal)){
     isError = true;
     setError(district,'Invalid Entry');
   }else{
     setError(district,'');
   }
 
-  if(!lettersOnlyRegex.test(cityVal)){
+  if(cityVal === ''){
+    isError =true;
+    setError(city,'This Field Cannot Be Empty')
+  }else if(!lettersOnlyRegex.test(cityVal)){
     isError = true;
     setError(city,'Invalid Entry');
   }else{
@@ -180,13 +197,16 @@ let lettersOnlyRegex = /^[A-Za-z\s]*$/;
   }
 
   if(localityVal === ''){
-    isError = false;
-    setError(locality,'')
+    isError =true;
+    setError(locality,'This Field Cannot Be Empty')
   }else{
     setError(locality,'');
   }
   const numbersOnlyRegex = /^[0-9]/ ;
-  if(!numbersOnlyRegex.test(postalCodeVal)){
+  if(postalCodeVal === ''){
+    isError =true;
+    setError(postalCode,'This Field Cannot Be Empty')
+  }else if(!numbersOnlyRegex.test(postalCodeVal)){
     isError = true;
     setError(postalCode,'Invalid Entry');
   }else{
@@ -194,7 +214,10 @@ let lettersOnlyRegex = /^[A-Za-z\s]*$/;
   }
 
   let mobileRegex = /^\d{10}$/;
-  if(!mobileRegex.test(phoneVal)){
+  if(phoneVal === ''){
+    isError =true;
+    setError(phone,'This Field Cannot Be Empty')
+  }else if(!mobileRegex.test(phoneVal)){
     isError = true;
     setError(phone,'Invalid Number');
   }else{

@@ -42,39 +42,49 @@ Home/Product Details
         <hr class="mt-4">
         <div class="p-2">
           <h5>Available Sizes</h5>
+          <form id="form" action="/addToCart/<%=product._id%>?userId=<%=user._id%>" method="post">
           <div class="d-flex  mt-4">
            <% product.sizes.forEach((size)=>{ %> 
            <% if(size === 'S'){ %>
             <div>
-              <input type="radio" class="btn-check " name="size" id="sizeS" autocomplete="off">
+              <input value="S" type="radio" class="btn-check " name="size" id="sizeS" autocomplete="off">
               <label for="sizeS" class="btn btn-outline-dark ms-1 px-3">S</label>
             </div>
             <% }else if(size === 'M'){ %>
             <div class="ms-3">
-              <input type="radio" class="btn-check"  name="size" id="sizeM" autocomplete="off">
+              <input value="M" type="radio" class="btn-check"  name="size" id="sizeM" autocomplete="off">
               <label for="sizeM" class="btn btn-outline-dark ms-1 px-3">M</label>
             </div>
             <% }else if(size === 'L'){ %>
             <div class="ms-3">
-              <input type="radio" class="btn-check" name="size" id="sizeL" autocomplete="off">
+              <input value="L" type="radio" class="btn-check" name="size" id="sizeL" autocomplete="off">
               <label for="sizeL" class="btn btn-outline-dark ms-1 px-3">L</label>
             </div>
             <% }else if(size === 'XL'){ %>
             <div class="ms-3">
-              <input type="radio" class="btn-check" name="size" id="sizeXL" autocomplete="off">
+              <input value="XL" type="radio" class="btn-check" name="size" id="sizeXL" autocomplete="off">
               <label for="sizeXL" class="btn btn-outline-dark ms-1 px-3">XL</label>
             </div>
             <% }else if(size === 'XXL'){ %>
             <div class="ms-3">
-              <input type="radio" class="btn-check" name="size" id="sizeXXL" autocomplete="off">
+              <input value="XXL" type="radio" class="btn-check" name="size" id="sizeXXL" autocomplete="off">
               <label for="sizeXXL" class="btn btn-outline-dark ms-1 px-3">XXL</label>
             </div>
             <%}%>
             <%})%>
           </div>
         <div class="mt-5 d-flex justify-content-between">
-          <button style="background-color: rgba(111, 1, 255, 0.795);border: none;width: 45%;" type="button" class="btn btn-primary ">Add to Cart<i class="fa-solid fa-cart-shopping mt-1 ms-2"></i></button>          
-          <button style="background-color: rgba(255, 255, 255, 0.795);border:1px solid black;color: black;width: 45%;" type="button" class="btn btn-primary ">BUY NOW</button>          
+          
+          
+            <button style="background-color: rgba(111, 1, 255, 0.795);border: none;width: 45%;" type="submit" class="btn btn-primary ">
+               Add to Cart 
+              <i class="fa-solid fa-cart-shopping mt-1 ms-2"></i></button>          
+            </form>
+            <button style="background-color: rgba(255, 255, 255, 0.795);border:1px solid black;color: black;width: 45%;" type="button" class="btn btn-primary ">
+              <a style="color: black;" href=""> BUY NOW
+            </button>          
+          </a>
+        </div>
         </div>
       </div>
       </div>
@@ -119,4 +129,29 @@ Home/Product Details
   </div>
 </div>
 
+
+
+
+<script>
+const form =document.getElementById('form');
+form.addEventListener('submit',(e)=>{
+  e.preventDefault();
+  const sizeRadioButtons = document.getElementsByName('size');
+  let selectedSize;
+  for (let i = 0; i < sizeRadioButtons.length; i++) {
+    if (sizeRadioButtons[i].checked) {
+      selectedSize = sizeRadioButtons[i].value;
+      break;
+    }
+  }
+ 
+  if (!selectedSize) {
+    Swal.fire("Please Select a Size!");
+    return;
+  }else{
+    form.submit();
+  }
+
+});
+</script>
 <%- include('../includes/usersPartials/userEnd.ejs') %>

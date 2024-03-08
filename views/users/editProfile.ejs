@@ -92,6 +92,9 @@ let lettersOnlyRegex = /^[A-Za-z\s]*$/;
    if(!lettersOnlyRegex.test(firstnameVal)){
     isError=true;
     setError(firstname,'Invalid Entry');
+  }else if(firstnameVal === ''){
+    setError(firstname,'This Field Cannot be Empty')
+    isError = true
   }else{
     setError(firstname,'');
   }
@@ -99,6 +102,9 @@ let lettersOnlyRegex = /^[A-Za-z\s]*$/;
    if(!lettersOnlyRegex.test(lastnameVal)){
     isError=true;
     setError(lastname,'Invalid Entry');
+  }else if(lastnameVal === ''){
+    setError(lastname,'This Field Cannot be Empty')
+    isError = true
   }else{
     setError(lastname,'');
   }
@@ -107,7 +113,11 @@ let lettersOnlyRegex = /^[A-Za-z\s]*$/;
    if(!mobileRegex.test(phoneVal)){
     isError = true;
     setError(phone,'Invalid Number');
-  }else{
+  }else if(phoneVal === ''){
+    isError = true
+    setError(phone,'This Field Cannot be Empty')
+  }
+  else{
     setError(phone,'');
   }
 
@@ -115,6 +125,9 @@ let lettersOnlyRegex = /^[A-Za-z\s]*$/;
   if(!emailRegex.test(emailVal)){
     isError = true
     setError(email,'Invalid Email');
+  }else if(emailVal === ''){
+    setError(email,'This Field Cannot be Empty');
+    isError = true
   }else{
     setError(email,'');
   }

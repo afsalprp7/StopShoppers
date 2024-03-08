@@ -246,6 +246,7 @@ module.exports = {
   doAddProduct: async (req, res) => {
     try {
       const data = req.body;
+      const pName = data.productName.toLowerCase();
       const color = req.body.color.toLowerCase();
       const images = [];
       for (let image of req.files) {
@@ -262,11 +263,11 @@ module.exports = {
       if (isExists) {
         if (isExists.isDeleted === true) {
           await productModel.updateOne(
-            { productName: data.productName, color: data.color },
+            { productName: pName, color: data.color },
             {
               $set: {
                 isDeleted: false,
-                productName: data.productName,
+                productName: pName,
                 productPrice: data.productPrice,
                 category: category._id,
                 userType: data.userType,
@@ -296,7 +297,7 @@ module.exports = {
         }
       } else {
         await productModel.collection.insertOne({
-          productName: data.productName,
+          productName: pName,
           productPrice: data.productPrice,
           category: category._id,
           userType: data.userType,
@@ -335,6 +336,7 @@ module.exports = {
         res.redirect('/admin')
       }
       const editData = req.body;
+      console.log(editData);
       const id = req.params.id;
       const product = await productModel.findOne({ _id: id });
       const productName = req.body.productName.toLowerCase();
@@ -375,7 +377,7 @@ module.exports = {
                     ? editData.productDescription
                     : undefined,
                 category:
-                  editData.category !== "" ? editData.category : undefined,
+                  editData.category !== "" ? editData.category : new ObjectId(product.category) ,
                 color:
                   editData.color !== ""
                     ? editData.color.toLowerCase()

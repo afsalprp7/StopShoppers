@@ -5,7 +5,7 @@ const shopController = require('../controller/shopController');
 const {validateUser} = require('../middleware/authMiddleware');
 
 
-
+router.get('/',shopController.getLandingPage);
 router.get('/home',validateUser,shopController.getHomePage);
 router.get('/productDetail/:id',shopController.getProductDetailpage);
 
@@ -24,4 +24,12 @@ router.get('/editProfile/:id',shopController.getEditProfilePage);
 router.patch('/editProfile/:id',shopController.doPatchEditProfile);
 
 router.post('/searchProduct',shopController.searchProductHome);
+
+
+
+
+router.get('/shopPage',shopController.getShopPage);
+router.get('/userLogout',shopController.userLogout);
+router.get('/cartPage',shopController.getCartPage);
+router.post('/addToCart/:id',shopController.AddToCartpage);
 module.exports = router;
