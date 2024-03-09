@@ -5,45 +5,22 @@ const mongoose = require("mongoose");
 const categoryModel = require("../models/categoryModel");
 const cartModel = require('../models/cartModel');
 const { ObjectId } = require("mongodb");
+const jwt = require('jsonwebtoken');
 module.exports = {
 
-  getLandingPage :async (req,res) =>{
-    try{
-       // Pagination parameters
-       const page = req.query.page ? parseInt(req.query.page) : 1;
-       const limit = req.query.limit ? parseInt(req.query.limit) : 8;
- 
-       // Calculate skip
-       const skip = (page - 1) * limit;
- 
-       // Fetch products with pagination
-       const products = await productModel
-         .find({ isDeleted: false })
-         .skip(skip)
-         .limit(limit);
- 
-       // Count total number of products (for pagination)
-       const totalCount = await productModel.countDocuments({
-         isDeleted: false,
-       });
-      res.render('users/userHome',{
-      title : 'Home',
-      user : req.session.user ? req.session.user : false,
-      allProducts : products,
-      pagination: {
-        currentPage: page,
-        totalPages: Math.ceil(totalCount / limit),
-        totalItems: totalCount,
-      }
 
-    });
-    }catch(error){
-      console.log(error);
-    }
-
-  },
   getHomePage: async (req, res) => {
     try {
+      const token = req.cookies.UserToken;
+       
+       let user ;
+       if(token){
+         const data = jwt.verify(token,"secretKeyUser");
+         user = data.user
+         
+       }else{
+         user = false
+       }
       // Pagination parameters
       const page = req.query.page ? parseInt(req.query.page) : 1;
       const limit = req.query.limit ? parseInt(req.query.limit) : 8;
@@ -66,7 +43,7 @@ module.exports = {
       res.render("users/userHome", {
         allProducts: products,
         title: "Home",
-        user : req.session.user ? req.session.user : false,
+        user : user,
 
         pagination: {
           currentPage: page,
@@ -80,6 +57,16 @@ module.exports = {
   },
 
   getProductDetailpage: async (req, res) => {
+    const token = req.cookies.UserToken;
+      
+       let user ;
+       if(token){
+         const data = jwt.verify(token,"secretKeyUser");
+         user = data.user
+         
+       }else{
+         user = false
+       }
     const id = req.params.id;
     const allProducts = await productModel.collection.find({
       _id: { $ne: id },
@@ -92,12 +79,22 @@ module.exports = {
       title: "Product Detail",
       product: productInfo,
       allProducts: allProducts,
-      user : req.session.user ? req.session.user : false,
+      user : user,
     });
   },
 
   getUserProfilePage: async (req, res) => {
     try {
+      const token = req.cookies.UserToken;
+      //  console.log(token);
+       let user ;
+       if(token){
+         const data = jwt.verify(token,"secretKeyUser");
+         user = data.user
+        //  console.log(user);
+       }else{
+         user = false
+       }
       const Id = req.params.id;
       const userId = new mongoose.Types.ObjectId(Id);
       console.log(userId);
@@ -126,7 +123,7 @@ module.exports = {
       res.render("users/userProfile", {
         title: "User Profile",
         userInfo: userDetails,
-        user : req.session.user ? req.session.user : false,
+        user : user,
         userAddress: userAddress,
       });
     } catch (error) {
@@ -135,10 +132,21 @@ module.exports = {
   },
 
   getAddAddressPage: (req, res) => {
-    const id = req.params.id;
+    
+    const token = req.cookies.UserToken;
+      //  console.log(token);
+       let user ;
+       if(token){
+         const data = jwt.verify(token,"secretKeyUser");
+         user = data.user
+        //  console.log(user);
+       }else{
+         user = false
+       }
+       const id = req.params.id;
     res.render("users/addAddress", {
       title: "Add Address",
-      user : req.session.user ? req.session.user : false,
+      user : user,
       userid: id,
     });
   },
@@ -172,6 +180,17 @@ module.exports = {
 
   getEditAddress: async (req, res) => {
     try {
+     
+      const token = req.cookies.UserToken;
+      // console.log(token);
+      let user ;
+      if(token){
+        const data = jwt.verify(token,"secretKeyUser");
+        user = data.user
+        // console.log(user);
+      }else{
+        user = false
+      }
       const id = req.params.id;
       const userid = req.query.userId;
       console.log(userid);
@@ -181,7 +200,7 @@ module.exports = {
         title: "Edit Address",
         addressDetails,
         userid,
-        user : req.session.user ? req.session.user : false,
+        user : user,
       });
     } catch (error) {
       console.log(error);
@@ -259,12 +278,22 @@ module.exports = {
 
   getEditProfilePage: async (req, res) => {
     try {
+      const token = req.cookies.UserToken;
+      // console.log(token);
+      let user ;
+      if(token){
+        const data = jwt.verify(token,"secretKeyUser");
+        user = data.user
+        // console.log(user);
+      }else{
+        user = false
+      }
       const userId = req.params.id;
-      const user = await userModel.findOne({ _id: userId });
+      const userdet = await userModel.findOne({ _id: userId });
       res.render("users/editProfile", {
         title: "Edit Profile",
-        user : req.session.user ? req.session.user : false,
-        userDetails: user,
+        user : user,
+        userDetails: userdet,
       });
     } catch (error) {
       console.log(error);
@@ -300,7 +329,12 @@ module.exports = {
       const string = req.body.string.toLowerCase();
 
       if (string !== "") {
-        const result = await productModel.find({ productName: string });
+        const result = await productModel.find({ $or:[
+          {productName:{$regex : string, $options :'i'}},
+          {description : {$regex : string,$options : 'i'}}
+        ] });
+
+        
 
         if (result.length !== 0) {
           res.json({
@@ -328,6 +362,7 @@ module.exports = {
           result: products,
         });
       }
+
     } catch (error) {
       console.log(error);
     }
@@ -336,6 +371,16 @@ module.exports = {
 
   getShopPage : async(req,res)=>{
     try{
+      const token = req.cookies.UserToken;
+      // console.log(token);
+      let user ;
+      if(token){
+        const data = jwt.verify(token,"secretKeyUser");
+        user = data.user
+        // console.log(user);
+      }else{
+        user = false
+      }
       const categories = await categoryModel.find({
         isDeleted : false   
        });
@@ -344,7 +389,7 @@ module.exports = {
       res.render('users/shopPage',{
         title : 'Shop',
         allProducts : products,
-        user : req.session.user ? req.session.user : false,
+        user : user,
         category : categories
       })
 
@@ -360,12 +405,52 @@ module.exports = {
 
 getCartPage : async(req,res)=>{
   try{
+    const token = req.cookies.UserToken;
+    
+    let user ;
+    if(token){
+      const data = jwt.verify(token,"secretKeyUser");
+      user = data.user
+    }else{
+      user = false
+    }
     const cart = await cartModel.find();
+    const productDetails = await cartModel.aggregate([{$match:{userId : new ObjectId(user._id)}},{$unwind : "$products"},
+    {$lookup:{
+      from : "products",
+      localField :"products.productId",
+      foreignField : "_id",
+      as: "productDetails"
+    }},{$unwind: "$productDetails"},
+  ]);
+
+
+   // Calculate the total price for each product in the cart
+  productDetails.forEach(cartItem => {
+      const quantity = cartItem.products.quantity;
+      const price = cartItem.productDetails.productPrice;
+      console.log("Quantity:", quantity);
+      console.log("Price:", price);
+      if (isNaN(quantity) || isNaN(price)) {
+        console.log("Error: Quantity or price is not a number");
+        cartItem.totalPrice = "Not a Number";
+      } else {
+        cartItem.totalPrice = quantity * price;
+      }
+    });
+  const grandTotal = productDetails.reduce((total, item) => {
+    return total + item.totalPrice;
+  }, 0);
+  console.log(grandTotal);
+  
+    
+    // console.log(productDetails);
       res.render('users/cartPage',
       {
       title : 'Cart',
-      user : req.session.user ? req.session.user : false,
-      cart 
+      user : user,
+      carts : productDetails,
+      grandTotal
     })
   }catch(error){
     console.log(error);
@@ -373,10 +458,9 @@ getCartPage : async(req,res)=>{
 },
 
 
-AddToCartpage : async(req,res)=>{
-  
+AddToCart : async(req,res)=>{
     try{
-      if(!req.cookies.UserToken || !req.session.user){
+      if(!req.cookies.UserToken){
         return res.redirect('/login')
       }else{
       let quantity = 1;
@@ -391,33 +475,118 @@ AddToCartpage : async(req,res)=>{
 
       const product = await productModel.findOne({_id : productid});
       const existingCart = await cartModel.findOne({ userId: userId });
+      console.log(existingCart);
       if(existingCart){
-       existingCart.products.forEach(async(obj)=>{
-        if(obj.productId === productid){
-          console.log(obj.productId,productid);
+        console.log('first');
 
+          const pExists = await cartModel.findOne({
+            "products.productId" : product._id,
+            "products.color" : product.color,
+            "products.size" : body.size
+          })
+          
+          
+         if(pExists){
+          const pId = product._id
+          const index = pExists.products.findIndex((product) => {
+            return (
+              product.productId.equals(new ObjectId(pId)) &&
+              product.size === body.size
+            );
+          });
+          console.log(index);
+          console.log('quantity');
+          await cartModel.updateOne({userId : userId},{
+            $inc:{
+              [`products.${index}.quantity`] : 1
+            }
+          });  
         }else{
-          await cartModel.updateOne({_id : existingCart._id},{products : {$addToSet : {
-            productId : productid ,
+          console.log('fourth');
+          await cartModel.updateOne({userId : userId},{$push: {products : {
+            productId : product._id,
             quantity : quantity,
             color : product.color,
             size : body.size
           }}})
         }
-
-       })
-
-        
       }else{
-        await cartModel.collection.insertOne({
-          userId : userId,
-          products : 
-          {productId: product._id,color: product.color,quantity: quantity,size: body.size}
-        })
+        await cartModel.updateOne({userId : userId}, 
+          {$push :{products :{  productId: product._id,color: product.color,quantity: quantity,size: body.size}}},{upsert : true})
       }
       res.redirect('/cartPage');
       }
       
+    }catch(error){
+      console.log(error);
+    }
+
+  },
+
+  cartUpdateFetch : async(req,res)=>{
+   
+
+  try {
+    const { productId, userId } = req.params;
+    const { quantity, size } = req.body;
+    console.log(req.body);
+    // Find the cart item 
+    let cartItem = await cartModel.findOne({ userId: userId, 'products.productId': productId });
+    // console.log(cartItem);
+
+    if (!cartItem) {
+      return res.status(404).json({ success: false, message: 'Cart item not found' });
+    }
+
+    // Update the quantity of the product in the cart
+    const productIndex = cartItem.products.findIndex((product) => {
+      return(
+        product.productId.equals(new ObjectId(productId)) &&
+              product.size === size
+      );
+         });
+      
+      
+    // console.log();
+    console.log(productIndex);
+    cartItem.products[productIndex].quantity = quantity;
+
+    // Save the updated cart item it is an mongoose function.
+    await cartItem.save();
+
+   
+  } catch (error) {
+    console.error(error);
+    
+  }
+
+
+  },
+
+  removeFromCart : async (req,res)=>{
+    try{
+
+      const {productId,size} = req.body;
+      const userId = req.params.id;
+      console.log(userId);
+      console.log(productId);
+      console.log(size);
+      const cartItem = await cartModel.findOne({userId : userId , "products.productId" : productId });
+      console.log(cartItem);
+      if(!cartItem){
+        console.log('Cart Item Not Found');
+      }
+
+     const index =  cartItem.products.findIndex((product)=>{
+        return(
+          product.productId.equals(new ObjectId(productId)) &&
+                product.size === size
+        );
+      })
+console.log(index);
+      cartItem.products.splice(index,1);
+      cartItem.save();
+
     }catch(error){
       console.log(error);
     }

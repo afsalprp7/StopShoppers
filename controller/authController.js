@@ -31,7 +31,7 @@ module.exports = {
           if (compare) {
             //setting the token
             const payload = {
-              email: data.email,
+              user
             };
             const token = jwt.sign(payload, "secretKeyUser", {
               expiresIn: "24h",
