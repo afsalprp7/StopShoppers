@@ -9,7 +9,7 @@ router.get('/',shopController.getHomePage);
 router.get('/home',validateUser,shopController.getHomePage);
 router.get('/productDetail/:id',shopController.getProductDetailpage);
 
-router.get('/userProfile/:id',shopController.getUserProfilePage);
+router.get('/userProfile/:id',validateUser,shopController.getUserProfilePage);
 
 
 router.get('/addAddress/:id',validateUser,shopController.getAddAddressPage);
@@ -28,10 +28,25 @@ router.post('/searchProduct',shopController.searchProductHome);
 
 
 
-router.get('/shopPage',shopController.getShopPage);
-router.get('/userLogout',shopController.userLogout);
+router.get('/shopPage',validateUser,shopController.getShopPage);
+router.get('/userLogout',validateUser,shopController.userLogout);
 router.get('/cartPage',shopController.getCartPage);
 router.post('/addToCart/:id',shopController.AddToCart);
 router.post('/updateCartQuantity/:productId/:userId',shopController.cartUpdateFetch);
-router.post('/removeFromCart/:id',shopController.removeFromCart)
+router.post('/removeFromCart/:id',shopController.removeFromCart);
+
+
+
+
+router.get('/checkoutPage',validateUser,shopController.getCheckoutPage);
+router.post('/addAddressCheckout/:id',shopController.doAddAddressCheckout);
+router.get('/checkoutDirect/:id',validateUser,shopController.checkoutDirectFromDetailPage);
+router.get('/checkoutFromCart/:id',validateUser,shopController.checkoutFromCart);
+router.post('/placeOrder/:id',shopController.doPlaceOrder);
+
+
+router.get('/orderDetails',validateUser,shopController.getOrderDetailpage);
+
+
+
 module.exports = router;

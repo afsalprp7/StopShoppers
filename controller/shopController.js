@@ -6,6 +6,8 @@ const categoryModel = require("../models/categoryModel");
 const cartModel = require('../models/cartModel');
 const { ObjectId } = require("mongodb");
 const jwt = require('jsonwebtoken');
+const flash = require("connect-flash");
+const orderModel = require('../models/orderModel');
 module.exports = {
 
 
@@ -99,27 +101,8 @@ module.exports = {
       const userId = new mongoose.Types.ObjectId(Id);
       console.log(userId);
       const userDetails = await userModel.findOne({ _id: userId });
-      const userAddress = await userModel.aggregate([
-        {
-          $match: {
-            _id: userId,
-          },
-        },
-
-        {
-          $lookup: {
-            from: "addresses",
-            localField: "address_id",
-            foreignField: "_id",
-            as: "userAddress",
-          },
-        },
-
-        {
-          $unwind: "$userAddress", //unwinding the created array.
-        },
-      ]);
-
+       const userAddress = await addressModel.find({userId : Id})
+       console.log(userAddress);
       res.render("users/userProfile", {
         title: "User Profile",
         userInfo: userDetails,
@@ -157,6 +140,7 @@ module.exports = {
       console.log(id);
       const data = req.body;
       const result = await addressModel.collection.insertOne({
+        userId : new ObjectId(id),
         firstname: data.firstname,
         lastname: data.lastname,
         address: data.address, //street/home address
@@ -168,10 +152,10 @@ module.exports = {
         phone: data.phone,
       });
       console.log(result);
-      await userModel.updateOne(
-        { _id: id },
-        { $addToSet: { address_id: result.insertedId } }
-      );
+      // await userModel.updateOne(
+      //   { _id: id },
+      //   { $addToSet: { address_id: result.insertedId } }
+      // );
       res.redirect(`/userProfile/${id}`);
     } catch (error) {
       console.log(error);
@@ -240,7 +224,9 @@ module.exports = {
     try {
       const id = req.params.id;
       const userId = req.query.userId;
+      
       await addressModel.deleteOne({ _id: id });
+     
       res.redirect(`/userProfile/${userId}`);
     } catch (error) {
       console.log(error);
@@ -251,7 +237,7 @@ module.exports = {
     try {
       const id = req.params.id;
       const userid = req.query.userId;
-      const primaryExists = await addressModel.findOne({ isPrimary: true });
+      const primaryExists = await addressModel.findOne({ isPrimary: true });//
       console.log(id);
       if (primaryExists) {
         console.log("exists");
@@ -565,6 +551,10 @@ AddToCart : async(req,res)=>{
 
   removeFromCart : async (req,res)=>{
     try{
+      req.session.productInfo = '';
+
+      req.session.productDetails ='';
+      req.session.grandTotal = '' ;
 
       const {productId,size} = req.body;
       const userId = req.params.id;
@@ -592,6 +582,191 @@ console.log(index);
     }
 
   },
+
+  getCheckoutPage : async(req,res)=>{
+    try{
+      const token = req.cookies.UserToken;
+      let user ;
+      if(token){
+        const data = jwt.verify(token,"secretKeyUser");
+        user = data.user
+      }else{
+        user = false
+      }
+      // console.log(user._id);
+      //function route starts
+      
+      
+      // console.log(products);
+      const addressPrimary = await addressModel.findOne({
+      userId : user._id,
+      isPrimary : true
+     });
+    
+
+     console.log(req.flash('productDetails'));
+     console.log(req.flash('grandTotal'));
+
+      res.render('users/checkoutPage',{
+        title : 'Checkout',
+        user : user,
+        addressPrimary,
+        grandTotal : req.session.grandTotal ? req.session.grandTotal : false,
+        cartProducts : req.session.productDetails ? req.session.productDetails : false,
+        productInfo : req.session.productInfo ? req.session.productInfo : false
+
+      });
+
+
+    }catch(error){
+      console.log(error);
+
+    }
+
+  },
+
+  doAddAddressCheckout : async(req,res)=>{
+    try{
+      const data = req.body
+      const id = req.params.id
+      console.log(id);
+       const result = await addressModel.collection.insertOne({
+        userId : new ObjectId(id),
+        firstname: data.firstname,
+        lastname: data.lastname,
+        address: data.address, //street/home address
+        state: data.state,
+        district: data.district,
+        city: data.city,
+        locality: data.locality,
+        postalcode: data.postalCode,
+        phone: data.phone,
+      });
+      
+      const primaryExists = await addressModel.findOne({ userId : new ObjectId(id),isPrimary:true});
+      console.log(primaryExists);
+      if(primaryExists){
+        await addressModel.updateOne({ _id : primaryExists._id},{$set :{isPrimary : false}});
+        await addressModel.updateOne({ _id : result.insertedId },{$set :{isPrimary : true}});
+        res.json('success');
+      }else{
+        await addressModel.updateOne({ _id : result.insertedId },{$set :{isPrimary : true}});
+        res.json('success');
+      }
+      
+    }catch(error){
+      console.log(error);
+    }
+
+  },
+
+  checkoutDirectFromDetailPage : async(req,res)=>{
+    try{
+      const productId = req.params.id 
+      const size = req.query.size;
+      
+      const productInfo = await productModel.aggregate([
+        { $match: { _id :new ObjectId(productId)  } },{$unwind : "$sizes"},{$match:{sizes : size}}
+      ]);
+      
+      
+      console.log(productInfo);
+      
+      req.session.productDetails = '';
+     req.session.grandTotal = '';
+      req.session.productInfo = productInfo
+      res.redirect('/checkoutPage');
+    }catch(error){
+      console.log(error);
+    }
+
+  },
+
+  checkoutFromCart : async(req,res)=>{
+    try{
+      const userId = req.params.id
+      const productDetails = await cartModel.aggregate([{$match:{userId : new ObjectId(userId)}},{$unwind : "$products"},
+      {$lookup:{
+        from : "products",
+        localField :"products.productId",
+        foreignField : "_id",
+        as: "productDetails"
+      }},{$unwind: "$productDetails"},
+    ]);
+       // console.log(addressPrimary);
+ 
+       productDetails.forEach(cartItem => {
+         const quantity = cartItem.products.quantity;
+         const price = cartItem.productDetails.productPrice;
+         console.log("Quantity:", quantity);
+         console.log("Price:", price);
+         if (isNaN(quantity) || isNaN(price)) {
+           console.log("Error: Quantity or price is not a number");
+           cartItem.totalPrice = "Not a Number";
+         } else {
+           cartItem.totalPrice = quantity * price;
+         }
+       });
+     const grandTotal = productDetails.reduce((total, item) => {
+       return total + item.totalPrice;
+     }, 0);
+
+    
+     req.session.productInfo = '';
+
+     req.session.productDetails = productDetails
+     req.session.grandTotal = grandTotal
+     res.redirect('/checkoutPage');
+     
+
+
+    }catch(error){
+      console.log(error);
+    }
+
+  },
+
+
+  doPlaceOrder : async(req,res)=>{
+    try{
+      const databody = req.body
+      const userId = req.params.id;
+
+      console.log(databody);
+      const deliveryAddress = await addressModel.findOne({_id : userId,isPrimary : true});
+
+      res.redirect('/orderDetails')
+    }catch(error){
+      console.log(error);
+    }
+  },
+
+getOrderDetailpage : async(req,res)=>{
+  try{
+    const token = req.cookies.UserToken;
+      let user ;
+      if(token){
+        const data = jwt.verify(token,"secretKeyUser");
+        user = data.user
+      }else{
+        user = false
+      }
+
+
+      res.render('users/orderDetailsPage',{
+        title : 'Order Details',
+        user,
+
+      })
+  }catch(error){
+    console.log(error);
+  }
+
+},
+
+
+
+
 
   userLogout : (req,res)=>{
     delete req.session.user

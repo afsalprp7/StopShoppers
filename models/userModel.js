@@ -36,7 +36,7 @@ const userSchema = new mongoose.Schema({
 
   address_id:{
     type : Array,
-    required : true
+    
   },
   
   wishlist_id:{

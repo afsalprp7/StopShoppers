@@ -80,10 +80,13 @@ Home/Product Details
                Add to Cart 
               <i class="fa-solid fa-cart-shopping mt-1 ms-2"></i></button>          
             </form>
-            <button style="background-color: rgba(255, 255, 255, 0.795);border:1px solid black;color: black;width: 45%;" type="button" class="btn btn-primary ">
-              <a style="color: black;" href=""> BUY NOW
-            </button>          
-          </a>
+            <a id="buy-link" style="color: black;" href="#">
+              <div>
+            <button id="buy-btn" style="background-color: rgba(255, 255, 255, 0.795);border:1px solid black;color: black;" type="button" class="btn  px-5">
+              BUY NOW
+            </button> 
+          </div> 
+          </a>        
         </div>
         </div>
       </div>
@@ -144,7 +147,7 @@ form.addEventListener('submit',(e)=>{
       break;
     }
   }
- 
+ console.log(selectedSize);
   if (!selectedSize) {
     Swal.fire("Please Select a Size!");
     return;
@@ -153,5 +156,29 @@ form.addEventListener('submit',(e)=>{
   }
 
 });
+
+const buyNowLink = document.getElementById('buy-link');
+  const buyButton = document.getElementById('buy-btn');
+
+  // Add click event listener to the button
+  buyButton.addEventListener('click', function() {
+    // Set the href attribute of the anchor element
+    const sizeRadioButtons = document.getElementsByName('size');
+    let selectedSize;
+  for (let i = 0; i < sizeRadioButtons.length; i++) {
+    if (sizeRadioButtons[i].checked) {
+      selectedSize = sizeRadioButtons[i].value;
+      break;
+    }
+  }
+  if (!selectedSize) {
+    Swal.fire("Please Select a Size!");
+    return;
+  }else{
+    const productId = "<%=product._id%>"; // Replace with actual product ID
+    console.log(productId);
+      buyNowLink.setAttribute('href', `/checkoutDirect/${productId}?size=${selectedSize}`);
+    }
+  });
 </script>
 <%- include('../includes/usersPartials/userEnd.ejs') %>

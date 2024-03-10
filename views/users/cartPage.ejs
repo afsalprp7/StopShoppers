@@ -6,7 +6,13 @@
   }
 </style>
 <div class="p-5 container-main">
+  
   <div class="container-fluid">
+    <div class="d-flex mb-3">
+      <i style="font-size: x-large;" class="fa-solid fa-cart-arrow-down"></i>
+      <h4 class="ms-3">My Cart</h4>
+    </div>
+    
     <div class="row">
       <div class="col-md-8">
         <% carts.forEach((item)=>{%>
@@ -38,7 +44,7 @@
                     <button
                       style="
                         background: none;
-                        background-color: #717fe0;
+                        background-color: #b04fff;
                         border: none;
                         color: white;
                       "
@@ -58,7 +64,7 @@
                     <button
                       style="
                         background: none;
-                        background-color: #717fe0;
+                        background-color: #b04fff;
                         border: none;
                         color: white;
                       "
@@ -77,7 +83,7 @@
                 
                   <button
                     type="submit"
-                    style="background-color: #717fe0; color: white"
+                    style="background-color: #b04fff; color: white"
                     class="btn remove-button"
                     data-size="<%= item.products.size%>" 
                     data-productid="<%= item.products.productId %>" 
@@ -94,11 +100,11 @@
       </div>
       <div class="col-md-4">
         <div style="background-color: white;
-        box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.119);" class="border rounded p-3 shadow-sm">
+        box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.119);" class="border rounded p-3 shadow">
           <h4>Cart Total</h4>
           <%carts.forEach((item)=>{%>
             <div class="d-flex mt-3 border-bottom">
-              <div style="flex: 0.5" class="mb-3">
+              <div style="flex: 0.5;width: fit-content;" class="mb-3">
                 <strong style="text-transform: capitalize;"><%=item.productDetails.productName%> :</strong>
               </div>
               <strong class="text-danger ms-5">₹<%=item.totalPrice%></strong>
@@ -107,11 +113,12 @@
           
           <div class="mt-3 d-flex">
             <strong style="flex: 0.5">Grand Total :</strong>
-            <strong class="text-danger">₹<%=grandTotal%></strong>
+            <strong class="text-danger ms-5">₹<%=grandTotal%></strong>
           </div>
           <div class="d-flex justify-content-center">
-            <button style="padding-left: 10%;padding-right: 10%;
-            background-color: #717fe0;color: white;" class="btn  mt-5">Checkout</button>
+            
+            <a href="/checkoutFromCart/<%=user._id%>"><button style="padding-left: 10%;padding-right: 10%;
+            background-color: #b04fff;color: white;" class="btn px-5 mt-5">Proceed To Checkout</button></a>
           </div>
         </div>
       </div>

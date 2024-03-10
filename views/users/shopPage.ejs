@@ -12,7 +12,6 @@
  .a-tag{
   text-decoration: none;
   color: black;
-  font-size: larger;
  }
  .drop-content-div:hover{
   background-color: rgb(245, 245, 245);
@@ -26,14 +25,14 @@
     <div  class="col-md-3 col-sm-3 col-xs-3">
       <div style="position: static;" class="p-2">
        <div class="drop mb-1">
-          <div class="btn  d-flex justify-content-between list border border-2 dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false"> 
+          <div class="btn shadow-sm  d-flex justify-content-between list border border-2 dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false"> 
            <div>
-            <i  style="color: #717fe0;" class="fa-solid fa-layer-group"></i>
+            <i  style="color: #b04fff;" class="fa-solid fa-layer-group"></i>
             <strong class="ms-4">Categories</strong> 
            </div>
            
           </div>
-          <div style="display: none;" class="border border-2 drop-content mt-1">
+          <div style="display: none;" class="border shadow-sm  border-2 drop-content mt-1">
             <% category.forEach((category)=>{ %>
               <a class="a-tag" href=""><div style="text-transform: capitalize;" class="p-3 drop-content-div"><%=category.categoryName%></div></a>
             <%})%>
@@ -46,14 +45,14 @@
 
 
         <div class="drop mb-1">
-          <div class="btn  d-flex justify-content-between list border border-2 dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false"> 
+          <div class="btn shadow-sm   d-flex justify-content-between list border border-2 dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false"> 
           <div>
-            <i  style="color: #717fe0;" class="fa-solid fa-filter"></i>
+            <i  style="color: #b04fff;" class="fa-solid fa-filter"></i>
             <strong class="ms-4">Filter</strong>
           </div>
             
           </div>
-          <div style="display: none;" class="border border-2 drop-content mt-1">
+          <div style="display: none;" class="border shadow-sm  border-2 drop-content mt-1">
             
             <a class="a-tag" href=""><div class="p-3 drop-content-div">fdfsd</div></a>
 
@@ -65,14 +64,14 @@
           </div>
         </div>           
         <div class="drop mb-1">
-          <div class="btn  d-flex justify-content-between list border border-2 dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false"> 
+          <div class="btn shadow-sm   d-flex justify-content-between list border border-2 dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false"> 
            <div>
-            <i  style="color: #717fe0;" class="fa-solid fa-palette"></i>
+            <i  style="color: #b04fff;" class="fa-solid fa-palette"></i>
             <strong class="ms-4">Colors</strong> 
            </div>
             
           </div>
-          <div style="display: none;" class="border border-2 drop-content mt-1">
+          <div style="display: none;" class="border shadow-sm  border-2 drop-content mt-1">
            
             <a class="a-tag" href=""><div class="p-3 drop-content-div">
               Blue</div></a>
@@ -93,7 +92,7 @@
         
       </div>
     </div>
-    <div class="col-md-9 col-sm-9 col-xs-9 border-start border-2">
+    <div class="col-md-9 col-sm-9 col-xs-9">
       <div class="row isotope-grid productList">
         <% allProducts.forEach((item)=>{ %>
         <div class="col-sm-6 col-md-4 col-lg-3 p-b-35 isotope-item women">

@@ -134,27 +134,27 @@
           <div style="width: fit-content;box-shadow: 0px 0px 5px 0 rgba(0, 0, 0, 0.5);
           " class="border rounded-3 p-3 col-md-6 mt-3">
               <p style="font-size: large;line-height: 5px;">
-                <%= data.userAddress.address %>,
-                <%= data.userAddress.locality %>,
+                <%= data.address %>,
+                <%= data.locality %>,
                 </p>
               <p style="font-size: large;" >
-                <%= data.userAddress.city %>(city),
-                <%= data.userAddress.district %>(dist),
-                <%= data.userAddress.state %>(state),
-                <%= data.userAddress.postalcode %>(Pin),
-                <%= data.userAddress.phone %>(PH).
+                <%= data.city %>(city),
+                <%= data.district %>(dist),
+                <%= data.state %>(state),
+                <%= data.postalcode %>(Pin),
+                <%= data.phone %>(PH).
               </p>
               <div class="d-flex justify-content-between">
-                <form id="radioForm" action="/setPrimary/<%=data.userAddress._id%>?_method=PATCH&userId=<%= data._id %>" method="post">
+                <form id="radioForm" action="/setPrimary/<%=data._id%>?_method=PATCH&userId=<%= data.userId %>" method="post">
                 <div style="cursor: pointer;" class="d-flex justify-content-start">
-                  <input   id="radio" style="width: 10px;" type="radio" <%= data.userAddress.isPrimary ? 'checked' : '' %>><p class="ms-1">Primary</p>
+                  <input   id="radio" style="width: 10px;" type="radio" <%= data.isPrimary ? 'checked' : '' %>><p class="ms-1">Primary</p>
                 </div>
               </form>
                 <div  class="d-flex justify-content-end">
-                    <form id="form-delete" style="display: block;" action="/deleteAddress/<%= data.userAddress._id %>?_method=DELETE&userId=<%= data._id %>" method="post">
+                    <form id="form-delete" style="display: block;" action="/deleteAddress/<%= data._id %>?_method=DELETE&userId=<%= data.userId %>" method="post">
                       <button class="btn text-danger mt-2 btn-delete">Delete</button>
                     </form>
-                  <a href="/editAddress/<%= data.userAddress._id %>?userId=<%= data._id%>">
+                  <a href="/editAddress/<%= data._id %>?userId=<%= data.userId%>">
                     <p>Edit</p>
                   </a>
                 </div>

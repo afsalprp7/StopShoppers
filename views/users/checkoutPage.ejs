@@ -1,0 +1,422 @@
+<%- include('../includes/usersPartials/userHead.ejs') %>
+
+<style>
+  .price-tag {
+    color: rgb(255, 45, 45);
+  }
+  .container-main {
+    margin-top: 6%;
+  }
+  .form-control:focus {
+    box-shadow: none;
+  }
+  .form-input {
+    border: none;
+    border-radius: 0;
+    border-bottom: 2px solid #b04fff7c;
+  }
+  .form-input-home {
+    width: 100%;
+  }
+  .container-form {
+    display: none;
+    transition: all 0.3s ease;
+  }
+  .p-div {
+    line-height: 40px;
+  }
+</style>
+<div class="container container-main">
+  <h4 class="mb-2">Billing Details</h4>
+  <div class="row">
+    <div class="col-md-7 mb-5">
+      <div class="mt-2 border rounded border-2 shadow p-3">
+        <h4>
+          Delivery Address
+          <small class="text-warning" style="font-size: xx-small"
+            >(Address that set as primary)</small
+          >
+        </h4>
+        <%if(addressPrimary){%>
+        <div class="ms-1 p-div mt-3">
+          <p>
+            Name : <%=addressPrimary.firstname%> <%=addressPrimary.lastname%>
+          </p>
+          <p>Street Address : <%=addressPrimary.address%></p>
+          <p>
+            State,District : <%=addressPrimary.state%>,
+            <%=addressPrimary.district%>
+          </p>
+          <p>
+            City,Locality : <%=addressPrimary.city%>,
+            <%=addressPrimary.locality%>
+          </p>
+          <p>PostalCode : <%=addressPrimary.postalcode%></p>
+          <p>Phone : <%=addressPrimary.phone%></p>
+        </div>
+        <%}%>
+        <div class="d-flex justify-content-end">
+          <button
+            style="background-color: #b04fff; color: #ffffff"
+            class="btn form-btn"
+          >
+            Add Address
+          </button>
+        </div>
+      </div>
+      <div class="container p-5 border rounded container-form mt-1 shadow">
+        <div><h4>Add Delivery Address</h4></div>
+        <form id="form" data-userid="<%=user._id%>">
+          <div class="row">
+            <div class="col-md-6 col-sm-6 mt-3">
+              <div>
+                <strong><label for="">Firstname</label></strong>
+                <input
+                  id="firstname"
+                  type="text"
+                  name="firstname"
+                  class="form-control p-3 mt-1 form-input"
+                  placeholder="Enter the firstname"
+                />
+                <p style="font-size: smaller" class="mt-2 text-danger warn"></p>
+              </div>
+            </div>
+            <div class="col-md-6 col-sm-6 mt-3">
+              <div>
+                <strong><label for="">Lastname</label></strong>
+
+                <input
+                  id="lastname"
+                  type="text"
+                  name="lastname"
+                  class="form-control p-3 mt-1 form-input"
+                  placeholder="Enter the lastname"
+                />
+                <p style="font-size: smaller" class="mt-2 text-danger warn"></p>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col mt-3">
+              <div>
+                <strong><label for="">Street Address</label></strong>
+
+                <input
+                  id="address"
+                  type="text"
+                  name="address"
+                  class="form-control p-3 mt-1 form-input"
+                  placeholder="Street/Home Address"
+                />
+                <p style="font-size: smaller" class="mt-2 text-danger warn"></p>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6 col-sm-6 mt-3">
+              <div>
+                <strong><label for="">State</label></strong>
+
+                <input
+                  id="state"
+                  type="text"
+                  name="state"
+                  class="form-control p-3 mt-1 form-input"
+                  placeholder="State"
+                />
+                <p style="font-size: smaller" class="mt-2 text-danger warn"></p>
+              </div>
+            </div>
+            <div class="col-md-6 col-sm-6 mt-3">
+              <div>
+                <strong><label for="">District</label></strong>
+                <input
+                  id="district"
+                  type="text"
+                  name="district"
+                  class="form-control p-3 mt-1 form-input"
+                  placeholder="Enter your District Name"
+                />
+                <p style="font-size: smaller" class="mt-2 text-danger warn"></p>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6 col-sm-6 mt-3">
+              <div>
+                <strong><label for="">City</label></strong>
+                <input
+                  id="city"
+                  type="text"
+                  name="city"
+                  class="form-control p-3 mt-1 form-input"
+                  placeholder="Enter your city"
+                />
+                <p style="font-size: smaller" class="mt-2 text-danger warn"></p>
+              </div>
+            </div>
+            <div class="col-md-6 col-sm-6 mt-3">
+              <div>
+                <strong><label for="">Locality</label></strong>
+
+                <input
+                  id="locality"
+                  type="text"
+                  name="locality"
+                  class="form-control p-3 mt-1 form-input"
+                  placeholder="Enter your locality"
+                />
+                <p style="font-size: smaller" class="mt-2 text-danger warn"></p>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6 col-sm-6 mt-3">
+              <div>
+                <strong><label for="">Post</label></strong>
+                <input
+                  id="postalCode"
+                  type="text"
+                  name="postalCode"
+                  class="form-control p-3 mt-1 form-input"
+                  placeholder="Enter your Postal Code"
+                />
+                <p style="font-size: smaller" class="mt-2 text-danger warn"></p>
+              </div>
+            </div>
+            <div class="col-md-6 col-sm-6 mt-3">
+              <div>
+                <strong><label for="">Phone No</label></strong>
+                <input
+                  id="phone"
+                  type="text"
+                  name="phone"
+                  class="form-control p-3 mt-1 form-input"
+                  placeholder="Enter your Phone Number"
+                />
+                <p style="font-size: smaller" class="mt-2 text-danger warn"></p>
+              </div>
+            </div>
+          </div>
+          <div class="d-flex justify-content-end">
+            <button
+              type="submit"
+              style="color: #ffffff; background-color: #b04fff"
+              class="btn px-4 py-1 mt-4"
+            >
+              Add Address
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div class="mt-4 border rounded border-2 shadow p-3">
+        <h4>Add Payment Details</h4>
+        <div style="display: inline-flex; align-items: baseline" class="mt-3">
+          <input id="cashOnDelivery" type="radio" class="mt-1 me-2" />
+          <label for="cashOnDelivery"><strong>Cash On Delivery</strong></label>
+        </div>
+      </div>
+    </div>
+
+    <!--column-->
+    <div class="col-md-5">
+      <div class="border shadow rounded p-4">
+        <h4>Add Coupon</h4>
+        <div class="mt-3">
+          <form action="">
+            <label for="">Coupon Code</label>
+            <input name="coupon" type="text" class="form-control" />
+            <button
+              type="submit"
+              style="color: #ffffff; background-color: #b04fff"
+              class="btn px-4 py-1 mt-3"
+            >
+              Add Coupon
+            </button>
+          </form>
+        </div>
+      </div>
+      <div class="border rounded p-4 mt-3 shadow mb-5">
+        <%if(cartProducts){%> <% cartProducts.forEach((item)=>{%>
+
+        <div
+          class="d-flex justify-content-between mb-3 align-items-center border-bottom"
+        >
+          <div class="d-block">
+            <div class="py-2 d-flex align-items-center">
+              <img
+                style="max-width: 40px"
+                src="/productImg/<%=item.productDetails.image[0]%>"
+                alt=""
+              />
+              <p class="ms-3">Qty : <%=item.products.quantity%></p>
+            </div>
+          </div>
+          <div>
+            <p>Size : <%=item.products.size%></p>
+          </div>
+          <div>
+            <p style="text-transform: capitalize">
+              <%=item.productDetails.productName%>
+            </p>
+          </div>
+          <div>
+            <p class="price-tag">₹<%=item.totalPrice%></p>
+          </div>
+        </div>
+        <% })%> <%}else if(productInfo){%>
+        <div
+          class="d-flex justify-content-between mb-3 align-items-center border-bottom"
+        >
+          <div class="d-block">
+            <div class="py-2 d-flex align-items-center">
+              <img
+                style="max-width: 40px"
+                src="/productImg/<%=productInfo[0].image[0]%>"
+                alt=""
+              />
+              <p class="ms-3">Qty : 1</p>
+            </div>
+          </div>
+          <div>
+            <p>Size : <%=productInfo[0].sizes%></p>
+          </div>
+          <div>
+            <p style="text-transform: capitalize">
+              <%=productInfo[0].productName%>
+            </p>
+          </div>
+          <div>
+            <p class="price-tag">₹<%=productInfo[0].productPrice%></p>
+          </div>
+        </div>
+        <%}%>
+        <!-- <div class="d-flex justify-content-between mb-3 align-items-center border-bottom ">
+              <div class="d-block">
+                  <div class="py-2">
+                      <img style="max-width: 40px;" src="/productImg/1709564003145back2.jpg" alt="">
+                  </div>
+              </div>
+              
+              <div>
+                  <p>product name </p>
+              </div>
+              <div>
+                  <p>₹price</p>
+              </div>
+          </div> -->
+
+        <h4>Order Summary</h4>
+        <div class="border-bottom p-div mt-3">
+          <%if(grandTotal){%>
+          <div class="d-flex justify-content-between">
+            <p>Subtotal</p>
+            <span class="price-tag">₹<%=grandTotal%></span>
+          </div>
+          <%}else if(productInfo){%>
+          <div class="d-flex justify-content-between">
+            <p>Subtotal</p>
+            <span class="price-tag">₹<%=productInfo[0].productPrice%></span>
+          </div>
+          <%}%>
+          <div class="d-flex justify-content-between">
+            <p>Discount</p>
+            <span class="price-tag">₹-/</span>
+          </div>
+          <div class="d-flex justify-content-between">
+            <p>Coupon</p>
+            <span class="price-tag">₹-/</span>
+          </div>
+          <div class="d-flex justify-content-between">
+            <p>Delivery</p>
+            <span class="price-tag">₹-/</span>
+          </div>
+        </div>
+        <div class="mt-2 d-flex justify-content-between">
+          <strong>Grand Total</strong>
+          <%if(grandTotal){%>
+          <strong class="price-tag">₹<%=grandTotal%></strong>
+          <%}else if(productInfo){%>
+          <strong class="price-tag">₹<%=productInfo[0].productPrice%></strong>
+          <%}%>
+        </div>
+        <small class="text-warning">(Inclusive of all taxes)</small>
+        <div class="d-flex justify-content-center mt-3">
+          <form id="placeOrder-form" action="" method="post">
+            <div>
+              <%if(productInfo){%>
+              <input
+                name="productName"
+                value="<%=productInfo[0].productName%>"
+                type="text"
+                hidden
+              />
+              <input
+                name="size"
+                value="<%=productInfo[0].sizes%>"
+                type="text"
+                hidden
+              />
+              <input
+                name="price"
+                value="<%=productInfo[0].productPrice%>"
+                type="text"
+                hidden
+              />
+              <%}else{%>
+              <input name="productName" value="fromCart" type="text" hidden />
+              <%}%>
+            </div>
+            <button
+              type="submit"
+              style="color: white; background-color: #b04fff"
+              class="btn px-5"
+            >
+              Place Order
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const placeOrderForm = document.getElementById("placeOrder-form");
+  const radioCashonDelivery = document.getElementById("cashOnDelivery");
+  const userId = "<%=user._id%>";
+  placeOrderForm.addEventListener("submit", (e) => {
+    if (!radioCashonDelivery.checked) {
+      e.preventDefault();
+      Swal.fire("Chose Payment method");
+    } else {
+      placeOrderForm.setAttribute(
+        "action",
+        `/placeOrder/${userId}?payMethod=Cash On Delivery`
+      );
+      placeOrderForm.submit();
+    }
+  });
+</script>
+
+<script>
+  const formBtn = document.querySelector(".form-btn");
+  formBtn.addEventListener("click", () => {
+    const form = document.querySelector(".container-form");
+
+    if (form.style.display === "block") {
+      form.style.display = "none";
+    } else {
+      form.style.display = "block";
+    }
+
+    if (formBtn.innerText === "Add Address") {
+      formBtn.innerText = "Close";
+    } else if (formBtn.innerText === "Close") {
+      formBtn.innerText = "Add Address";
+    }
+  });
+</script>
+<script src="/scripts/validation/checkoutPageV.js"></script>
+<%- include('../includes/usersPartials/userEnd.ejs') %>
