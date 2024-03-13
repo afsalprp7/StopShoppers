@@ -3,26 +3,35 @@ const userModel = require("../models/userModel");
 const addressModel = require("../models/addressModel");
 const mongoose = require("mongoose");
 const categoryModel = require("../models/categoryModel");
-const cartModel = require('../models/cartModel');
+const cartModel = require("../models/cartModel");
 const { ObjectId } = require("mongodb");
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
 const flash = require("connect-flash");
-const orderModel = require('../models/orderModel');
+const orderModel = require("../models/orderModel");
 module.exports = {
-
 
   getHomePage: async (req, res) => {
     try {
       const token = req.cookies.UserToken;
-       
-       let user ;
-       if(token){
-         const data = jwt.verify(token,"secretKeyUser");
-         user = data.user
-         
-       }else{
-         user = false
-       }
+
+      let user;
+      if (token) {
+        const data = jwt.verify(token, "secretKeyUser");
+        user = data.user;
+        const cartCount = await cartModel.aggregate([{
+          $group :{
+            _id : "$_id",
+            count : {$sum : 1}
+          }
+        },{$project :{
+          _id : 0,
+          count : 1
+        }}]);
+        // user.cartCount = cartCount
+        // console.log(user.cartCount);
+      } else {
+        user = false;
+      }
       // Pagination parameters
       const page = req.query.page ? parseInt(req.query.page) : 1;
       const limit = req.query.limit ? parseInt(req.query.limit) : 8;
@@ -45,7 +54,7 @@ module.exports = {
       res.render("users/userHome", {
         allProducts: products,
         title: "Home",
-        user : user,
+        user: user,
 
         pagination: {
           currentPage: page,
@@ -60,15 +69,14 @@ module.exports = {
 
   getProductDetailpage: async (req, res) => {
     const token = req.cookies.UserToken;
-      
-       let user ;
-       if(token){
-         const data = jwt.verify(token,"secretKeyUser");
-         user = data.user
-         
-       }else{
-         user = false
-       }
+
+    let user;
+    if (token) {
+      const data = jwt.verify(token, "secretKeyUser");
+      user = data.user;
+    } else {
+      user = false;
+    }
     const id = req.params.id;
     const allProducts = await productModel.collection.find({
       _id: { $ne: id },
@@ -76,12 +84,17 @@ module.exports = {
       isDeleted: false,
     });
     const productInfo = await productModel.findOne({ _id: id });
-
+    if(productInfo.quantity === 0){
+      req.session.detailpageError = true
+    }else{
+      req.session.detailpageError = false
+    }
     res.render("users/productDetailPage", {
       title: "Product Detail",
       product: productInfo,
       allProducts: allProducts,
-      user : user,
+      user: user,
+      error : req.session.detailpageError ? req.session.detailpageError : false
     });
   },
 
@@ -89,24 +102,24 @@ module.exports = {
     try {
       const token = req.cookies.UserToken;
       //  console.log(token);
-       let user ;
-       if(token){
-         const data = jwt.verify(token,"secretKeyUser");
-         user = data.user
+      let user;
+      if (token) {
+        const data = jwt.verify(token, "secretKeyUser");
+        user = data.user;
         //  console.log(user);
-       }else{
-         user = false
-       }
+      } else {
+        user = false;
+      }
       const Id = req.params.id;
       const userId = new mongoose.Types.ObjectId(Id);
       console.log(userId);
       const userDetails = await userModel.findOne({ _id: userId });
-       const userAddress = await addressModel.find({userId : Id})
-       console.log(userAddress);
+      const userAddress = await addressModel.find({ userId: Id });
+      console.log(userAddress);
       res.render("users/userProfile", {
         title: "User Profile",
         userInfo: userDetails,
-        user : user,
+        user: user,
         userAddress: userAddress,
       });
     } catch (error) {
@@ -115,21 +128,20 @@ module.exports = {
   },
 
   getAddAddressPage: (req, res) => {
-    
     const token = req.cookies.UserToken;
-      //  console.log(token);
-       let user ;
-       if(token){
-         const data = jwt.verify(token,"secretKeyUser");
-         user = data.user
-        //  console.log(user);
-       }else{
-         user = false
-       }
-       const id = req.params.id;
+    //  console.log(token);
+    let user;
+    if (token) {
+      const data = jwt.verify(token, "secretKeyUser");
+      user = data.user;
+      //  console.log(user);
+    } else {
+      user = false;
+    }
+    const id = req.params.id;
     res.render("users/addAddress", {
       title: "Add Address",
-      user : user,
+      user: user,
       userid: id,
     });
   },
@@ -140,7 +152,7 @@ module.exports = {
       console.log(id);
       const data = req.body;
       const result = await addressModel.collection.insertOne({
-        userId : new ObjectId(id),
+        userId: new ObjectId(id),
         firstname: data.firstname,
         lastname: data.lastname,
         address: data.address, //street/home address
@@ -164,16 +176,15 @@ module.exports = {
 
   getEditAddress: async (req, res) => {
     try {
-     
       const token = req.cookies.UserToken;
       // console.log(token);
-      let user ;
-      if(token){
-        const data = jwt.verify(token,"secretKeyUser");
-        user = data.user
+      let user;
+      if (token) {
+        const data = jwt.verify(token, "secretKeyUser");
+        user = data.user;
         // console.log(user);
-      }else{
-        user = false
+      } else {
+        user = false;
       }
       const id = req.params.id;
       const userid = req.query.userId;
@@ -184,7 +195,7 @@ module.exports = {
         title: "Edit Address",
         addressDetails,
         userid,
-        user : user,
+        user: user,
       });
     } catch (error) {
       console.log(error);
@@ -224,9 +235,9 @@ module.exports = {
     try {
       const id = req.params.id;
       const userId = req.query.userId;
-      
+
       await addressModel.deleteOne({ _id: id });
-     
+
       res.redirect(`/userProfile/${userId}`);
     } catch (error) {
       console.log(error);
@@ -237,7 +248,7 @@ module.exports = {
     try {
       const id = req.params.id;
       const userid = req.query.userId;
-      const primaryExists = await addressModel.findOne({ isPrimary: true });//
+      const primaryExists = await addressModel.findOne({ isPrimary: true }); //
       console.log(id);
       if (primaryExists) {
         console.log("exists");
@@ -266,19 +277,19 @@ module.exports = {
     try {
       const token = req.cookies.UserToken;
       // console.log(token);
-      let user ;
-      if(token){
-        const data = jwt.verify(token,"secretKeyUser");
-        user = data.user
+      let user;
+      if (token) {
+        const data = jwt.verify(token, "secretKeyUser");
+        user = data.user;
         // console.log(user);
-      }else{
-        user = false
+      } else {
+        user = false;
       }
       const userId = req.params.id;
       const userdet = await userModel.findOne({ _id: userId });
       res.render("users/editProfile", {
         title: "Edit Profile",
-        user : user,
+        user: user,
         userDetails: userdet,
       });
     } catch (error) {
@@ -315,12 +326,12 @@ module.exports = {
       const string = req.body.string.toLowerCase();
 
       if (string !== "") {
-        const result = await productModel.find({ $or:[
-          {productName:{$regex : string, $options :'i'}},
-          {description : {$regex : string,$options : 'i'}}
-        ] });
-
-        
+        const result = await productModel.find({
+          $or: [
+            { productName: { $regex: string, $options: "i" } },
+            { description: { $regex: string, $options: "i" } },
+          ],
+        });
 
         if (result.length !== 0) {
           res.json({
@@ -348,290 +359,297 @@ module.exports = {
           result: products,
         });
       }
-
     } catch (error) {
       console.log(error);
     }
   },
 
-
-  getShopPage : async(req,res)=>{
-    try{
+  getShopPage: async (req, res) => {
+    try {
       const token = req.cookies.UserToken;
       // console.log(token);
-      let user ;
-      if(token){
-        const data = jwt.verify(token,"secretKeyUser");
-        user = data.user
+      let user;
+      if (token) {
+        const data = jwt.verify(token, "secretKeyUser");
+        user = data.user;
         // console.log(user);
-      }else{
-        user = false
+      } else {
+        user = false;
       }
       const categories = await categoryModel.find({
-        isDeleted : false   
-       });
-       console.log(categories);
-      const products = await productModel.find({isDeleted : false});
-      res.render('users/shopPage',{
-        title : 'Shop',
-        allProducts : products,
-        user : user,
-        category : categories
-      })
-
-
-
-
-    }catch(error){
+        isDeleted: false,
+      });
+      console.log(categories);
+      const products = await productModel.find({ isDeleted: false });
+      res.render("users/shopPage", {
+        title: "Shop",
+        allProducts: products,
+        user: user,
+        category: categories,
+      });
+    } catch (error) {
       console.log(error);
     }
-
   },
 
+  getCartPage: async (req, res) => {
+    try {
+      const token = req.cookies.UserToken;
 
-getCartPage : async(req,res)=>{
-  try{
-    const token = req.cookies.UserToken;
-    
-    let user ;
-    if(token){
-      const data = jwt.verify(token,"secretKeyUser");
-      user = data.user
-    }else{
-      user = false
-    }
-    const cart = await cartModel.find();
-    const productDetails = await cartModel.aggregate([{$match:{userId : new ObjectId(user._id)}},{$unwind : "$products"},
-    {$lookup:{
-      from : "products",
-      localField :"products.productId",
-      foreignField : "_id",
-      as: "productDetails"
-    }},{$unwind: "$productDetails"},
-  ]);
-
-
-   // Calculate the total price for each product in the cart
-  productDetails.forEach(cartItem => {
-      const quantity = cartItem.products.quantity;
-      const price = cartItem.productDetails.productPrice;
-      console.log("Quantity:", quantity);
-      console.log("Price:", price);
-      if (isNaN(quantity) || isNaN(price)) {
-        console.log("Error: Quantity or price is not a number");
-        cartItem.totalPrice = "Not a Number";
+      let user;
+      if (token) {
+        const data = jwt.verify(token, "secretKeyUser");
+        user = data.user;
       } else {
-        cartItem.totalPrice = quantity * price;
+        user = false;
       }
-    });
-  const grandTotal = productDetails.reduce((total, item) => {
-    return total + item.totalPrice;
-  }, 0);
-  console.log(grandTotal);
-  
-    
-    // console.log(productDetails);
-      res.render('users/cartPage',
-      {
-      title : 'Cart',
-      user : user,
-      carts : productDetails,
-      grandTotal
-    })
-  }catch(error){
-    console.log(error);
-  }
-},
+      const cart = await cartModel.find();
+      const productDetails = await cartModel.aggregate([
+        { $match: { userId: new ObjectId(user._id) } },
+        { $unwind: "$products" },
+        {
+          $lookup: {
+            from: "products",
+            localField: "products.productId",
+            foreignField: "_id",
+            as: "productDetails",
+          },
+        },
+        { $unwind: "$productDetails" },
+      ]);
+      // console.log(productDetails);
+      // Calculate the total price for each product in the cart
+      productDetails.forEach((cartItem) => {
+        const quantity = cartItem.products.quantity;
+        const price = cartItem.productDetails.productPrice;
+        console.log("Quantity:", quantity);
+        console.log("Price:", price);
+        if (isNaN(quantity) || isNaN(price)) {
+          console.log("Error: Quantity or price is not a number");
+          cartItem.totalPrice = "Not a Number";
+        } else {
+          cartItem.totalPrice = quantity * price;
+        }
+      });
+      const grandTotal = productDetails.reduce((total, item) => {
+        return total + item.totalPrice;
+      }, 0);
+      // console.log(grandTotal);
 
+      // console.log(productDetails);
+      res.render("users/cartPage", {
+        title: "Cart",
+        user: user,
+        carts: productDetails,
+        grandTotal,
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  },
 
-AddToCart : async(req,res)=>{
-    try{
-      if(!req.cookies.UserToken){
-        return res.redirect('/login')
-      }else{
-      let quantity = 1;
-      //body
-      const body = req.body;
-      console.log(body);
-      const productid = req.params.id
-      const user = req.query.userId;
-      const userId = new ObjectId(user);
-      
+  AddToCart: async (req, res) => {
+    try {
+      if (!req.cookies.UserToken) {
+        return res.redirect("/login");
+      } else {
+        let quantity = 1;
+        //body
+        const body = req.body;
+        console.log(body);
+        const productid = req.params.id;
+        const user = req.query.userId;
+        const userId = new ObjectId(user);
 
-
-      const product = await productModel.findOne({_id : productid});
-      const existingCart = await cartModel.findOne({ userId: userId });
-      console.log(existingCart);
-      if(existingCart){
-        console.log('first');
+        const product = await productModel.findOne({ _id: productid });
+        
+        const existingCart = await cartModel.findOne({ userId: userId });
+        console.log(existingCart);
+        if (existingCart) {
+          // console.log("first");
 
           const pExists = await cartModel.findOne({
-            "products.productId" : product._id,
-            "products.color" : product.color,
-            "products.size" : body.size
-          })
-          
-          
-         if(pExists){
-          const pId = product._id
-          const index = pExists.products.findIndex((product) => {
-            return (
-              product.productId.equals(new ObjectId(pId)) &&
-              product.size === body.size
-            );
+            "products.productId": product._id,
+            "products.color": product.color,
+            "products.size": body.size,
           });
-          console.log(index);
-          console.log('quantity');
-          await cartModel.updateOne({userId : userId},{
-            $inc:{
-              [`products.${index}.quantity`] : 1
-            }
-          });  
-        }else{
-          console.log('fourth');
-          await cartModel.updateOne({userId : userId},{$push: {products : {
-            productId : product._id,
-            quantity : quantity,
-            color : product.color,
-            size : body.size
-          }}})
+         
+          if (pExists) {
+              const pId = product._id;
+              const index = pExists.products.findIndex((product) => {
+                return (
+                  product.productId.equals(new ObjectId(pId)) &&
+                  product.size === body.size
+                );
+              });
+              console.log(index);
+              console.log("quantity");
+              
+              await cartModel.updateOne(
+                { userId: userId },
+                {
+                  $inc: {
+                    [`products.${index}.quantity`]: 1,
+                  },
+                }
+              );
+            
+
+          } else {
+            console.log("fourth");
+            await cartModel.updateOne(
+              { userId: userId },
+              {
+                $push: {
+                  products: {
+                    productId: product._id,
+                    quantity: quantity,
+                    color: product.color,
+                    size: body.size,
+                  },
+                },
+              }
+            );
+          }
+        } else {
+          await cartModel.updateOne(
+            { userId: userId },
+            {
+              $push: {
+                products: {
+                  productId: product._id,
+                  color: product.color,
+                  quantity: quantity,
+                  size: body.size,
+                },
+              },
+            },
+            { upsert: true }
+          );
         }
-      }else{
-        await cartModel.updateOne({userId : userId}, 
-          {$push :{products :{  productId: product._id,color: product.color,quantity: quantity,size: body.size}}},{upsert : true})
+        res.redirect("/cartPage");
       }
-      res.redirect('/cartPage');
-      }
-      
-    }catch(error){
+    } catch (error) {
       console.log(error);
     }
-
   },
 
-  cartUpdateFetch : async(req,res)=>{
-   
+  cartUpdateFetch: async (req, res) => {
+    try {
+      const { productId, userId } = req.params;
+      const { quantity, size } = req.body;
+      console.log(req.body);
+      // Find the cart item
+      let cartItem = await cartModel.findOne({
+        userId: userId,
+        "products.productId": productId,
+      });
+      // console.log(cartItem);
 
-  try {
-    const { productId, userId } = req.params;
-    const { quantity, size } = req.body;
-    console.log(req.body);
-    // Find the cart item 
-    let cartItem = await cartModel.findOne({ userId: userId, 'products.productId': productId });
-    // console.log(cartItem);
+      if (!cartItem) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Cart item not found" });
+      }
 
-    if (!cartItem) {
-      return res.status(404).json({ success: false, message: 'Cart item not found' });
+      // Update the quantity of the product in the cart
+      const productIndex = cartItem.products.findIndex((product) => {
+        return (
+          product.productId.equals(new ObjectId(productId)) &&
+          product.size === size
+        );
+      });
+
+      // console.log();
+      console.log(productIndex);
+      cartItem.products[productIndex].quantity = quantity;
+
+      // Save the updated cart item it is an mongoose function.
+      await cartItem.save();
+    } catch (error) {
+      console.error(error);
     }
-
-    // Update the quantity of the product in the cart
-    const productIndex = cartItem.products.findIndex((product) => {
-      return(
-        product.productId.equals(new ObjectId(productId)) &&
-              product.size === size
-      );
-         });
-      
-      
-    // console.log();
-    console.log(productIndex);
-    cartItem.products[productIndex].quantity = quantity;
-
-    // Save the updated cart item it is an mongoose function.
-    await cartItem.save();
-
-   
-  } catch (error) {
-    console.error(error);
-    
-  }
-
-
   },
 
-  removeFromCart : async (req,res)=>{
-    try{
-      req.session.productInfo = '';
+  removeFromCart: async (req, res) => {
+    try {
+      req.session.productInfo = "";
 
-      req.session.productDetails ='';
-      req.session.grandTotal = '' ;
+      req.session.productDetails = "";
+      req.session.grandTotal = "";
 
-      const {productId,size} = req.body;
+      const { productId, size } = req.body;
       const userId = req.params.id;
       console.log(userId);
       console.log(productId);
       console.log(size);
-      const cartItem = await cartModel.findOne({userId : userId , "products.productId" : productId });
+      const cartItem = await cartModel.findOne({
+        userId: userId,
+        "products.productId": productId,
+      });
       console.log(cartItem);
-      if(!cartItem){
-        console.log('Cart Item Not Found');
+      if (!cartItem) {
+        console.log("Cart Item Not Found");
       }
 
-     const index =  cartItem.products.findIndex((product)=>{
-        return(
+      const index = cartItem.products.findIndex((product) => {
+        return (
           product.productId.equals(new ObjectId(productId)) &&
-                product.size === size
+          product.size === size
         );
-      })
-console.log(index);
-      cartItem.products.splice(index,1);
+      });
+      console.log(index);
+      cartItem.products.splice(index, 1);
       cartItem.save();
-
-    }catch(error){
+    } catch (error) {
       console.log(error);
     }
-
   },
 
-  getCheckoutPage : async(req,res)=>{
-    try{
+  getCheckoutPage: async (req, res) => {
+    try {
       const token = req.cookies.UserToken;
-      let user ;
-      if(token){
-        const data = jwt.verify(token,"secretKeyUser");
-        user = data.user
-      }else{
-        user = false
+      let user;
+      if (token) {
+        const data = jwt.verify(token, "secretKeyUser");
+        user = data.user;
+      } else {
+        user = false;
       }
       // console.log(user._id);
       //function route starts
-      
-      
+
       // console.log(products);
       const addressPrimary = await addressModel.findOne({
-      userId : user._id,
-      isPrimary : true
-     });
-    
-
-     console.log(req.flash('productDetails'));
-     console.log(req.flash('grandTotal'));
-
-      res.render('users/checkoutPage',{
-        title : 'Checkout',
-        user : user,
-        addressPrimary,
-        grandTotal : req.session.grandTotal ? req.session.grandTotal : false,
-        cartProducts : req.session.productDetails ? req.session.productDetails : false,
-        productInfo : req.session.productInfo ? req.session.productInfo : false
-
+        userId: user._id,
+        isPrimary: true,
       });
 
+      console.log(req.flash("productDetails"));
+      console.log(req.flash("grandTotal"));
 
-    }catch(error){
+      res.render("users/checkoutPage", {
+        title: "Checkout",
+        user: user,
+        addressPrimary,
+        grandTotal: req.session.grandTotal ? req.session.grandTotal : false,
+        cartProducts: req.session.productDetails
+          ? req.session.productDetails
+          : false,
+        productInfo: req.session.productInfo ? req.session.productInfo : false,
+      });
+    } catch (error) {
       console.log(error);
-
     }
-
   },
 
-  doAddAddressCheckout : async(req,res)=>{
-    try{
-      const data = req.body
-      const id = req.params.id
+  doAddAddressCheckout: async (req, res) => {
+    try {
+      const data = req.body;
+      const id = req.params.id;
       console.log(id);
-       const result = await addressModel.collection.insertOne({
-        userId : new ObjectId(id),
+      const result = await addressModel.collection.insertOne({
+        userId: new ObjectId(id),
         firstname: data.firstname,
         lastname: data.lastname,
         address: data.address, //street/home address
@@ -642,135 +660,210 @@ console.log(index);
         postalcode: data.postalCode,
         phone: data.phone,
       });
-      
-      const primaryExists = await addressModel.findOne({ userId : new ObjectId(id),isPrimary:true});
+
+      const primaryExists = await addressModel.findOne({
+        userId: new ObjectId(id),
+        isPrimary: true,
+      });
       console.log(primaryExists);
-      if(primaryExists){
-        await addressModel.updateOne({ _id : primaryExists._id},{$set :{isPrimary : false}});
-        await addressModel.updateOne({ _id : result.insertedId },{$set :{isPrimary : true}});
-        res.json('success');
-      }else{
-        await addressModel.updateOne({ _id : result.insertedId },{$set :{isPrimary : true}});
-        res.json('success');
+      if (primaryExists) {
+        await addressModel.updateOne(
+          { _id: primaryExists._id },
+          { $set: { isPrimary: false } }
+        );
+        await addressModel.updateOne(
+          { _id: result.insertedId },
+          { $set: { isPrimary: true } }
+        );
+        res.json("success");
+      } else {
+        await addressModel.updateOne(
+          { _id: result.insertedId },
+          { $set: { isPrimary: true } }
+        );
+        res.json("success");
       }
-      
-    }catch(error){
+    } catch (error) {
       console.log(error);
     }
-
   },
 
-  checkoutDirectFromDetailPage : async(req,res)=>{
-    try{
-      const productId = req.params.id 
+  checkoutDirectFromDetailPage: async (req, res) => {
+    try {
+      const productId = req.params.id;
       const size = req.query.size;
-      
+
       const productInfo = await productModel.aggregate([
-        { $match: { _id :new ObjectId(productId)  } },{$unwind : "$sizes"},{$match:{sizes : size}}
+        { $match: { _id: new ObjectId(productId) } },
+        { $unwind: "$sizes" },
+        { $match: { sizes: size } },
       ]);
-      
-      
+
       console.log(productInfo);
-      
-      req.session.productDetails = '';
-     req.session.grandTotal = '';
-      req.session.productInfo = productInfo
-      res.redirect('/checkoutPage');
-    }catch(error){
+
+      req.session.productDetails = "";
+      req.session.grandTotal = "";
+      req.session.productInfo = productInfo;
+      res.redirect("/checkoutPage");
+    } catch (error) {
       console.log(error);
     }
-
   },
 
-  checkoutFromCart : async(req,res)=>{
-    try{
-      const userId = req.params.id
-      const productDetails = await cartModel.aggregate([{$match:{userId : new ObjectId(userId)}},{$unwind : "$products"},
-      {$lookup:{
-        from : "products",
-        localField :"products.productId",
-        foreignField : "_id",
-        as: "productDetails"
-      }},{$unwind: "$productDetails"},
-    ]);
-       // console.log(addressPrimary);
- 
-       productDetails.forEach(cartItem => {
-         const quantity = cartItem.products.quantity;
-         const price = cartItem.productDetails.productPrice;
-         console.log("Quantity:", quantity);
-         console.log("Price:", price);
-         if (isNaN(quantity) || isNaN(price)) {
-           console.log("Error: Quantity or price is not a number");
-           cartItem.totalPrice = "Not a Number";
-         } else {
-           cartItem.totalPrice = quantity * price;
-         }
-       });
-     const grandTotal = productDetails.reduce((total, item) => {
-       return total + item.totalPrice;
-     }, 0);
+  checkoutFromCart: async (req, res) => {
+    try {
+      const userId = req.params.id;
+      const productDetails = await cartModel.aggregate([
+        { $match: { userId: new ObjectId(userId) } },
+        { $unwind: "$products" },
+        {
+          $lookup: {
+            from: "products",
+            localField: "products.productId",
+            foreignField: "_id",
+            as: "productDetails",
+          },
+        },
+        { $unwind: "$productDetails" },
+      ]);
+      // console.log(addressPrimary);
 
-    
-     req.session.productInfo = '';
+      productDetails.forEach((cartItem) => {
+        const quantity = cartItem.products.quantity;
+        const price = cartItem.productDetails.productPrice;
+        console.log("Quantity:", quantity);
+        console.log("Price:", price);
+        if (isNaN(quantity) || isNaN(price)) {
+          console.log("Error: Quantity or price is not a number");
+          cartItem.totalPrice = "Not a Number";
+        } else {
+          cartItem.totalPrice = quantity * price;
+        }
+      });
+      const grandTotal = productDetails.reduce((total, item) => {
+        return total + item.totalPrice;
+      }, 0);
 
-     req.session.productDetails = productDetails
-     req.session.grandTotal = grandTotal
-     res.redirect('/checkoutPage');
+      req.session.productInfo = "";
+
+      req.session.productDetails = productDetails;
+      req.session.grandTotal = grandTotal;
+      res.redirect("/checkoutPage");
+    } catch (error) {
+      console.log(error);
+    }
+  },
+
+  doPlaceOrder: async (req, res) => {
+    try {
+      const databody = req.body;
+      const userId = req.params.id;
+      console.log(userId);
+      
+      const deliveryAddress = await addressModel.findOne({
+        userId : userId,
+        isPrimary: true,
+      });
+      // console.log(deliveryAddress);
+      if ( Object.keys(req.body).length > 0) {
+
+        console.log(databody);
+
+        await orderModel.collection.insertOne(
+          {
+           userId: userId , 
+           deliveryAddress: new ObjectId(deliveryAddress._id),
+           orderStatus : 'confirmed',
+           productDetails : [{
+            productId : databody.productName,
+            quantity : 1,
+            size : databody.size
+           }],
+           paymentMethod : 'COD',
+           grandTotal : Number(databody.price),
+           cancellationReason : null,
+           orderedAt : new Date() ,
+           updatedAt : new Date()
+           },
+         );
+
+         //ordered product
+          await productModel.updateOne({_id : databody.productName},{$inc:{
+          quantity : -1
+
+        }});
+        
+
+      } else {
+        console.log('else');
+
+        const cartProducts = await cartModel.findOne({ userId : userId });
+        console.log(cartProducts);
+        const productDetails = cartProducts.products.map(product => ({
+          productId: product.productId,
+          quantity: product.quantity,
+          size: product.size,
+        }));
+       
+        console.log(productDetails);
+        await orderModel.collection.insertOne(
+         {
+          userId: userId , 
+          deliveryAddress: new ObjectId(deliveryAddress._id),
+          orderStatus : 'confirmed',
+          productDetails : productDetails,
+          paymentMethod : 'COD',
+          grandTotal : req.session.grandTotal,
+          cancellationReason : null,
+          orderedAt : new Date() ,
+          updatedAt : new Date()
+          },
+        );
+
+
+
+        await cartModel.updateOne({userId : userId},{$set :{
+          products : []
+        }});
+  
+        productDetails.forEach(async(item)=>{
+          await productModel.updateOne ({_id : item.productId},{$inc :{
+            quantity : -item.quantity
+          }});
+        });
+      }
+
      
 
-
-    }catch(error){
-      console.log(error);
-    }
-
-  },
-
-
-  doPlaceOrder : async(req,res)=>{
-    try{
-      const databody = req.body
-      const userId = req.params.id;
-
-      console.log(databody);
-      const deliveryAddress = await addressModel.findOne({_id : userId,isPrimary : true});
-
-      res.redirect('/orderDetails')
-    }catch(error){
+      res.redirect("/orderDetails");
+    } catch (error) {
       console.log(error);
     }
   },
 
-getOrderDetailpage : async(req,res)=>{
-  try{
-    const token = req.cookies.UserToken;
-      let user ;
-      if(token){
-        const data = jwt.verify(token,"secretKeyUser");
-        user = data.user
-      }else{
-        user = false
+  getOrderDetailpage: async (req, res) => {
+    try {
+      const token = req.cookies.UserToken;
+      let user;
+      if (token) {
+        const data = jwt.verify(token, "secretKeyUser");
+        user = data.user;
+      } else {
+        user = false;
       }
 
-
-      res.render('users/orderDetailsPage',{
-        title : 'Order Details',
+      res.render("users/orderDetailsPage", {
+        title: "Order Details",
         user,
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  },
 
-      })
-  }catch(error){
-    console.log(error);
-  }
-
-},
-
-
-
-
-
-  userLogout : (req,res)=>{
-    delete req.session.user
+  userLogout: (req, res) => {
+    delete req.session.user;
     res.clearCookie("UserToken");
-    res.redirect('/');
-  }
+    res.redirect("/");
+  },
 };

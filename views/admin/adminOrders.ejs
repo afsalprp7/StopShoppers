@@ -1,0 +1,58 @@
+
+
+<%- include('../includes/admin/adminHead') %>
+<div class="container   container1">
+  <h3>ORDERS</h3>
+</div>
+<div class="container container1 pt-5 pb-5 border mb-5">
+  
+  <table id="tableProduct" class="table p-1 table-striped table-content">
+    
+    <thead>
+      
+      <tr>
+        <th scope="col">User Name</th>
+        <th scope="col">Phone No</th>
+        <th scope="col">Quantity</th>
+        <th scope="col">Total Price</th>
+        <th scope="col">Status</th>
+        <th scope="col">Ordered Date</th>
+        <th scope="col">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% orders.forEach((item)=>{%>
+      <tr>
+        <td style="text-transform: capitalize;"><%= item.user.firstname%> <%= item.user.lastname%></td>
+        <td><%=item.user.phone%></td>
+        <td><%=orders.productCount%></td>
+        <td><%=item.grandTotal%></td>
+        <td><%=item.orderStatus%></td>
+        <td><%=item.orderedAt%></td>
+        <td class="d-flex">
+          <a href="/AdminOrderDetails/<%=item._id%>">
+              <i class="fa-solid fa-circle-info ms-3"></i></a></i>
+        </td>
+      </tr>
+      <% }); %>
+    </tbody>
+
+  </table>
+  
+</div>
+</div>
+
+
+
+
+<script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
+<script>
+  new DataTable('#tableProduct', {
+              responsive: true
+          });
+  </script>
+<%- include('../includes/admin/adminEnd') %>

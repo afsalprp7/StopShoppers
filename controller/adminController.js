@@ -5,7 +5,7 @@ const userModel = require("../models/userModel");
 const flash = require("connect-flash");
 const fs = require("fs");
 const adminModel = require("../models/adminModel");
-
+const orderModel = require("../models/orderModel");
 
 module.exports = {
   //get category pageṭ
@@ -72,8 +72,8 @@ module.exports = {
   //get edit category page
   getEditCategoryPage: async (req, res) => {
     try {
-      if(!req.cookies.token){
-        res.redirect('/admin');
+      if (!req.cookies.token) {
+        res.redirect("/admin");
       }
       const id = req.params.id;
       // console.log(id);
@@ -215,7 +215,6 @@ module.exports = {
 
   //get add product page.
   getAddProductPage: async (req, res) => {
-   
     const catData = await categoryModel.find({ isDeleted: false });
     res.render("admin/addProduct", {
       title: "Add Product",
@@ -227,8 +226,8 @@ module.exports = {
 
   // get edit product page.
   getEditProductPage: async (req, res) => {
-    if(!req.cookies.token){
-      res.redirect('/admin');
+    if (!req.cookies.token) {
+      res.redirect("/admin");
     }
     const catData = await categoryModel.find({ isDeleted: false });
     const paramId = req.params.id;
@@ -332,8 +331,8 @@ module.exports = {
 
   doEditProduct: async (req, res) => {
     try {
-      if(!req.cookies.token){
-        res.redirect('/admin')
+      if (!req.cookies.token) {
+        res.redirect("/admin");
       }
       const editData = req.body;
       console.log(editData);
@@ -377,7 +376,9 @@ module.exports = {
                     ? editData.productDescription
                     : undefined,
                 category:
-                  editData.category !== "" ? editData.category : new ObjectId(product.category) ,
+                  editData.category !== ""
+                    ? editData.category
+                    : new ObjectId(product.category),
                 color:
                   editData.color !== ""
                     ? editData.color.toLowerCase()
@@ -444,8 +445,8 @@ module.exports = {
   //deleting the images from edit product page
   deleteImageEditProduct: async (req, res) => {
     try {
-      if(!req.cookies.token){
-        res.redirect('/admin');
+      if (!req.cookies.token) {
+        res.redirect("/admin");
       }
       const filename = req.body.filename;
       console.log(filename);
@@ -480,8 +481,8 @@ module.exports = {
 
   doBlockUsers: async (req, res) => {
     try {
-      if(!req.cookies.token){
-        res.redirect('/admin');
+      if (!req.cookies.token) {
+        res.redirect("/admin");
       }
       const id = req.params.id;
       console.log(req.body);
@@ -497,6 +498,103 @@ module.exports = {
           message: "unblocked",
         });
       }
+    } catch (error) {
+      console.log(error);
+    }
+  },
+
+  getAdminOrders: async (req, res) => {
+    try {
+      const orders = await orderModel.aggregate([
+        {
+          $lookup: {
+            from: "users",
+            let: { userId: { $toObjectId: "$userId" } },
+            pipeline: [
+              {
+                $match: {
+                  $expr: { $eq: ["$_id", "$$userId"] },
+                },
+              },
+            ],
+            as: "user",
+          },
+        },
+        { $unwind: "$user" },
+        {
+          $lookup: {
+            from: "addresses",
+            localField: "deliveryAddress",
+            foreignField: "_id",
+            as: "address",
+          },
+        },
+        { $unwind: "$address" },
+      ]);
+      console.log(orders);
+
+      let productCount = 0;
+      
+        orders.reduce((total, current) => {
+          productCount = current.productDetails.reduce((subtotal,subcurrent)=>{
+            return subtotal += subcurrent.quantity;
+        },0)
+         return 0;
+       }, 0);
+      
+
+      orders.productCount = productCount;
+      console.log(orders);
+      res.render("admin/adminOrders", {
+        title: "Admin Orders",
+        orders,
+        adminName: req.session.adminName,
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  },
+
+  getAdminOrderDetailpage: async (req, res) => {
+    try {
+      const Id = new ObjectId(req.params.id);
+      const order = await orderModel.aggregate([
+        {
+          $match: {
+            _id: Id,
+          },
+        },
+        {
+          $lookup: {
+            from: "addresses",
+            localField: "deliveryAddress",
+            foreignField: "_id",
+            as: "address",
+          },
+        },
+        { $unwind: "$address" },
+        { $unwind: "$productDetails"},
+        {
+          $lookup: {
+            from: "products",
+            let: { productId: { $toObjectId: "$productDetails.productId" } },
+            pipeline: [
+              {
+                $match: {
+                  $expr: { $eq: ["$_id", "$$productId"] },
+                },
+              },
+            ],
+            as: "productInfo",
+          },
+        },
+      ]);
+      console.log(order);
+      res.render("admin/orderDetails", {
+        title: "Order Details",
+        adminName: req.session.adminName,
+        order,
+      });
     } catch (error) {
       console.log(error);
     }

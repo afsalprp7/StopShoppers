@@ -348,7 +348,7 @@
               <%if(productInfo){%>
               <input
                 name="productName"
-                value="<%=productInfo[0].productName%>"
+                value="<%=productInfo[0]._id%>"
                 type="text"
                 hidden
               />
@@ -364,8 +364,6 @@
                 type="text"
                 hidden
               />
-              <%}else{%>
-              <input name="productName" value="fromCart" type="text" hidden />
               <%}%>
             </div>
             <button

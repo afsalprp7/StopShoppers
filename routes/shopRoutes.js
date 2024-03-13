@@ -30,7 +30,7 @@ router.post('/searchProduct',shopController.searchProductHome);
 
 router.get('/shopPage',validateUser,shopController.getShopPage);
 router.get('/userLogout',validateUser,shopController.userLogout);
-router.get('/cartPage',shopController.getCartPage);
+router.get('/cartPage',validateUser,shopController.getCartPage);
 router.post('/addToCart/:id',shopController.AddToCart);
 router.post('/updateCartQuantity/:productId/:userId',shopController.cartUpdateFetch);
 router.post('/removeFromCart/:id',shopController.removeFromCart);
