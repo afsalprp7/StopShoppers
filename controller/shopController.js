@@ -9,7 +9,6 @@ const jwt = require("jsonwebtoken");
 const flash = require("connect-flash");
 const orderModel = require("../models/orderModel");
 module.exports = {
-
   getHomePage: async (req, res) => {
     try {
       const token = req.cookies.UserToken;
@@ -18,15 +17,20 @@ module.exports = {
       if (token) {
         const data = jwt.verify(token, "secretKeyUser");
         user = data.user;
-        const cartCount = await cartModel.aggregate([{
-          $group :{
-            _id : "$_id",
-            count : {$sum : 1}
-          }
-        },{$project :{
-          _id : 0,
-          count : 1
-        }}]);
+        const cartCount = await cartModel.aggregate([
+          {
+            $group: {
+              _id: "$_id",
+              count: { $sum: 1 },
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              count: 1,
+            },
+          },
+        ]);
         // user.cartCount = cartCount
         // console.log(user.cartCount);
       } else {
@@ -84,18 +88,20 @@ module.exports = {
       isDeleted: false,
     });
     const productInfo = await productModel.findOne({ _id: id });
-    if(productInfo.quantity === 0){
-      req.session.detailpageError = true
-    }else{
-      req.session.detailpageError = false
+    if (productInfo.quantity <= 0) {
+      req.session.detailpageError = true;
+    } else {
+      req.session.detailpageError = false;
     }
+
     res.render("users/productDetailPage", {
       title: "Product Detail",
       product: productInfo,
       allProducts: allProducts,
       user: user,
-      error : req.session.detailpageError ? req.session.detailpageError : false
+      error: req.session.detailpageError ? req.session.detailpageError : false,
     });
+    req.session.quantityError = false;
   },
 
   getUserProfilePage: async (req, res) => {
@@ -323,42 +329,18 @@ module.exports = {
   //search product
   searchProductHome: async (req, res) => {
     try {
-      const string = req.body.string.toLowerCase();
+      const string = req.body.string;
 
-      if (string !== "") {
-        const result = await productModel.find({
-          $or: [
-            { productName: { $regex: string, $options: "i" } },
-            { description: { $regex: string, $options: "i" } },
-          ],
-        });
-
-        if (result.length !== 0) {
-          res.json({
-            result,
-          });
-        } else {
-          res.json({
-            result: "Nothing Found",
-          });
-        }
-      } else {
-        // Pagination parameters
-        const page = req.query.page ? parseInt(req.query.page) : 1;
-        const limit = req.query.limit ? parseInt(req.query.limit) : 8;
-
-        // Calculate skip
-        const skip = (page - 1) * limit;
-
-        // Fetch products with pagination
-        const products = await productModel
-          .find({ isDeleted: false })
-          .skip(skip)
-          .limit(limit);
-        res.json({
-          result: products,
-        });
-      }
+      const result = await productModel.find({
+        $or: [
+          { productName: { $regex: string, $options: "i" } },
+          { description: { $regex: string, $options: "i" } },
+          {color : {$regex : string , $options : "i"}}
+        ],
+      });
+      res.json({
+        result,
+      });
     } catch (error) {
       console.log(error);
     }
@@ -376,16 +358,35 @@ module.exports = {
       } else {
         user = false;
       }
+      // Pagination parameters
+      const page = req.query.page ? parseInt(req.query.page) : 1;
+      const limit = req.query.limit ? parseInt(req.query.limit) : 16;
+      const totalCount = await productModel.countDocuments({
+        isDeleted: false,
+      });
+      // Calculate skip
+      const skip = (page - 1) * limit;
+
+      // Fetch products with pagination
+      const products = await productModel
+        .find({ isDeleted: false })
+        .skip(skip)
+        .limit(limit);
+
       const categories = await categoryModel.find({
         isDeleted: false,
       });
       console.log(categories);
-      const products = await productModel.find({ isDeleted: false });
       res.render("users/shopPage", {
         title: "Shop",
         allProducts: products,
         user: user,
         category: categories,
+        pagination: {
+          currentPage: page,
+          totalPages: Math.ceil(totalCount / limit),
+          totalItems: totalCount,
+        },
       });
     } catch (error) {
       console.log(error);
@@ -453,38 +454,42 @@ module.exports = {
       if (!req.cookies.UserToken) {
         return res.redirect("/login");
       } else {
-        let quantity = 1;
         //body
         const body = req.body;
-        console.log(body);
+
         const productid = req.params.id;
         const user = req.query.userId;
         const userId = new ObjectId(user);
 
         const product = await productModel.findOne({ _id: productid });
-        
-        const existingCart = await cartModel.findOne({ userId: userId });
-        console.log(existingCart);
-        if (existingCart) {
-          // console.log("first");
 
+        const existingCart = await cartModel.findOne({ userId: userId });
+        if (existingCart) {
           const pExists = await cartModel.findOne({
             "products.productId": product._id,
             "products.color": product.color,
             "products.size": body.size,
           });
-         
+
           if (pExists) {
-              const pId = product._id;
-              const index = pExists.products.findIndex((product) => {
-                return (
-                  product.productId.equals(new ObjectId(pId)) &&
-                  product.size === body.size
-                );
+            const pId = product._id;
+            const index = pExists.products.findIndex((product) => {
+              return (
+                product.productId.equals(new ObjectId(pId)) &&
+                product.size === body.size
+              );
+            });
+            const checkQuantity =
+              product.quantity - pExists.products[index].quantity;
+            if (checkQuantity <= 0) {
+              // req.session.quantityError = true;
+              // return res.redirect(`/productDetail/${product._id}`);
+
+              res.json({
+                message: "failed",
               });
+            } else {
               console.log(index);
-              console.log("quantity");
-              
               await cartModel.updateOne(
                 { userId: userId },
                 {
@@ -493,23 +498,55 @@ module.exports = {
                   },
                 }
               );
-            
-
+              res.json({
+                message: "success",
+              });
+            }
           } else {
-            console.log("fourth");
-            await cartModel.updateOne(
-              { userId: userId },
-              {
-                $push: {
-                  products: {
-                    productId: product._id,
-                    quantity: quantity,
-                    color: product.color,
-                    size: body.size,
-                  },
-                },
+            const productlreadyIn = await cartModel.findOne({
+              "products.productId": product._id,
+            });
+            if (productlreadyIn) {
+              const checkQuantity = product.quantity - 1;
+              if (checkQuantity <= 0) {
+                // req.session.quantityError = true;
+                // return res.redirect(`/productDetail/${product._id}`);
+                res.json({
+                  message: "failed",
+                });
+              } else {
+                await cartModel.updateOne(
+                  { userId: userId },
+                  {
+                    $push: {
+                      products: {
+                        productId: product._id,
+                        quantity: 1,
+                        color: product.color,
+                        size: body.size,
+                      },
+                    },
+                  }
+                );
               }
-            );
+            } else {
+              await cartModel.updateOne(
+                { userId: userId },
+                {
+                  $push: {
+                    products: {
+                      productId: product._id,
+                      quantity: 1,
+                      color: product.color,
+                      size: body.size,
+                    },
+                  },
+                }
+              );
+              res.json({
+                message: "success",
+              });
+            }
           }
         } else {
           await cartModel.updateOne(
@@ -519,15 +556,19 @@ module.exports = {
                 products: {
                   productId: product._id,
                   color: product.color,
-                  quantity: quantity,
+                  quantity: 1,
                   size: body.size,
                 },
               },
             },
             { upsert: true }
           );
+          res.json({
+            message: "success",
+          });
         }
-        res.redirect("/cartPage");
+
+        // return res.redirect("/cartPage");
       }
     } catch (error) {
       console.log(error);
@@ -552,20 +593,27 @@ module.exports = {
           .json({ success: false, message: "Cart item not found" });
       }
 
+      const productInfo = await productModel.findOne({ _id: productId });
       // Update the quantity of the product in the cart
-      const productIndex = cartItem.products.findIndex((product) => {
-        return (
-          product.productId.equals(new ObjectId(productId)) &&
-          product.size === size
-        );
-      });
+      if (productInfo.quantity < quantity) {
+        res.json({
+          error: true,
+        });
+      } else {
+        const productIndex = cartItem.products.findIndex((product) => {
+          return (
+            product.productId.equals(new ObjectId(productId)) &&
+            product.size === size
+          );
+        });
 
-      // console.log();
-      console.log(productIndex);
-      cartItem.products[productIndex].quantity = quantity;
+        // console.log();
+        console.log(productIndex);
+        cartItem.products[productIndex].quantity = quantity;
 
-      // Save the updated cart item it is an mongoose function.
-      await cartItem.save();
+        // Save the updated cart item it is an mongoose function.
+        await cartItem.save();
+      }
     } catch (error) {
       console.error(error);
     }
@@ -756,86 +804,99 @@ module.exports = {
 
   doPlaceOrder: async (req, res) => {
     try {
+      let result;
       const databody = req.body;
       const userId = req.params.id;
       console.log(userId);
-      
+
       const deliveryAddress = await addressModel.findOne({
-        userId : userId,
+        userId: userId,
         isPrimary: true,
       });
       // console.log(deliveryAddress);
-      if ( Object.keys(req.body).length > 0) {
-
+      if (Object.keys(req.body).length > 0) {
         console.log(databody);
 
-        await orderModel.collection.insertOne(
+        await orderModel.collection.insertOne({
+          userId: userId,
+          deliveryAddress: new ObjectId(deliveryAddress._id),
+          orderStatus: "confirmed",
+          productDetails: [
+            {
+              productId: databody.productName,
+              quantity: 1,
+              size: databody.size,
+            },
+          ],
+          totalQuantity : 1 ,
+          paymentMethod: "COD",
+          grandTotal: Number(databody.price),
+          cancellationReason: null,
+          orderedAt: new Date(),
+          updatedAt: new Date(),
+        });
+
+        //ordered product
+        await productModel.updateOne(
+          { _id: databody.productName },
           {
-           userId: userId , 
-           deliveryAddress: new ObjectId(deliveryAddress._id),
-           orderStatus : 'confirmed',
-           productDetails : [{
-            productId : databody.productName,
-            quantity : 1,
-            size : databody.size
-           }],
-           paymentMethod : 'COD',
-           grandTotal : Number(databody.price),
-           cancellationReason : null,
-           orderedAt : new Date() ,
-           updatedAt : new Date()
-           },
-         );
-
-         //ordered product
-          await productModel.updateOne({_id : databody.productName},{$inc:{
-          quantity : -1
-
-        }});
-        
-
+            $inc: {
+              quantity: -1,
+            },
+          }
+        );
       } else {
-        console.log('else');
+        console.log("else");
 
-        const cartProducts = await cartModel.findOne({ userId : userId });
-        console.log(cartProducts);
-        const productDetails = cartProducts.products.map(product => ({
+        const cartProducts = await cartModel.findOne({ userId: userId });
+        // console.log(cartProducts);
+        const productDetails = cartProducts.products.map((product) => ({
           productId: product.productId,
           quantity: product.quantity,
           size: product.size,
         }));
-       
+
+        const totalProducts = cartProducts.products.reduce((total,current)=>{
+          return total = total + current.quantity;
+        },0)
+
         console.log(productDetails);
-        await orderModel.collection.insertOne(
-         {
-          userId: userId , 
+          result =  await orderModel.collection.insertOne({
+          userId: userId,
           deliveryAddress: new ObjectId(deliveryAddress._id),
-          orderStatus : 'confirmed',
-          productDetails : productDetails,
-          paymentMethod : 'COD',
-          grandTotal : req.session.grandTotal,
-          cancellationReason : null,
-          orderedAt : new Date() ,
-          updatedAt : new Date()
-          },
+          orderStatus: "confirmed",
+          productDetails: productDetails,
+          paymentMethod: "COD",
+          grandTotal: req.session.grandTotal,
+          totalQuantity : totalProducts,
+          cancellationReason: null,
+          orderedAt: new Date(),
+          updatedAt: new Date(),
+        });
+
+        await cartModel.updateOne(
+          { userId: userId },
+          {
+            $set: {
+              products: [],
+            },
+          }
         );
 
-
-
-        await cartModel.updateOne({userId : userId},{$set :{
-          products : []
-        }});
-  
-        productDetails.forEach(async(item)=>{
-          await productModel.updateOne ({_id : item.productId},{$inc :{
-            quantity : -item.quantity
-          }});
+        productDetails.forEach(async (item) => {
+          console.log(item.quantity);
+          await productModel.updateOne(
+            { _id: item.productId },
+            {
+              $inc: {
+                quantity: -Number(item.quantity),
+              },
+            }
+          );
         });
       }
 
-     
-
-      res.redirect("/orderDetails");
+      res.redirect(`/confirmOrder/${result.insertedId}`);
     } catch (error) {
       console.log(error);
     }
@@ -861,6 +922,102 @@ module.exports = {
     }
   },
 
+  filterCategory: async (req, res) => {
+    try {
+      const criteria = req.body.categoryValue;
+      let priceSort = req.body.priceSortvalue === "low to high" ? 1 : -1;
+      const colors = req.body.colorValues;
+      let products;
+      if (priceSort) {
+        products = await productModel
+          .find({ isDeleted: false })
+          .sort({ productPrice: priceSort });
+      }
+      if (criteria.length !== 0) {
+        products = await productModel.find({
+          category: { $in: criteria },
+          isDeleted: false,
+        });
+      }
+      if (criteria.length > 0 && priceSort) {
+        products = await productModel
+          .find({ category: { $in: criteria }, isDeleted: false })
+          .sort({ productPrice: priceSort });
+      }
+
+      if(colors.length > 0){
+        products = await productModel.find({color : {$in: colors}});
+      }
+      
+      if(criteria.length > 0 && priceSort && colors.length > 0){
+        products = await productModel.find({color : {$in: colors},category: { $in: criteria }}).sort({ productPrice: priceSort });
+      }
+
+
+      if(colors.length > 0 && priceSort){
+        products = await productModel.find({color : {$in: colors}}).sort({ productPrice: priceSort });
+
+      }
+
+      if(colors.length > 0 && criteria.length > 0){
+        products = await productModel.find({color : {$in: colors},category: { $in: criteria }});
+
+      }
+
+
+        res.json({
+          result: products,
+        });
+     
+    
+    } catch (error) {
+      console.log(error);
+    }
+  },
+
+getOrderConfirmationPage :async(req,res)=>{
+  try{
+    const token = req.cookies.UserToken;
+      let user;
+      if (token) {
+        const data = jwt.verify(token, "secretKeyUser");
+        user = data.user;
+      } else {
+        user = false;
+      }
+
+      const orderId = req.params.id ; 
+      const orderDetails = await orderModel.aggregate([{$match :{ _id : new ObjectId(orderId)}},
+        {$unwind : "$productDetails"},
+        {$lookup:{
+          from : "products",
+          localField : "productDetails.productId",
+          foreignField : "_id",
+          as : "productInfo"
+        }},{$unwind : "$productInfo"},
+        {$lookup:{
+          from : "addresses",
+          localField : "deliveryAddress",
+          foreignField : "_id",
+          as : "address",
+
+        }},{$unwind : "$address"},
+
+      ])
+        console.log(orderDetails);
+    res.render('users/productConfirmPage',
+    {
+      title : 'Confirm Order',
+      user : user,
+      order : orderDetails ? orderDetails : false 
+    }
+    
+    )
+  }catch(error){
+    console.log(error);
+  }
+
+},
   userLogout: (req, res) => {
     delete req.session.user;
     res.clearCookie("UserToken");

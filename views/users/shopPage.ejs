@@ -2,7 +2,8 @@
 
 <style>
   .container-main{
-    margin-top: 5%;
+    margin-top: 7%;
+    
   }
   .list {
     list-style-type:none;
@@ -16,80 +17,119 @@
  .drop-content-div:hover{
   background-color: rgb(245, 245, 245);
  }
+
 </style>
 
-<div class="container-fluid container-main px-5">
+<div class="container-fluid px-5 container-main  mb-5">
+  <div class="container-fluid d-flex justify-content-between ms-4 mb-3">
+    <div>
+      <i class="fa-solid fa-bag-shopping"><span class="ms-2">Shop</span></i>
+    </div>
+    <div class="form-group col-md-6 ">
+      <input class="form-control rounded-0 py-2" type="search"  id="example-search-input" placeholder="search">
+    </div> 
+  </div>
   <div class="row">
-   
-
     <div  class="col-md-3 col-sm-3 col-xs-3">
       <div style="position: static;" class="p-2">
        <div class="drop mb-1">
-          <div class="btn shadow-sm  d-flex justify-content-between list border border-2 dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false"> 
-           <div>
-            <i  style="color: #b04fff;" class="fa-solid fa-layer-group"></i>
-            <strong class="ms-4">Categories</strong> 
+        <div class="btn shadow-sm   d-flex justify-content-between list border border-2 " > 
+          <div>
+            <i  style="color: #b04fff;" class="fa-solid fa-layer-group"><strong  style="color: black;" class="ms-4">Categories</strong> </i>
            </div>
+           <i class="fa-solid fa-circle-chevron-down"></i>
+          </div>
+          <div style="display: none;" class="border shadow-sm border-2 drop-content mt-1 p-3">
+            <% category.forEach((category) => { %>
+              
+              <div class="form-check">
+                <input class="form-check-input filter-box" type="checkbox" id="<%= category.categoryName %>" value="<%= category._id %>">
+                <label style="font-size: large;text-transform: capitalize;" class="form-check-label" for="<%= category.categoryName %>"><%= category.categoryName %></label>
+              </div>
            
+            <% }) %>
           </div>
-          <div style="display: none;" class="border shadow-sm  border-2 drop-content mt-1">
-            <% category.forEach((category)=>{ %>
-              <a class="a-tag" href=""><div style="text-transform: capitalize;" class="p-3 drop-content-div"><%=category.categoryName%></div></a>
-            <%})%>
-            
-            <!-- <a class="a-tag" href=""><div class="p-3 drop-content-div">fdfsd</div></a>
-            <a class="a-tag" href=""><div class="p-3 drop-content-div">fdfsd</div></a> -->
-          </div>
+          
         </div>
 
 
 
         <div class="drop mb-1">
-          <div class="btn shadow-sm   d-flex justify-content-between list border border-2 dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false"> 
+          <div class="btn shadow-sm   d-flex justify-content-between list border border-2 " > 
           <div>
-            <i  style="color: #b04fff;" class="fa-solid fa-filter"></i>
-            <strong class="ms-4">Filter</strong>
+            <i  style="color: #b04fff;" class="fa-solid fa-sort"><strong  style="color: black;" class="ms-4">Sorted By</strong></i>
           </div>
-            
+          <i  class="fa-solid fa-circle-chevron-down"></i>
           </div>
-          <div style="display: none;" class="border shadow-sm  border-2 drop-content mt-1">
-            
-            <a class="a-tag" href=""><div class="p-3 drop-content-div">fdfsd</div></a>
+          <div id="price-sort-options" style="display: none;" class="border shadow-sm  border-2 drop-content mt-1 p-3">
+             
+            <!-- <div class="form-check">
+              <input class="form-check-input " type="checkbox" id="1" value="popularity">
+              <label style="font-size: large;" class="form-check-label" for="1">Popularity</label>
+            </div>
 
-            <a class="a-tag" href=""><div class="p-3 drop-content-div">fdfsd</div></a>
+            <div class="form-check">
+              <input class="form-check-input " type="checkbox" id="2" value="new arrivals">
+              <label style="font-size: large;" class="form-check-label" for="2">New Arrivals</label>
+            </div> -->
 
-            <a class="a-tag" href=""><div class="p-3 drop-content-div">fdfsd</div></a>
 
-        
+            <div class="form-check">
+              <input class="form-check-input sort-box" type="checkbox" id="3" value="low to high">
+              <label style="font-size: large;" class="form-check-label" for="3">₹ Low to High</label>
+            </div>
+
+            <div class="form-check">
+              <input class="form-check-input sort-box" type="checkbox" id="4" value="high to low">
+              <label style="font-size: large;" class="form-check-label" for="4">₹ High to Low</label>
+            </div>
+
           </div>
         </div>           
         <div class="drop mb-1">
-          <div class="btn shadow-sm   d-flex justify-content-between list border border-2 dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false"> 
-           <div>
-            <i  style="color: #b04fff;" class="fa-solid fa-palette"></i>
-            <strong class="ms-4">Colors</strong> 
+          <div class="btn shadow-sm   d-flex justify-content-between list border border-2 " > 
+            <div>
+            <i  style="color: #b04fff;" class="fa-solid fa-palette"><strong  style="color: black;" class="ms-4">Colors</strong></i>
            </div>
-            
+           <i class="fa-solid fa-circle-chevron-down"></i>
           </div>
-          <div style="display: none;" class="border shadow-sm  border-2 drop-content mt-1">
-           
-            <a class="a-tag" href=""><div class="p-3 drop-content-div">
-              Blue</div></a>
+          <div style="display: none;" class="border shadow-sm  border-2 drop-content mt-1 p-3">
+            
+            <div class="form-check d-flex align-items-center justify-content-between">
+              <input class="form-check-input color-box" type="checkbox" id="blue" value="blue">
+              <label style="font-size: large;" class="form-check-label" for="blue">Blue</label>
+              <i style="color: rgb(0, 0, 199);" class="fa-solid fa-circle"></i>
+            </div>
 
-            <a class="a-tag" href=""><div class="p-3 drop-content-div">Green</div></a>
 
-            <a class="a-tag" href=""><div class="p-3 drop-content-div">
-              <span class="color-block" style="background-color: red; width: 10px; height: 10px; margin-right: 5px;"></span>
-              Red
-            </div></a>
+            <div class="form-check d-flex align-items-center justify-content-between">
+              <input class="form-check-input color-box" type="checkbox" id="red" value="red">
+              <label style="font-size: large;" class="form-check-label" for="red">Red</label>
+              <i style="color: rgb(202, 0, 0);" class="fa-solid fa-circle"></i>
+            </div>
 
+            <div class="form-check d-flex align-items-center justify-content-between">
+              <input class="form-check-input color-box" type="checkbox" id="yellow" value="yellow">
+             
+                <label style="font-size: large;" class="form-check-label" for="yellow">Yellow</label>
+                  
+                <i style="color: rgb(218, 218, 0);" class="fa-solid fa-circle"></i>
+                
+             
+            </div>
+
+            <div class="form-check d-flex align-items-center justify-content-between">
+              <input class="form-check-input color-box" type="checkbox" id="green" value="green">
+             
+                <label style="font-size: large;" class="form-check-label" for="green">Green</label>
+                  
+                <i style="color: rgb(15, 133, 0);" class="fa-solid fa-circle"></i>
+                
+             
+            </div>
           
           </div>
         </div>
-           
-           
-         
-        
       </div>
     </div>
     <div class="col-md-9 col-sm-9 col-xs-9">
@@ -126,26 +166,34 @@
         </div>
         <%});%>
           </div>
+          <ul class="pagination d-flex mb-5 justify-content-center" >
+            <% if (pagination.currentPage > 1) { %>
+                <li  class="page-item"><a href="?page=<%= pagination.currentPage - 1 %>&limit=<%= pagination.limit %>" class="page-link">&laquo;</a></li>
+            <% } %>
+            
+            <% for (let i = 1; i <= pagination.totalPages; i++) { %>
+                <li class="page-item <%= i === pagination.currentPage ? 'active' : '' %>">
+                    <a href="?page=<%= i %>&limit=<%= pagination.limit %>" class="page-link"><%= i %></a>
+                </li>
+            <% } %>
+            
+            <% if (pagination.currentPage < pagination.totalPages) { %>
+                <li class="page-item"><a href="?page=<%= pagination.currentPage + 1 %>&limit=<%= pagination.limit %>" class="page-link">&raquo;</a></li>
+            <% } %>
+          </ul>
     </div>
 
   </div>
 </div>
 
 
-
-
-
-
-
-
-
-
-
+<script src="/scripts/shopScripts/shopPageFetch.js"></script>
 
 <script>
 const category = document.querySelectorAll('.drop');
 category.forEach((element)=>{
-  element.addEventListener('click',()=>{
+  element.addEventListener('click',(e)=>{
+    e.stopPropagation();
   const content = element.querySelector('.drop-content');
   if(content.style.display === 'block'){
     content.style.display = 'none';
@@ -158,6 +206,5 @@ category.forEach((element)=>{
 })
 });
 </script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
 <%- include('../includes/usersPartials/userEnd.ejs') %>

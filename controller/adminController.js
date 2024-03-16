@@ -273,7 +273,7 @@ module.exports = {
                 description: data.productDescription,
                 color: data.color,
                 sizes: data.Sizes,
-                quantity: data.Quantity,
+                quantity: Number(data.Quantity),
                 image: images,
               },
             }
@@ -303,7 +303,7 @@ module.exports = {
           description: data.productDescription,
           color: data.color,
           sizes: data.Sizes,
-          quantity: data.Quantity,
+          quantity: Number(data.Quantity),
           image: images,
           isDeleted: false,
         });
@@ -385,7 +385,7 @@ module.exports = {
                     : undefined,
                 sizes: editData.Sizes !== "" ? editData.Sizes : undefined,
                 quantity:
-                  editData.Quantity !== "" ? editData.Quantity : undefined,
+                  editData.Quantity !== "" ? Number(editData.Quantity) : undefined,
                 productPrice:
                   editData.Quantity !== "" ? editData.productPrice : undefined,
                 userType:
@@ -425,7 +425,7 @@ module.exports = {
               color: editData.color !== "" ? editData.color : undefined,
               sizes: editData.Sizes !== "" ? editData.Sizes : undefined,
               quantity:
-                editData.Quantity !== "" ? editData.Quantity : undefined,
+                editData.Quantity !== "" ? Number(editData.Quantity) : undefined,
               productPrice:
                 editData.Quantity !== "" ? editData.productPrice : undefined,
               userType:

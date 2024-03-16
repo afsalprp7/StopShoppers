@@ -13,23 +13,23 @@
 <div class="container container-main border rounded p-5 shadow mb-5">
   <div class="d-flex justify-content-center"><h2>Order Details</h2></div>
 
-  <div class="mt-3 border-bottom shadow-sm border-primary-subtle">
+  <div class="mt-3 border-bottom shadow-sm ">
     <h3>Delivery Address : </h3>
     <div class="ms-1 mt-3 p-div">
-      <strong>
+      
         <p>Name : <%=order[0].address.firstname%> <%=order[0].address.lastname%></p>
         <p>Street Address : <%=order[0].address.address%></p>
         <p>State,District : <%=order[0].address.state%>,<%=order[0].address.district%></p>
         <p>City,Locality : <%=order[0].address.city%>,<%=order[0].address.locality%></p>
         <p>PostalCode : <%=order[0].address.postalcode%></p>
         <p>Phone : <%=order[0].address.phone%></p>
-      </strong>
+      
     </div>
   </div>
   <div class="mt-3">
     <h3>Product Details :</h3>
     <div
-      class=" mt-3 border-primary-subtle border-bottom shadow-sm"
+      class="mt-3 border-bottom shadow-sm"
     >
    
     <%order.forEach((item)=>{%>
@@ -40,7 +40,7 @@
       
         <div class="ms-5 p-div">
           <strong>
-            <p>Qty :<%=item.productDetails.quantity%></p>
+            <p>Qty : <%=item.productDetails.quantity%></p>
             <p>Product Name : <%=item.productInfo[0].productName%></p>
             <p>Size : <%=item.productDetails.size%></p>
             <p>Price : ₹<%=item.productInfo[0].productPrice%></p>
@@ -55,11 +55,8 @@
     <div class="mt-3">
       <h3>Payment Details :</h3>
       <div class="ms-1 mt-3 p-div">
-        <strong>
           <p>Payment Method : <%=order[0].paymentMethod%></p>
-          <p>Total Amount : ₹<%=order[0].grandTotal%></p>
-        </strong>
-       
+          <p class="text-danger">Total Amount : ₹<%=order[0].grandTotal%></p>
         </div>
       </div>
     </div>

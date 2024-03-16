@@ -17,6 +17,7 @@ const quantityDiv = document.querySelectorAll(".quantity");
       // console.log(newQuantity);
       // console.log(size);
       updateCartQuantity(productId, userId, newQuantity,size);
+      
       window.location.reload();
       
     });
@@ -24,6 +25,7 @@ const quantityDiv = document.querySelectorAll(".quantity");
       if (input.value > 1) 
       input.value = parseInt(input.value) - 1;
       const newQuantity = input.value;
+      
       // console.log(newQuantity);
       // console.log(size);
 

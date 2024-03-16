@@ -49,6 +49,10 @@ const orderSchema = new mongoose.Schema({
       required : true
     },
 
+    totalQuantity : {
+      type : Number,
+      required : true
+    },
 
 
   cancellationReason: {

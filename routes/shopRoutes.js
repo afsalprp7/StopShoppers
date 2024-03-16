@@ -24,6 +24,7 @@ router.get('/editProfile/:id',validateUser,shopController.getEditProfilePage);
 router.patch('/editProfile/:id',shopController.doPatchEditProfile);
 
 router.post('/searchProduct',shopController.searchProductHome);
+router.post('/searchFromShopPage',shopController.searchProductHome);
 
 
 
@@ -46,6 +47,12 @@ router.post('/placeOrder/:id',shopController.doPlaceOrder);
 
 
 router.get('/orderDetails',validateUser,shopController.getOrderDetailpage);
+
+
+
+router.post('/filterCategory',shopController.filterCategory);
+
+router.get('/confirmOrder/:id',validateUser,shopController.getOrderConfirmationPage);
 
 
 

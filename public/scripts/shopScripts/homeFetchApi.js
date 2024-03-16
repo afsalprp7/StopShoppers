@@ -26,7 +26,7 @@ const input = document.querySelector('.searchInput');
     console.log(result);
     const listingDiv = document.querySelector('.productList');
     listingDiv.innerHTML = '';
-    if (Array.isArray(result)) {
+    if (result.length > 0) {
         result.forEach(item => {
             const productHtml = `
                 <div class="col-sm-6 col-md-4 col-lg-3 p-b-35 isotope-item women">
@@ -62,7 +62,7 @@ const input = document.querySelector('.searchInput');
       listingDiv.innerHTML = `<div class="d-flex justify-content-center">
         <h2 class="error-head"></h2>
       </div><div class="d-flex justify-content-center mb-4">
-        <h2 class="error-head">${result}</h2>
+        <h2 class="error-head">Nothing Found</h2>
       </div>`
         
     }
