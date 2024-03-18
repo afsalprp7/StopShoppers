@@ -13,7 +13,7 @@
 <div class="container container-main border rounded p-5 shadow mb-5">
   <div class="d-flex justify-content-center"><h2>Order Details</h2></div>
 
-  <div class="mt-3 border-bottom shadow-sm ">
+  <div class="mt-3 border-bottom ">
     <h3>Delivery Address : </h3>
     <div class="ms-1 mt-3 p-div">
       
@@ -29,21 +29,21 @@
   <div class="mt-3">
     <h3>Product Details :</h3>
     <div
-      class="mt-3 border-bottom shadow-sm"
+      class="mt-3 border-bottom"
     >
    
     <%order.forEach((item)=>{%>
-      <div class="d-flex align-items-center border-bottom mt-3">
+      <div class="d-flex align-items-center  mt-3">
       <div>
         <img style="max-width: 120px" src="/productImg/<%=item.productInfo[0].image[0]%>" alt="something" />
       </div>
       
         <div class="ms-5 p-div">
           <strong>
-            <p>Qty : <%=item.productDetails.quantity%></p>
+            <p>Qty : <%=item.productsDetails.quantity%></p>
             <p>Product Name : <%=item.productInfo[0].productName%></p>
-            <p>Size : <%=item.productDetails.size%></p>
-            <p>Price : ₹<%=item.productInfo[0].productPrice%></p>
+            <p>Size : <%=item.productsDetails.size%></p>
+            <p>Price : ₹<%=item.productInfo[0].productPrice * item.productsDetails.quantity%></p>
           </strong>
         </div>
       </div>
@@ -52,17 +52,140 @@
       
     </div>
 
-    <div class="mt-3">
+    <div class="mt-3  border-bottom">
       <h3>Payment Details :</h3>
       <div class="ms-1 mt-3 p-div">
           <p>Payment Method : <%=order[0].paymentMethod%></p>
           <p class="text-danger">Total Amount : ₹<%=order[0].grandTotal%></p>
         </div>
       </div>
+      
+        <%  if(order[0].cancelRequested === true && order[0].isCanceled === false){%>
+        <div class="mt-3 ">
+          <h4>Request For Cancel Order</h4>
+          <p>Reason : <%=order[0].cancellationReason%> </p>
+          <div>
+            <button style="background-color: #b04fff;" data-orderid="<%=order[0]._id%>" class="btn text-white accept-btn">Accept</button>
+            <button  class="btn btn-danger ms-3 decline-btn" data-orderid="<%=order[0]._id%>">Decline</button>
+          </div>
+        </div>
+        <%}%>
+    
+      
     </div>
   </div>
 </div>
 
+<script>
+
+
+
+
+
+
+const declineBtn = document.querySelector('.decline-btn');
+
+declineBtn.addEventListener('click',async()=>{
+  try{
+      const { value: text } = await Swal.fire({
+      input: "textarea",
+      inputLabel: "Give Your Reason",
+      inputPlaceholder: "Type your reason for declining the request...",
+      showCancelButton: true
+    });
+    const orderId = declineBtn.dataset.orderid ;
+    if(text){
+      declineRequest(orderId,text);
+    }else{
+      Swal.fire("Please Mention the Reason");
+    }
+    
+
+  }catch(error){
+    console.log(error);
+
+  }
+  
+
+})
+
+
+
+async function declineRequest(orderId,text){
+  try{
+    const response = await fetch(`/declineCancelRequest/${orderId}`,{
+      method : "PATCH",
+      headers :{
+        'content-type' : 'application/json',
+      },
+      body :JSON.stringify({
+        reason : text
+      })
+    });
+    
+    if(!response.ok){
+      console.log('Failed fetch');
+    }else{
+     await Swal.fire({
+      position: "center",
+      icon: "success",
+      title: "Done",
+      showConfirmButton: false,
+      timer: 1500
+    });
+    window.location.reload();
+    }
+  }catch(error){
+    console.log(error);
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+const acceptBtn = document.querySelector('.accept-btn');
+if(acceptBtn){
+  acceptBtn.addEventListener('click',()=>{
+  const orderId = acceptBtn.dataset.orderid ;
+  console.log(orderId);
+  cancelAccept(orderId)
+
+});
+}
+
+
+
+async function cancelAccept(orderId){
+  try{
+    const response = await fetch(`/acceptCancel/${orderId}`,{
+    method : 'PATCH',
+    headers :{
+      'content-type' : 'application/json'
+    },
+    
+  });
+
+  if(!response.ok){
+    console.log('failed fetch');
+  }else{
+    const result = response.json();
+      Swal.fire("Order Canceled !");
+      window.location.reload();
+    
+  }
+  
+  }catch(error){
+    console.log(error);
+  }
+}
+</script>
 
 <%- include('../includes/admin/adminEnd') %>
 

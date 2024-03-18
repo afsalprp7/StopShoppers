@@ -42,5 +42,7 @@ router.patch('/blockUser/:id',adminController.doBlockUsers);
 router.get('/adminOrders',validateAdmin,adminController.getAdminOrders);
 router.get('/AdminOrderDetails/:id',validateAdmin,adminController.getAdminOrderDetailpage)
 
+router.patch('/acceptCancel/:id',validateAdmin,adminController.acceptCancelOrder);
+router.patch('/declineCancelRequest/:id',validateAdmin,adminController.declineCancelOrder);
 
 module.exports = router;

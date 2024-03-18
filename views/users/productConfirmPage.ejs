@@ -55,8 +55,8 @@
         
         <div class="ms-5 p-div">
           <p style="text-transform: capitalize;"><strong>Product Name :</strong> <%=item.productInfo.productName%></p>
-          <p><strong>Product Quantity :</strong> <%=item.productDetails.quantity%></p>
-          <p><strong>Product Size :</strong> <%=item.productDetails.size%></p>
+          <p><strong>Product Quantity :</strong> <%=item.productsDetails.quantity%></p>
+          <p><strong>Product Size :</strong> <%=item.productsDetails.size%></p>
         </div>
       </div>
     <%})%>
@@ -68,15 +68,17 @@
   </div>
   
   <p class="text-secondary mt-3">If you have any questions or concerns regarding your order, please don't hesitate to contact us at <a href="">StopShoppers@gmail.com</a> .Our dedicated customer support team is here to assist you.</p>
-  <a style="text-decoration: none;" href="">
+  
     <div class="d-flex justify-content-end mt-3">
+      <a href="/myOrders">
       <button style="background-color: #b04fff;" class="btn text-white px-5 me-4">My orders</button>
+    </a>
       <a href="/shopPage">
       <button style="background-color: #b04fff;" class="btn text-white px-5 ">Continue Shopping</button>
     </a>
 
     </div>
-  </a>
+  
   
  
 </div>

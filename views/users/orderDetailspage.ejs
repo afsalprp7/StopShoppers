@@ -7,6 +7,7 @@
   .p-div {
     line-height: 40px;
   }
+  
 </style>
 
 <div class="container container-main border rounded p-5 shadow mb-5">
@@ -16,67 +17,85 @@
     <h3>Delivery Address :</h3>
     <div class="ms-1 mt-3 p-div">
       <strong>
-        <p>Name :</p>
-        <p>Street Address :</p>
-        <p>State,District :</p>
-        <p>City,Locality :</p>
-        <p>PostalCode :</p>
-        <p>Phone :</p>
+        <p>Name : <%=order[0].address.firstname%> <%=order[0].address.lastname%></p>
+        <p>Street Address : <%=order[0].address.address%></p>
+        <p>State,District : <%=order[0].address.state%>,<%=order[0].address.district%></p>
+        <p>City,Locality : <%=order[0].address.city%>,<%=order[0].address.locality%></p>
+        <p>PostalCode : <%=order[0].address.postalcode%></p>
+        <p>Phone : <%=order[0].address.phone%></p>
       </strong>
     </div>
   </div>
   <div class="mt-3">
     <h3>Product Details :</h3>
+    <% order.forEach((item)=>{ %>
+
+    
     <div
-      class="d-flex align-items-center mt-3 border-primary-subtle border-bottom shadow-sm"
+      class="d-flex align-items-center  mt-3 border-primary-subtle border-bottom shadow-sm"
     >
-      <div>
-        <img style="max-width: 120px" src="/productImg/1709564158572back3.jpg" alt="something" />
+      <div class="mb-3">
+        <img style="max-width: 120px" src="/productImg/<%=item.productInfo.image[0]%>" alt="something" />
       </div>
-      <div class="ms-5 p-div">
+      <div class="ms-5 p-div mb-3">
         <strong>
-          <p>Qty :</p>
-          <p>Product Name :</p>
-          <p>Size :</p>
-          <p>Price :</p>
+          <p>Qty : <%=item.productsDetails.quantity%></p>
+          <p>Product Name : <%=item.productInfo.productName%></p>
+          <p>Size : <%=item.productsDetails.size%></p>
+          <p>Price : ₹<%=item.productInfo.productPrice * item.productsDetails.quantity%></p>
         </strong>
       </div>
     </div>
+    <%})%>
 
     <div class="mt-3">
       <h3>Payment Details :</h3>
       <div class="ms-1 mt-3 p-div">
         <strong>
-          <p>Payment Method :</p>
-          <p>Total Amount :</p>
+          <p>Payment Method : <%=order[0].paymentMethod%></p>
+          <p class="text-danger">Total Amount :  ₹<%=order[0].grandTotal%></p>
         </strong>
-        <div class="d-flex justify-content-end">
-          <button
-            id="cancel-order-btn"
-            style="background-color: #b04fff"
-            class="btn text-white"
-          >
-            Cancel Order
-          </button>
-        </div>
       </div>
 
-      <div
+      <%if(order[0].cancelRequested === true){%>
+        <div class="shadow-sm p-4 mt-4 rounded d-flex justify-content-center">
+          <h4 class="text-warning">Order Status : <%=order[0].orderStatus%></h4>
+        </div>
+      <%}else if(order[0].isCanceled === true){%>
+        <div class="shadow-sm p-4 mt-4 rounded d-flex justify-content-center">
+          <h4 class="text-warning">Order Status : <%=order[0].orderStatus%></h4>
+          <p class="ms-4"> (Reason : <%=order[0].cancellationReason%>)</p>
+        </div>
+
+       <%}else if(order[0].cancelRequestDeclined === true){%>
+        <div class="shadow-sm p-4 mt-4 rounded d-flex justify-content-center">
+          <h4 class="text-warning">Request Status : <span class="text-danger">Declined</span></h4>
+          <p class="ms-4"> (Reason : <%=order[0].declineRequestReason%>)</p>
+        </div>
+
+        <%}else{%>
+        <div class="d-flex justify-content-end">
+          <button id="cancel-order-btn" style="background-color: #b04fff;" class="btn text-white">Cancel Order</button>
+          </div>
+        <div
         class="border shadow-sm p-4 mt-4 rounded form-div"
         style="display: none"
       >
-        <form action="">
+        
           <label class="mb-3" style="font-size: larger"
             ><strong>Reason For Cancellation</strong></label
           >
           <textarea
             class="form-control"
-            id="productDescription"
-            name="productDescription"
+            id="orderReason"
+            name="reason"
             placeholder=""
           ></textarea>
-          <div class="d-flex justify-content mt-3">
+          <p class="text-danger error-p"></p>
+          <div class="d-flex mt-3">
             <button
+            data-orderid="<%=order[0]._id%>"
+              id="cancel-order-submit"
               type="submit"
               style="background-color: #b04fff"
               class="btn text-white"
@@ -84,15 +103,18 @@
               Submit
             </button>
           </div>
-        </form>
+        
       </div>
+      <%}%>
+      
     </div>
   </div>
 </div>
 
 <script>
   const cancelOrderbtn = document.getElementById("cancel-order-btn");
-  cancelOrderbtn.addEventListener("click", () => {
+  if(cancelOrderbtn){
+    cancelOrderbtn.addEventListener("click", () => {
     if (cancelOrderbtn.innerText === "Cancel Order") {
       cancelOrderbtn.innerText = "Close";
     } else {
@@ -105,6 +127,56 @@
       formDiv.style.display = "none";
     }
   });
+  }
+  
+</script>
+<script>
+  const submitBtn = document.getElementById('cancel-order-submit');
+  if(submitBtn){
+    submitBtn.addEventListener('click',()=>{
+    
+    const reason = document.getElementById('orderReason').value;
+    const errorP = document.querySelector('.error-p');
+    if(reason === ''){
+      errorP.innerText = 'This Field Cannot Be Empty'
+      setTimeout(() => {
+        errorP.innerText = '';
+      }, 3000);
+    }else{
+      const orderId = submitBtn.dataset.orderid ;
+      cancelOrder(reason,orderId);
+    }
+    
+  });
+  }
+ 
+
+  async function cancelOrder(reason,orderId){
+    const response = await fetch(`/cancelOrder/${orderId}`,{
+      method : "PATCH",
+      headers :{
+        'content-type' : 'application/json',
+      },
+      body : JSON.stringify({
+        reason : reason
+      })
+
+    })
+    if(!response.ok){
+      console.log('Failed');
+    }
+
+    const result = await response.json();
+
+    if(result){
+     await Swal.fire("Requested !");
+     window.location.reload();
+
+    }
+
+  }
+
+
 </script>
 
 <%- include('../includes/usersPartials/userEnd.ejs') %>

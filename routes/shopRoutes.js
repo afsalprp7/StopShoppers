@@ -46,13 +46,16 @@ router.get('/checkoutFromCart/:id',validateUser,shopController.checkoutFromCart)
 router.post('/placeOrder/:id',shopController.doPlaceOrder);
 
 
-router.get('/orderDetails',validateUser,shopController.getOrderDetailpage);
+router.get('/orderDetails/:id',validateUser,shopController.getOrderDetailpage);
 
 
 
 router.post('/filterCategory',shopController.filterCategory);
 
 router.get('/confirmOrder/:id',validateUser,shopController.getOrderConfirmationPage);
+router.get('/myOrders',validateUser,shopController.getUserMyOrders);
+
+router.patch('/cancelOrder/:id',shopController.orderCancelatiionRequest);
 
 
 

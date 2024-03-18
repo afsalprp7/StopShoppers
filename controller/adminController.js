@@ -536,7 +536,7 @@ module.exports = {
       let productCount = 0;
       
         orders.reduce((total, current) => {
-          productCount = current.productDetails.reduce((subtotal,subcurrent)=>{
+          productCount = current.productsDetails.reduce((subtotal,subcurrent)=>{
             return subtotal += subcurrent.quantity;
         },0)
          return 0;
@@ -547,7 +547,7 @@ module.exports = {
       console.log(orders);
       res.render("admin/adminOrders", {
         title: "Admin Orders",
-        orders,
+        orders : orders ? orders : false,
         adminName: req.session.adminName,
       });
     } catch (error) {
@@ -573,11 +573,11 @@ module.exports = {
           },
         },
         { $unwind: "$address" },
-        { $unwind: "$productDetails"},
+        { $unwind: "$productsDetails"},
         {
           $lookup: {
             from: "products",
-            let: { productId: { $toObjectId: "$productDetails.productId" } },
+            let: { productId: { $toObjectId: "$productsDetails.productId" } },
             pipeline: [
               {
                 $match: {
@@ -598,5 +598,63 @@ module.exports = {
     } catch (error) {
       console.log(error);
     }
+  },
+
+  acceptCancelOrder : async(req,res)=>{
+    try{
+      const orderId = req.params.id ;
+      console.log(orderId);
+      
+      //finding the order
+      const order = await orderModel.findOne({ _id: orderId });
+      console.log('fetched order',order);
+     
+      if (order && order.productsDetails) {
+        const productDetails = order.productsDetails;
+        console.log(productDetails);
+
+        // Increment the quantity of each product back to the product collection
+        const bulkOperations = productDetails.map(product => ({
+            updateOne: {
+                filter: { _id: product.productId },
+                update: { $inc: { quantity: product.quantity } }
+            }
+        }));
+
+        await productModel.bulkWrite(bulkOperations);
+
+        await orderModel.updateOne ({_id : orderId},{
+          cancelRequested : false ,
+          isCanceled : true,
+          orderStatus : 'canceled'
+        });
+  
+        res.json('success');
+        
+      }else{
+        console.log("cannot found data");
+      }
+
+    }catch(error){
+      console.log(error);
+    }
+
+  },
+
+  declineCancelOrder :async(req,res)=>{
+    try{
+      const orderId = req.params.id ;
+      await orderModel.updateOne({_id : orderId},{
+        cancelRequested : false,
+        orderStatus : 'confirmed',
+        cancelRequestDeclined : true,
+        declineRequestReason : req.body.reason,
+      });
+
+      res.json('success');
+
+   } catch(error){
+    console.log(error);
+  }
   },
 };

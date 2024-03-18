@@ -1,0 +1,156 @@
+<%- include('../includes/usersPartials/userHead.ejs') %>
+<style>
+ 
+  /*userprofile styles*/
+.container-main{
+    height: fit-content;
+    margin-top: 5%;
+  }
+ .list{
+  list-style-type: none;
+ }
+
+ .list-container{
+  width: 40%;
+  background-color: rgb(176, 177, 129);
+  margin-left: -15px;
+ }
+  .list div:hover {
+    background-color: rgba(0, 0, 0, 0.1); 
+    margin-left: -25px;
+    transition: .5s;
+    cursor: pointer;
+  }
+  .list a{
+    text-decoration: none;
+    color: black;
+    font-size: larger;
+  }
+.details-container{
+width: 100%;
+height: fit-content;
+}
+.profile-content p{
+line-height: 50px;
+}
+.list-phone{
+  list-style-type: none;
+ }
+ 
+  .list-phone div:hover {
+    background-color: rgba(231, 231, 231, 0.1); 
+    margin-left: -25px;
+    transition: .5s;
+    cursor: pointer;
+  }
+  .list-phone a{
+    text-decoration: none;
+    color: black;
+    font-size: larger;
+  }  
+  .button-phone{
+    width: fit-content;
+    cursor: pointer;
+    position: absolute;
+    display: none;
+    top: 20px;
+    left: 20px;
+  }
+
+  @media (max-width : 768px){
+    .list-container{
+      display: none;
+    }
+    .button-phone{
+      display: block;
+    }
+    .offcanvas{
+      display: block !important;
+    }
+  }
+
+  /* end of userprofile */
+  .btn:focus{
+    box-shadow: none;
+    outline: none;
+    border:none;
+
+  }
+  .card-content:hover{
+      background-color: rgb(230, 230, 230);
+      cursor: pointer;
+      transition: .4s;
+    }
+</style>
+<div style="display: none;" class="offcanvas offcanvas-start" data-bs-scroll="true" data-bs-backdrop="false" tabindex="-1" id="offcanvasScrolling" aria-labelledby="offcanvasScrollingLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="offcanvasScrollingLabel"></h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body">
+    <div  class="list-container-phone p-2">
+      <ul class="list-phone">
+        <strong>
+       <a href="/userProfile/<%=user._id%>"><div  class=" mt-5 p-2 border-bottom "><li>Profile</li></div></a> 
+       <a href=""><div class=" mt-5 p-2 border-bottom"><li><li>Wallet</li></div></a> 
+       <a href=""><div class=" mt-5 p-2 border-bottom"><li>Coupon</li></div></a> 
+       <a href="/myOrders"><div class=" mt-5 p-2 border-bottom"><li>My Orders</li></div></a> 
+      </strong>
+      </ul>
+    </div>
+  </div>
+</div>
+<div class="ms-5 me-5 mb-5 container-main d-flex shadow">
+  <div  class=" list-container p-2 ">
+    <ul class="list">
+      <strong>
+        <a href="/userProfile/<%=user._id%>"><div  class=" mt-5 p-2"><li>Profile</li></div></a>
+        <a href=""><div class=" mt-5 p-2"><li><li>Wallet</li></div></a>
+        <a href=""><div class=" mt-5 p-2"><li>Coupon</li></div></a>
+        <a href=""><div style="background-color: rgba(31, 31, 31, 0.1); margin-left: -25px;" class=" mt-5 p-2"><li>My Orders</li></div></a>
+      </strong>
+    </ul>
+  </div>
+  <div style="position: relative;" class="details-container">
+    <div class="border rounded border-2 p-2 button-phone"  data-bs-toggle="offcanvas" data-bs-target="#offcanvasScrolling" aria-controls="offcanvasScrolling">
+      <i style="font-size: x-large;" class="fa-solid fa-bars"></i>
+    </div>
+    <% if(orders.length > 0){%>
+    <div class="d-flex justify-content-around ms-4 mt-4">
+      <h1>My Orders</h1>
+    </div>
+    
+      <% orders.forEach((item)=>{%>
+        <a href="/orderDetails/<%=item._id%>">
+          <div class="card mx-4 p-5 shadow card-content mt-5 mb-5">
+            <div class="card-body d-flex justify-content-between">
+              <div>
+                <%=item.orderId%>
+              </div>
+              <div>
+                Status : <%=item.orderStatus%>
+              </div>
+              <div>
+                Qty : <%=item.totalQuantity%>
+              </div>
+              <div>
+                <i class="fa-solid fa-angle-right"></i>
+              </div>
+            </div>
+          </div>
+        </a>
+      <%})%>
+   <% }else{%>
+    <div class="d-flex justify-content-center mt-5">
+      <h4 class="text-warning">No Orders Yet !</h4>
+    </div>
+
+    <%}%>
+    
+    
+  </div>
+</div>
+
+
+<%- include('../includes/usersPartials/userEnd.ejs') %>
+

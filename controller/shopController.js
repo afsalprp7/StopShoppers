@@ -8,6 +8,8 @@ const { ObjectId } = require("mongodb");
 const jwt = require("jsonwebtoken");
 const flash = require("connect-flash");
 const orderModel = require("../models/orderModel");
+const {v4} = require('uuid');
+
 module.exports = {
   getHomePage: async (req, res) => {
     try {
@@ -815,15 +817,16 @@ module.exports = {
       });
       // console.log(deliveryAddress);
       if (Object.keys(req.body).length > 0) {
-        console.log(databody);
+        // console.log(databody);
 
-        await orderModel.collection.insertOne({
-          userId: userId,
+          result =  await orderModel.collection.insertOne({
+          userId: new ObjectId(userId),
+          orderId : v4(),
           deliveryAddress: new ObjectId(deliveryAddress._id),
           orderStatus: "confirmed",
-          productDetails: [
+          productsDetails: [
             {
-              productId: databody.productName,
+              productId: new ObjectId(databody.productName),
               quantity: 1,
               size: databody.size,
             },
@@ -834,8 +837,10 @@ module.exports = {
           cancellationReason: null,
           orderedAt: new Date(),
           updatedAt: new Date(),
+          isCanceled : false,
+          cancelRequested : false
         });
-
+        console.log(result);
         //ordered product
         await productModel.updateOne(
           { _id: databody.productName },
@@ -863,15 +868,18 @@ module.exports = {
         console.log(productDetails);
           result =  await orderModel.collection.insertOne({
           userId: userId,
+          orderId : v4(),
           deliveryAddress: new ObjectId(deliveryAddress._id),
           orderStatus: "confirmed",
-          productDetails: productDetails,
+          productsDetails: productDetails,
           paymentMethod: "COD",
           grandTotal: req.session.grandTotal,
           totalQuantity : totalProducts,
           cancellationReason: null,
           orderedAt: new Date(),
           updatedAt: new Date(),
+          isCanceled : false,
+          cancelRequested : false
         });
 
         await cartModel.updateOne(
@@ -912,10 +920,33 @@ module.exports = {
       } else {
         user = false;
       }
+      const orderId = new ObjectId (req.params.id);
+      const orderDetails = await orderModel.aggregate ([{
+        $match : {
+          _id : orderId
+        }
+      },{$unwind : "$productsDetails"},
+      {$lookup:{
+        from : "products",
+        localField : "productsDetails.productId",
+        foreignField : "_id",
+        as : "productInfo"
+      }},{$unwind : "$productInfo"},
+      {$lookup:{
+        from : "addresses",
+        localField : "deliveryAddress",
+        foreignField : "_id",
+        as : "address",
 
+      }},{$unwind : "$address"},
+
+
+    ]);
+    console.log(orderDetails);
       res.render("users/orderDetailsPage", {
         title: "Order Details",
         user,
+        order : orderDetails
       });
     } catch (error) {
       console.log(error);
@@ -988,10 +1019,10 @@ getOrderConfirmationPage :async(req,res)=>{
 
       const orderId = req.params.id ; 
       const orderDetails = await orderModel.aggregate([{$match :{ _id : new ObjectId(orderId)}},
-        {$unwind : "$productDetails"},
+        {$unwind : "$productsDetails"},
         {$lookup:{
           from : "products",
-          localField : "productDetails.productId",
+          localField : "productsDetails.productId",
           foreignField : "_id",
           as : "productInfo"
         }},{$unwind : "$productInfo"},
@@ -1018,6 +1049,48 @@ getOrderConfirmationPage :async(req,res)=>{
   }
 
 },
+getUserMyOrders :async(req,res)=>{
+  try{
+      const token = req.cookies.UserToken;
+      let user;
+      if (token) {
+        const data = jwt.verify(token, "secretKeyUser");
+        user = data.user;
+      } else {
+        user = false;
+      }
+
+      const orders = await orderModel.find()
+
+      res.render('users/userMyOrders',{
+        title : 'Orders',
+        orders,
+        user
+      })
+
+
+  }catch(error){
+    console.log(error);
+  }
+
+},
+
+orderCancelatiionRequest : async(req,res)=>{
+  try{
+    const orderId = req.params.id ; 
+    const reason = req.body.reason ;
+    const order = await orderModel.updateOne({_id : orderId},{ $set : 
+      { cancelRequested : true , cancellationReason : reason,orderStatus : "pending"}});
+      
+        res.json('success')
+      
+
+  }catch(error){
+    console.log(error);
+  }
+
+},
+
   userLogout: (req, res) => {
     delete req.session.user;
     res.clearCookie("UserToken");

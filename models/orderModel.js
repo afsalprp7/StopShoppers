@@ -7,6 +7,11 @@ const orderSchema = new mongoose.Schema({
     required: true
   },
 
+  orderId :{
+    type : String,
+    required : true
+  },
+
   deliveryAddress: {
     type: mongoose.Schema.Types.ObjectId,
     required: true
@@ -73,6 +78,27 @@ const orderSchema = new mongoose.Schema({
     required : true,
     
   },
+
+  isCanceled :{
+    type : Boolean,
+    default : false
+  },
+
+  cancelRequested : {
+    type : Boolean,
+    default : false
+  },
+
+  cancelRequestDeclined :{
+    type : Boolean,
+    default :false
+
+  },
+
+ declineRequestReason :{
+  type : String,
+  default : null
+ },
 
 });
 
