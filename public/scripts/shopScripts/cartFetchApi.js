@@ -30,7 +30,7 @@ const quantityDiv = document.querySelectorAll(".quantity");
       // console.log(size);
 
       updateCartQuantity(productId, userId, newQuantity,size);
-      window.location.reload();
+      
 
     });
     });
@@ -48,10 +48,19 @@ const quantityDiv = document.querySelectorAll(".quantity");
               size  : size
             })
         });
-
+        const result = await response.json();
         if (!response.ok) {
           console.log('failed to update cart');
+        }else{
+          if(result === 'success'){
+            window.location.reload();
+          }else{
+            await Swal.fire('No more Products Available');
+          }
+          
         }
+
+        
   
       } catch (error) {
         console.error(error);

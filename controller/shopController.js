@@ -10,6 +10,15 @@ const flash = require("connect-flash");
 const orderModel = require("../models/orderModel");
 const wishlistModel = require('../models/wishlistModel');
 const {v4} = require('uuid');
+const Razorpay = require('razorpay');
+require('dotenv').config();
+const crypto = require('crypto');
+
+
+
+
+
+
 
 
 module.exports = {
@@ -600,9 +609,7 @@ module.exports = {
       const productInfo = await productModel.findOne({ _id: productId });
       // Update the quantity of the product in the cart
       if (productInfo.quantity < quantity) {
-        res.json({
-          error: true,
-        });
+        res.json('error');
       } else {
         const productIndex = cartItem.products.findIndex((product) => {
           return (
@@ -617,6 +624,9 @@ module.exports = {
 
         // Save the updated cart item it is an mongoose function.
         await cartItem.save();
+
+        res.json('success');
+
       }
     } catch (error) {
       console.error(error);
@@ -842,7 +852,7 @@ module.exports = {
           isCanceled : false,
           cancelRequested : false
         });
-        console.log(result);
+        // console.log(result);
         //ordered product
         await productModel.updateOne(
           { _id: databody.productName },
@@ -1196,6 +1206,57 @@ removeFromWishlist : async(req,res)=>{
 
 },
 
+createOrderRzp : async(req,res)=>{
+  try{
+    const totalAmount = Number(req.body.totalAmount)
+    const instance = new Razorpay({
+      key_id : process.env.RAZORPAY_KEY_ID,
+      key_secret : process.env.RAZORPAY_SECRET_KEY
+    });
+    const options = {
+      amount : totalAmount * 100,
+      currency : "INR",
+      receipt : crypto.randomBytes(10).toString("hex")
+    }
+
+    instance.orders.create(options,(error,order)=>{
+      if(error){
+        console.log(error);
+        return res.status(500).json({message : "something went wrong"})
+      }
+      res.json({data : order, rzpId: instance.key_id});
+    })
+  }catch(error){
+    console.log(error);
+  }
+
+},
+
+// razorpayVerifyPayment : async(req,res)=>{
+//   try{
+//     const {
+//       rzpOrderId ,
+//       rzpPaymentId,
+//       rzpSignature} = req.body;
+
+//       const sign = rzpOrderId + "|" + rzpPaymentId;
+
+//       const expectedSign = crypto.createHmac("afs256",process.env.RAZORPAY_SECRET_KEY)
+//       .update(sign.toString()).digest("hex");
+
+//       if(rzpSignature === expectedSign){
+//         return res.status(200).json({message : "Payment verified successfully"});
+
+//       }else{
+//         return res.status(400).json({message : "invalid signature sent!"});
+//       }
+    
+//   }catch(error){
+//     console.log(error);
+
+//   }
+
+// },
   userLogout: (req, res) => {
     delete req.session.user;
     res.clearCookie("UserToken");

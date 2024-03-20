@@ -351,18 +351,21 @@
             <div>
               <%if(productInfo){%>
               <input
+              class="form-product-id"
                 name="productName"
                 value="<%=productInfo[0]._id%>"
                 type="text"
                 hidden
               />
               <input
+              class="form-product-size"
                 name="size"
                 value="<%=productInfo[0].sizes%>"
                 type="text"
                 hidden
               />
               <input
+              class="form-product-price"
                 name="price"
                 value="<%=productInfo[0].productPrice%>"
                 type="text"
@@ -379,10 +382,12 @@
               Place Order
             </button>
             <button
-          type="submit"
+          
+          type="button"
           id="rzp-btn"
           style="color: white; background-color: #b04fff;display: none;"
           class="btn px-5 razorpay-btn"
+          data-grandtotal="<%=grandTotal%>"
         >
           Pay Now
         </button>
@@ -394,10 +399,9 @@
   </div>
 </div>
 
-
+<script type="module" src="/scripts/shopScripts/checkoutPage.js"></script>
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
-
   const placeOrderForm = document.getElementById("placeOrder-form");
   const radioCashonDelivery = document.getElementById("cashOnDelivery");
   const razorpayInput = document.getElementById('razorpay-input');
@@ -435,7 +439,7 @@
  })
   
 
+ 
 </script>
-
 <script src="/scripts/validation/checkoutPageV.js"></script>
 <%- include('../includes/usersPartials/userEnd.ejs') %>

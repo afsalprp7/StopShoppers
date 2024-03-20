@@ -60,6 +60,7 @@ router.patch('/cancelOrder/:id',validateUser,shopController.orderCancelationRequ
 router.get('/wishlist/:id',validateUser,shopController.getWishlistPage);
 router.post('/addToWishlist/:id',validateUser,shopController.addToWishlist);
 router.patch('/removeFromWishlist/:id',validateUser,shopController.removeFromWishlist);
+router.post('/createOrderRzp',validateUser,shopController.createOrderRzp)
 
 
 
