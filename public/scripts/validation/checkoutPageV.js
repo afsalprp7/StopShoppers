@@ -164,3 +164,21 @@ async function setNewAddress (userId){
     console.log(error);
   }
 }
+
+
+const formBtn = document.querySelector(".form-btn");
+  formBtn.addEventListener("click", () => {
+    const form = document.querySelector(".container-form");
+
+    if (form.style.display === "block") {
+      form.style.display = "none";
+    } else {
+      form.style.display = "block";
+    }
+
+    if (formBtn.innerText === "Add Address") {
+      formBtn.innerText = "Close";
+    } else if (formBtn.innerText === "Close") {
+      formBtn.innerText = "Add Address";
+    }
+  });

@@ -55,7 +55,11 @@ router.post('/filterCategory',shopController.filterCategory);
 router.get('/confirmOrder/:id',validateUser,shopController.getOrderConfirmationPage);
 router.get('/myOrders',validateUser,shopController.getUserMyOrders);
 
-router.patch('/cancelOrder/:id',shopController.orderCancelatiionRequest);
+router.patch('/cancelOrder/:id',validateUser,shopController.orderCancelationRequest);
+
+router.get('/wishlist/:id',validateUser,shopController.getWishlistPage);
+router.post('/addToWishlist/:id',validateUser,shopController.addToWishlist);
+router.patch('/removeFromWishlist/:id',validateUser,shopController.removeFromWishlist);
 
 
 

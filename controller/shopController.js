@@ -8,7 +8,9 @@ const { ObjectId } = require("mongodb");
 const jwt = require("jsonwebtoken");
 const flash = require("connect-flash");
 const orderModel = require("../models/orderModel");
+const wishlistModel = require('../models/wishlistModel');
 const {v4} = require('uuid');
+
 
 module.exports = {
   getHomePage: async (req, res) => {
@@ -335,9 +337,9 @@ module.exports = {
 
       const result = await productModel.find({
         $or: [
-          { productName: { $regex: string, $options: "i" } },
-          { description: { $regex: string, $options: "i" } },
-          {color : {$regex : string , $options : "i"}}
+          {productName: { $regex: string, $options: "i" } },
+          {description: { $regex: string, $options: "i" } },
+          {color : {$regex : string , $options : "i"}},
         ],
       });
       res.json({
@@ -650,7 +652,7 @@ module.exports = {
       });
       console.log(index);
       cartItem.products.splice(index, 1);
-      cartItem.save();
+      await cartItem.save();
     } catch (error) {
       console.log(error);
     }
@@ -1075,7 +1077,7 @@ getUserMyOrders :async(req,res)=>{
 
 },
 
-orderCancelatiionRequest : async(req,res)=>{
+orderCancelationRequest : async(req,res)=>{
   try{
     const orderId = req.params.id ; 
     const reason = req.body.reason ;
@@ -1084,6 +1086,109 @@ orderCancelatiionRequest : async(req,res)=>{
       
         res.json('success')
       
+
+  }catch(error){
+    console.log(error);
+  }
+
+},
+
+getWishlistPage : async(req,res)=>{
+try{
+  const token = req.cookies.UserToken;
+  let user;
+  if (token) {
+    const data = jwt.verify(token, "secretKeyUser");
+    user = data.user;
+  } else {
+    user = false;
+  }
+  const userId = new ObjectId(user._id)
+  const wishProducts = await wishlistModel.aggregate([{$match :{
+    userId : userId
+  }},
+  {
+    $unwind : "$productDetails"
+  },
+  {$lookup :{
+    from : "products",
+    localField : "productDetails.productId",
+    foreignField : "_id",
+    as : "productInfo"
+  }},{
+    $unwind : "$productInfo"
+  }
+])
+
+
+console.log(wishProducts);
+
+
+  res.render('users/userwishlist',{
+    title : 'Wishlist',
+    user,
+    wishlist : wishProducts
+  })
+}catch(error){
+  console.log(error);
+}
+},
+
+addToWishlist: async (req, res) => {
+  try {
+    const productId = new ObjectId(req.params.id);
+    const userId = new ObjectId(req.body.userId);
+
+    const exists = await wishlistModel.findOne({ userId: userId });
+
+    if (exists) {
+      let isProductAlreadyAdded = false;
+     exists.productDetails.forEach((product)=>{
+        if (product.productId.equals(productId)) {
+         return isProductAlreadyAdded = true; 
+        }
+      });
+
+      if (isProductAlreadyAdded) {
+        return res.json('error');
+      } else {
+        exists.productDetails.push({
+          productId: productId
+        });
+        await exists.save();
+        return res.json('success');
+      }
+    } else {
+      const wishlistItem = await wishlistModel.create({
+        userId: userId,
+        productDetails: [{ productId: productId }]
+      });
+      return res.json('success');
+    }
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json('error');
+  }
+},
+
+removeFromWishlist : async(req,res)=>{
+  try{
+    const productId = new ObjectId(req.params.id);
+    console.log(productId);
+    const userId = new ObjectId(req.body.userId);
+    const wishlist = await wishlistModel.findOne({userId : userId});
+    console.log(wishlist);
+   
+    const index = wishlist.productDetails.findIndex((product)=>{
+      return product.productId.equals(new ObjectId(productId))
+    })
+
+
+    console.log(index);
+    wishlist.productDetails.splice(index,1);
+    await wishlist.save();
+    
+    res.json('success');
 
   }catch(error){
     console.log(error);

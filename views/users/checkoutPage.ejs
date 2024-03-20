@@ -213,8 +213,12 @@
       <div class="mt-4 border rounded border-2 shadow p-3">
         <h4>Add Payment Details</h4>
         <div style="display: inline-flex; align-items: baseline" class="mt-3">
-          <input id="cashOnDelivery" type="radio" class="mt-1 me-2" />
+          <input id="cashOnDelivery" type="radio" name="paymentMethod" class="mt-1 me-2 payment-method" value="cod" />
           <label for="cashOnDelivery"><strong>Cash On Delivery</strong></label>
+        </div>
+        <div  class="mt-3 d-flex align-items-baseline">
+          <input id="razorpay-input" type="radio" name="paymentMethod" class=" me-2 mb-2 payment-method" value="razorpay"/>
+          <img width="90px" src="/imagesLocal/razorpay.png" alt="">
         </div>
       </div>
     </div>
@@ -367,25 +371,40 @@
               <%}%>
             </div>
             <button
+            
               type="submit"
               style="color: white; background-color: #b04fff"
-              class="btn px-5"
+              class="btn px-5 cod-btn"
             >
               Place Order
             </button>
+            <button
+          type="submit"
+          id="rzp-btn"
+          style="color: white; background-color: #b04fff;display: none;"
+          class="btn px-5 razorpay-btn"
+        >
+          Pay Now
+        </button>
           </form>
+          
         </div>
       </div>
     </div>
   </div>
 </div>
 
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
+
   const placeOrderForm = document.getElementById("placeOrder-form");
   const radioCashonDelivery = document.getElementById("cashOnDelivery");
+  const razorpayInput = document.getElementById('razorpay-input');
   const userId = "<%=user._id%>";
+  
   placeOrderForm.addEventListener("submit", (e) => {
-    if (!radioCashonDelivery.checked) {
+    if (!radioCashonDelivery.checked && !razorpayInput.checked) {
       e.preventDefault();
       Swal.fire("Chose Payment method");
     } else {
@@ -396,25 +415,27 @@
       placeOrderForm.submit();
     }
   });
+
+  
+ const inputs = document.querySelectorAll(".payment-method");
+ const codBtn = document.querySelector('.cod-btn');
+ const razorpayBtn = document.querySelector('.razorpay-btn');
+ inputs.forEach((item)=>{
+  item.addEventListener('click',()=>{
+    if(item.checked){
+      if(item.value === 'cod'){
+        razorpayBtn.style.display = 'none';
+        codBtn.style.display = 'block';
+      }else{
+        razorpayBtn.style.display = 'block';
+        codBtn.style.display = 'none';
+      }
+    }
+  })
+ })
+  
+
 </script>
 
-<script>
-  const formBtn = document.querySelector(".form-btn");
-  formBtn.addEventListener("click", () => {
-    const form = document.querySelector(".container-form");
-
-    if (form.style.display === "block") {
-      form.style.display = "none";
-    } else {
-      form.style.display = "block";
-    }
-
-    if (formBtn.innerText === "Add Address") {
-      formBtn.innerText = "Close";
-    } else if (formBtn.innerText === "Close") {
-      formBtn.innerText = "Add Address";
-    }
-  });
-</script>
 <script src="/scripts/validation/checkoutPageV.js"></script>
 <%- include('../includes/usersPartials/userEnd.ejs') %>

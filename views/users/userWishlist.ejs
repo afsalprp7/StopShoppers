@@ -1,0 +1,101 @@
+<%- include('../includes/usersPartials/userHead.ejs') %>
+<style>
+.container-main{
+  margin-top: 6%;
+}
+</style>
+
+
+
+
+
+
+
+
+<div class="container container-main mb-5">
+  <div>
+    <i style="font-size: x-large;" class="fa-solid fa-hand-holding-heart">Wishlist</i>
+  </div>
+  <div class="row isotope-grid productList mt-5">
+    <% wishlist.forEach((item)=>{%>
+      <div class="col-sm-6 col-md-4 col-lg-3 p-b-35 isotope-item women">
+        <!-- Block2 -->
+        <div class="block2">
+          <div style="max-height: 350px;" class="block2-pic hov-img0">
+            <a href="/productDetail/<%=item.productInfo._id%>">
+            <img src="/productImg/<%=item.productInfo.image[0]%>" alt="IMG-PRODUCT">
+          </a>
+          </div>
+  
+          <div class="block2-txt flex-w flex-t p-t-14 ">
+            <div class="block2-txt-child1 flex-col-l ">
+              <a  class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
+                 <%=item.productInfo.productName%> 
+              </a>
+  
+              <span class="stext-105 cl3">
+                ₹ <%=item.productInfo.productPrice%>
+                
+              </span>
+            </div>
+            <div style="cursor: pointer;" class="block2-txt-child2 flex-r p-t-3 remove-btn" data-productid="<%=item.productInfo._id%>" data-userid="<%=user._id%>">
+              <button class="text-danger">Remove</button>
+            </div>
+          </div>
+  
+        </div>
+      </div>
+      <%})%>
+      </div>
+</div>
+
+
+
+<script>
+const removeBtn = document.querySelectorAll('.remove-btn');
+removeBtn.forEach((item)=>{
+  item.addEventListener('click',async()=>{
+    const productId = item.dataset.productid ;
+    const userId = item.dataset.userid ;
+    console.log(productId);
+    console.log(userId);
+   await Swal.fire({
+    title: "Are you sure?",
+    text: "You won't be able to revert this!",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#3085d6",
+    cancelButtonColor: "#d33",
+    confirmButtonText: "Yes, delete it!"
+}).then(async(result) => {
+  if (result.isConfirmed) {
+    const response = await fetch(`/removeFromWishlist/${productId}`,{
+      method : "PATCH",
+      headers :{
+        "content-type" : "application/json"
+      },
+      body : JSON.stringify({
+        userId
+      })
+    });
+    
+    const result = await response.json();
+    if(result === 'success'){
+      await Swal.fire({
+      position: "center",
+      icon: "success",
+      title: "Removed",
+      showConfirmButton: false,
+      timer: 1500
+    });
+    window.location.reload();
+    }
+    
+  }
+});
+    
+  })
+})
+</script>
+<%- include('../includes/usersPartials/userEnd.ejs') %>
+
