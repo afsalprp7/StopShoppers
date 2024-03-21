@@ -55,7 +55,12 @@
     <div class="mt-3  border-bottom">
       <h3>Payment Details :</h3>
       <div class="ms-1 mt-3 p-div">
-          <p>Payment Method : <%=order[0].paymentMethod%></p>
+          <p>Payment Method : <%=order[0].paymentDetails.method%></p>
+          <%if(order[0].paymentDetails.paymentId && order[0].paymentDetails.orderId){%>
+            <p>Payment Id : <%=order[0].paymentDetails.paymentId%></p>
+            <p>Order Id : <%=order[0].paymentDetails.orderId%></p>
+            <%}%>
+         
           <p class="text-danger">Total Amount : ₹<%=order[0].grandTotal%></p>
         </div>
       </div>

@@ -827,6 +827,9 @@ module.exports = {
         userId: userId,
         isPrimary: true,
       });
+      const paymentDetails = {
+        method : "COD"
+      }
       // console.log(deliveryAddress);
       if (Object.keys(req.body).length > 0) {
         // console.log(databody);
@@ -844,7 +847,7 @@ module.exports = {
             },
           ],
           totalQuantity : 1 ,
-          paymentMethod: "COD",
+          paymentDetails : paymentDetails ,
           grandTotal: Number(databody.price),
           cancellationReason: null,
           orderedAt: new Date(),
@@ -863,7 +866,7 @@ module.exports = {
           }
         );
       } else {
-        console.log("else");
+        
 
         const cartProducts = await cartModel.findOne({ userId: userId });
         // console.log(cartProducts);
@@ -884,7 +887,7 @@ module.exports = {
           deliveryAddress: new ObjectId(deliveryAddress._id),
           orderStatus: "confirmed",
           productsDetails: productDetails,
-          paymentMethod: "COD",
+          paymentDetails : paymentDetails ,
           grandTotal: req.session.grandTotal,
           totalQuantity : totalProducts,
           cancellationReason: null,
@@ -1232,32 +1235,134 @@ createOrderRzp : async(req,res)=>{
 
 },
 
-// razorpayVerifyPayment : async(req,res)=>{
-//   try{
-//     const {
-//       rzpOrderId ,
-//       rzpPaymentId,
-//       rzpSignature} = req.body;
+razorpayVerifyPaymentAndUpdateOrder : async(req,res)=>{
+  try{
+    let result ;
+    const userId = req.params.id
 
-//       const sign = rzpOrderId + "|" + rzpPaymentId;
+    const address = await addressModel.findOne({userId : userId,isPrimary : true})
+    const {
+      productId,
+      productSize,
+      productPrice,
+      rzpOrderId ,
+      rzpPaymentId,
+      rzpSignature} = req.body;
 
-//       const expectedSign = crypto.createHmac("afs256",process.env.RAZORPAY_SECRET_KEY)
-//       .update(sign.toString()).digest("hex");
+      const sign = rzpOrderId + "|" + rzpPaymentId;
 
-//       if(rzpSignature === expectedSign){
-//         return res.status(200).json({message : "Payment verified successfully"});
+      const expectedSign = crypto.createHmac("sha256",process.env.RAZORPAY_SECRET_KEY)
+      .update(sign.toString()).digest("hex");
 
-//       }else{
-//         return res.status(400).json({message : "invalid signature sent!"});
-//       }
+      if(rzpSignature === expectedSign){
+
+        if(productId || productSize || productPrice){
+
+
+          result =  await orderModel.collection.insertOne({
+            userId: new ObjectId(userId),
+            orderId : v4(),
+            deliveryAddress: new ObjectId(address._id),
+            orderStatus: "confirmed",
+            productsDetails: [
+              {
+                productId: new ObjectId(productId),
+                quantity: 1,
+                size: productSize,
+              },
+            ],
+            totalQuantity : 1 ,
+            paymentDetails :  {
+              method : "razorpay",
+              paymentId : rzpPaymentId,
+              orderId : rzpOrderId
+
+            },
+            grandTotal: Number(productPrice),
+            cancellationReason: null,
+            orderedAt: new Date(),
+            updatedAt: new Date(),
+            isCanceled : false,
+            cancelRequested : false
+          });
+          await productModel.updateOne({_id : productId},{$inc:{quantity : -1}});
+          console.log('updated');
+          return res.status(200).json({message : result.insertedId});
+        }else{
+
+          //from cart
+          const cartProducts = await cartModel.findOne({ userId: userId });
+          // console.log(cartProducts);
+          const productDetails = cartProducts.products.map((product) => ({
+            productId: product.productId,
+            quantity: product.quantity,
+            size: product.size,
+          }));
+  
+          const totalProducts = cartProducts.products.reduce((total,current)=>{
+            return total = total + current.quantity;
+          },0)
+  
+          console.log(productDetails);
+            result =  await orderModel.collection.insertOne({
+            userId: userId,
+            orderId : v4(),
+            deliveryAddress: new ObjectId(address._id),
+            orderStatus: "confirmed",
+            productsDetails: productDetails,
+            paymentDetails : {
+              method : "razorpay",
+              paymentId : rzpPaymentId,
+              orderId : rzpOrderId
+            },
+            grandTotal: req.session.grandTotal,
+            totalQuantity : totalProducts,
+            cancellationReason: null,
+            orderedAt: new Date(),
+            updatedAt: new Date(),
+            isCanceled : false,
+            cancelRequested : false
+          });
+
+          //clear products from cart
+          await cartModel.updateOne(
+            { userId: userId },
+            {
+              $set: {
+                products: [],
+              },
+            }
+          );
+
+          //updating or decrementing the product quantity
+          productDetails.forEach(async (item) => {
+            console.log(item.quantity);
+            await productModel.updateOne(
+              { _id: item.productId },
+              {
+                $inc: {
+                  quantity: -Number(item.quantity),
+                },
+              }
+            );
+          });
+
+          return res.status(200).json({message : result.insertedId});
+
+        }
+      }else{
+        return res.status(400).json({message : "invalid signature sent!"});
+      }
     
-//   }catch(error){
-//     console.log(error);
+  }catch(error){
+    console.log(error);
 
-//   }
+  }
 
-// },
-  userLogout: (req, res) => {
+},
+  
+
+userLogout: (req, res) => {
     delete req.session.user;
     res.clearCookie("UserToken");
     res.redirect("/");

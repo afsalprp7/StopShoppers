@@ -348,9 +348,10 @@
         <small class="text-warning">(Inclusive of all taxes)</small>
         <div class="d-flex justify-content-center mt-3">
           <form id="placeOrder-form" action="" method="post">
-            <div>
+            <div data-userid="<%=user._id%>" class="form-content-div">
               <%if(productInfo){%>
               <input
+              
               class="form-product-id"
                 name="productName"
                 value="<%=productInfo[0]._id%>"
@@ -387,7 +388,10 @@
           id="rzp-btn"
           style="color: white; background-color: #b04fff;display: none;"
           class="btn px-5 razorpay-btn"
-          data-grandtotal="<%=grandTotal%>"
+          data-grandtotal="<%=grandTotal ? grandTotal : false%>"
+          data-singleproduct="<%=productInfo ? productInfo[0].productPrice : false%>"
+            
+          
         >
           Pay Now
         </button>

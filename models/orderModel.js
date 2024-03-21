@@ -44,9 +44,17 @@ const orderSchema = new mongoose.Schema({
     }
   }],
 
-    paymentMethod :{
-      type : String,
-      required : true
+    paymentDetails :{
+      method : {
+        type : String,
+        required : true
+      },
+      paymentId : {
+        type : String
+      },
+      orderId : {
+        type : String
+      }
     },
 
     grandTotal : {
