@@ -6,7 +6,7 @@ const flash = require("connect-flash");
 const fs = require("fs");
 const adminModel = require("../models/adminModel");
 const orderModel = require("../models/orderModel");
-
+const walletModel = require('../models/walletModel');
 module.exports = {
   //get category pageṭ
   getCategoryPage: async (req, res) => {
@@ -621,6 +621,7 @@ module.exports = {
             }
         }));
 
+       
         await productModel.bulkWrite(bulkOperations);
 
         await orderModel.updateOne ({_id : orderId},{
@@ -628,7 +629,22 @@ module.exports = {
           isCanceled : true,
           orderStatus : 'canceled'
         });
-  
+
+
+        if(order.paymentDetails.method === 'razorpay'){
+          await walletModel.updateOne({
+            userId : new ObjectId(order.userId)
+          },
+          {$inc :{balance : order.grandTotal},$push :{
+            transactionDetails : {
+              paymentType : "credited",
+              date : new Date(),
+              amount : Number(order.grandTotal)
+            }
+          }},
+          {upsert : true})
+        }
+
         res.json('success');
         
       }else{
@@ -644,6 +660,8 @@ module.exports = {
   declineCancelOrder :async(req,res)=>{
     try{
       const orderId = req.params.id ;
+
+
       await orderModel.updateOne({_id : orderId},{
         cancelRequested : false,
         orderStatus : 'confirmed',

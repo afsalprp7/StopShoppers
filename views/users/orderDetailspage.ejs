@@ -54,6 +54,9 @@
         <strong>
           <p>Payment Method : <%=order[0].paymentDetails.method%></p>
           <p class="text-danger">Total Amount :  ₹<%=order[0].grandTotal%></p>
+          <% if(order[0].walletMoney){%>
+          <p class="text-danger">Payed From wallet :  ₹<%=order[0].walletMoney%></p>
+         <%}%>
         </strong>
       </div>
 

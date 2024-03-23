@@ -108,6 +108,9 @@ const orderSchema = new mongoose.Schema({
   default : null
  },
 
+  walletMoney :{
+    type : Number
+  }
 });
 
   

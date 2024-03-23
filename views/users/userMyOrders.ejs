@@ -13,7 +13,7 @@
 
  .list-container{
   width: 40%;
-  background-color: rgb(176, 177, 129);
+  background-color: #b04fff;
   margin-left: -15px;
  }
   .list div:hover {
@@ -24,7 +24,7 @@
   }
   .list a{
     text-decoration: none;
-    color: black;
+    color: rgb(255, 255, 255);
     font-size: larger;
   }
 .details-container{
@@ -93,9 +93,9 @@ line-height: 50px;
       <ul class="list-phone">
         <strong>
        <a href="/userProfile/<%=user._id%>"><div  class=" mt-5 p-2 border-bottom "><li>Profile</li></div></a> 
-       <a href=""><div class=" mt-5 p-2 border-bottom"><li><li>Wallet</li></div></a> 
+       <a href="/myWallet/<%=user._id%>"><div class=" mt-5 p-2 border-bottom"><li><li>Wallet</li></div></a> 
        <a href=""><div class=" mt-5 p-2 border-bottom"><li>Coupon</li></div></a> 
-       <a href="/myOrders"><div class=" mt-5 p-2 border-bottom"><li>My Orders</li></div></a> 
+       <a href="/myOrders/<%=user._id%>"><div class=" mt-5 p-2 border-bottom"><li>My Orders</li></div></a> 
       </strong>
       </ul>
     </div>
@@ -105,10 +105,16 @@ line-height: 50px;
   <div  class=" list-container p-2 ">
     <ul class="list">
       <strong>
-        <a href="/userProfile/<%=user._id%>"><div  class=" mt-5 p-2"><li>Profile</li></div></a>
-        <a href=""><div class=" mt-5 p-2"><li><li>Wallet</li></div></a>
-        <a href=""><div class=" mt-5 p-2"><li>Coupon</li></div></a>
-        <a href=""><div style="background-color: rgba(31, 31, 31, 0.1); margin-left: -25px;" class=" mt-5 p-2"><li>My Orders</li></div></a>
+        <a href="/userProfile/<%=user._id%>"><div  class=" mt-5 p-2">
+          <i class="fa-solid fa-user"><span class="ms-3">Profile</span></i>
+        </div></a>
+        <a href="/myWallet/<%=user._id%>"><div  class=" mt-5 p-2">
+          <i class="fa-solid fa-wallet"><span class="ms-3">Wallet</span></i>
+        </div></a>
+        <a href=""><div class=" mt-5 p-2"><i class="fa-solid fa-receipt"><span class="ms-3">Coupons</span></i></div></a>
+        <a href="/myOrders/<%=user._id%>"><div style="background-color: rgba(31, 31, 31, 0.1); margin-left: -25px;"  class=" mt-5 p-2">
+          <i class="fa-solid fa-store"><span class="ms-3">My Orders</span></i>
+        </div></a>
       </strong>
     </ul>
   </div>
@@ -126,10 +132,10 @@ line-height: 50px;
           <div class="card mx-4 p-5 shadow card-content mt-5 mb-5">
             <div class="card-body d-flex justify-content-between">
               <div>
-                <%=item.orderId%>
+               ID : <%=item.orderId%>
               </div>
               <div>
-                Status : <%=item.orderStatus%>
+                Status : <span class="order-status"><%=item.orderStatus%></span>
               </div>
               <div>
                 Qty : <%=item.totalQuantity%>
@@ -152,6 +158,18 @@ line-height: 50px;
   </div>
 </div>
 
+<script>
+  const status = document.querySelectorAll('.order-status');
+  status.forEach((item)=>{
+   if(item.innerText === 'canceled'){
+    item.classList.add('text-danger');
+   }else if(item.innerText === 'pending'){
+    item.classList.add('text-warning');
+   }else if(item.innerText === 'confirmed'){
+    item.classList.add('text-success');
+   }
+  })
+</script>
 
 <%- include('../includes/usersPartials/userEnd.ejs') %>
 

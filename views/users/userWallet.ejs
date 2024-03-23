@@ -1,0 +1,306 @@
+
+
+<%- include('../includes/usersPartials/userHead.ejs') %>
+<style>
+ 
+    /*userprofile styles*/
+.container-main{
+      min-height: 80vh;
+      margin-top: 5%;
+    }
+   .list{
+    list-style-type: none;
+   }
+
+   .list-container{
+    width: 40%;
+    background-color: #b04fff;
+    margin-left: -15px;
+   }
+    .list div:hover {
+      background-color: rgba(0, 0, 0, 0.1); 
+      margin-left: -25px;
+      transition: .5s;
+      cursor: pointer;
+    }
+    .list a{
+      text-decoration: none;
+      color: rgb(255, 255, 255);
+      font-size: larger;
+    }
+.details-container{
+  width: 100%;
+  height: fit-content;
+}
+.profile-content p{
+  line-height: 50px;
+}
+.list-phone{
+    list-style-type: none;
+   }
+   
+    .list-phone div:hover {
+      background-color: rgba(231, 231, 231, 0.1); 
+      margin-left: -25px;
+      transition: .5s;
+      cursor: pointer;
+    }
+    .list-phone a{
+      text-decoration: none;
+      color: rgb(0, 0, 0);
+      font-size: larger;
+    }  
+    .button-phone{
+      width: fit-content;
+      cursor: pointer;
+      position: absolute;
+      display: none;
+      top: 20px;
+      left: 20px;
+    }
+
+    @media (max-width : 768px){
+      .list-container{
+        display: none;
+      }
+      .button-phone{
+        display: block;
+      }
+      .offcanvas{
+        display: block !important;
+      }
+    }
+
+    /* end of userprofile */
+    .btn:focus{
+      box-shadow: none;
+      outline: none;
+      border:none;
+
+    }
+</style>
+
+<div style="display: none;" class="offcanvas offcanvas-start" data-bs-scroll="true" data-bs-backdrop="false" tabindex="-1" id="offcanvasScrolling" aria-labelledby="offcanvasScrollingLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="offcanvasScrollingLabel"></h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body">
+    <div  class="list-container-phone p-2">
+      <ul class="list-phone">
+        <strong>
+          <a href="/userProfile/<%=user._id%>"><div  class=" mt-5 p-2 border-bottom "><li>Profile</li></div></a> 
+          <a href="/myWallet/<%=user._id%>"><div class=" mt-5 p-2 border-bottom"><li><li>Wallet</li></div></a> 
+          <a href=""><div class=" mt-5 p-2 border-bottom"><li>Coupon</li></div></a> 
+          <a href="/myOrders/<%=user._id%>"><div class=" mt-5 p-2 border-bottom"><li>My Orders</li></div></a> 
+      </strong>
+      </ul>
+    </div>
+  </div>
+</div>
+<div class="ms-5 me-5 mb-5 container-main d-flex shadow">
+  <div  class=" list-container p-2 ">
+    <ul class="list">
+      <strong>
+        <a href="/userProfile/<%=user._id%>"><div  class=" mt-5 p-2"><i class="fa-solid fa-user"><span class="ms-3">Profile</span></i></div></a>
+        <a href="/myWallet/<%=user._id%>"><div style="background-color: rgba(31, 31, 31, 0.1); margin-left: -25px;" class=" mt-5 p-2">
+          <i class="fa-solid fa-wallet"><span class="ms-3">Wallet</span></i>
+        </div></a>
+        <a href=""><div class=" mt-5 p-2"><i class="fa-solid fa-receipt"><span class="ms-3">Coupons</span></i></div></a>
+        <a href="/myOrders/<%=user._id%>"><div  class=" mt-5 p-2"><i class="fa-solid fa-store"><span class="ms-3">My Orders</span></i></div></a>
+      </strong>
+    </ul>
+  </div>
+  <div style="position: relative;" class="details-container">
+    <div class="border rounded border-2 p-2 button-phone"  data-bs-toggle="offcanvas" data-bs-target="#offcanvasScrolling" aria-controls="offcanvasScrolling">
+      <i style="font-size: x-large;" class="fa-solid fa-bars"></i>
+    </div>
+    <div class="d-flex justify-content-center mt-2">
+      <h1>My Wallet</h1>
+    </div>
+    <div class="ms-5 mt-5 d-flex justify-content-between">
+      <% if(wallet){%>
+        <h3><i class="fa-solid fa-indian-rupee-sign"></i><span class="ms-3 amount-display-span">Total Balance : <%=wallet.balance%></span></h3> 
+        <button style="background-color: #b04fff;" class="btn text-white me-5 px-4 wallet-btn">Add Money</button>
+      <%}else{%>
+        <h2><i class="fa-solid fa-indian-rupee-sign"></i><span class="ms-3 amount-display-span">Total Balance : 0</span></h2> 
+        <button style="background-color: #b04fff;" class="btn text-white me-5 wallet-btn px-4">Add Money</button>
+        <%}%>
+    </div>
+    <div class="mt-5 mx-3">
+      <h4>Wallet History</h4>
+    </div>
+    <div class="m-3">
+
+    <table id="tableProduct" class="table p-1 table-striped table-content">
+    
+      <thead>
+        
+        <tr>
+          <th scope="col">Transaction Type</th>
+          <th scope="col">Date&Time</th>
+          <th scope="col">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% wallet.transactionDetails.forEach((item)=>{ %>
+        <tr>
+          <td class="type-transaction" style="text-transform: capitalize;"><%=item.paymentType%></td>
+          <td><%=item.date%></td>
+          <td>₹<%=item.amount%></td>
+        </tr>
+        <%})%>
+        
+      </tbody>
+  
+    </table>
+  </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+<script>  
+const transactionType = document.querySelectorAll('.type-transaction');
+transactionType.forEach((td)=>{
+  if(td.innerText === 'Credited'){
+    td.classList.add('text-success');
+  }else{
+    td.classList.add('text-danger');
+  }
+})
+
+
+
+
+
+const userId = '<%=user._id%>'
+const walletBtn = document.querySelector('.wallet-btn');
+
+function validateKeyAndUpdateWallet(data , rzpId){
+  const amount = data.amount/100 ; 
+  var options = {
+    "key": rzpId,
+    "amount": amount,
+    "currency": "INR",
+    "name": "StopShoppers",
+    "description": "Test Transaction",
+    "image" : "authPic.jpg",
+    "order_id": data.id,
+    "handler": async function(response){
+      try{
+        
+        Swal.fire('Payment successful! Payment ID: ' + response.razorpay_payment_id);
+        // console.log(userDetails);
+        const responseFetch = await fetch(`/addMoneyToWallet/${userId}`,{
+          method : "PATCH",
+          headers :{
+            'content-type' : 'application/json'
+          },
+          body : JSON.stringify({
+            amount
+          })
+
+        });
+
+        if(!responseFetch.ok){
+          Swal.fire('Something Went wrong');
+        }else{
+       const result =  await responseFetch.json();
+        await Swal.fire({
+        position: "center",
+        icon: "success",
+        title: "Money Added successfully",
+        showConfirmButton: false,
+        timer: 1500
+      });
+      document.querySelector('.amount-display-span').innerHTML = `Total Balance : ${result}`
+    }
+      }catch(error){
+        console.log(error);
+      }
+
+
+
+    },
+    "prefill": {
+      "name": 'something',
+      "email": 'something@getMaxListeners.com',
+      
+    },
+    "theme": {
+      "color": "#b04fff"
+    }
+  };
+
+  var rzp = new Razorpay(options);
+  rzp.open();
+
+}
+
+
+
+
+
+
+
+walletBtn.addEventListener('click',async()=>{
+  try{
+    const { value: amount } = await Swal.fire({
+  title: "Enter The Amount",
+  input: "number",
+  inputLabel: "Amount must be less than 5000",
+  inputPlaceholder: "Enter your amount"
+});
+// console.log(typeof(amount));
+if (amount < 5000 && amount !== '' ) {
+  
+  const response = await fetch('/createOrderRzpFromWallet',{
+    method : 'POST',
+    headers :{
+      'content-type' : 'application/json'
+    },
+    body : JSON.stringify({
+      totalAmount : amount
+    })
+  })
+
+  const result = await response.json();
+  const {data , rzpId} = result;
+
+  // console.log(data , rzpId);
+  validateKeyAndUpdateWallet(data , rzpId);
+
+
+}else{
+  Swal.fire({
+  icon: "error",
+  title: "Error",
+  text: "Invalid Amount",
+});
+}
+
+
+  }catch(error){
+    console.log(error);
+  }
+  
+
+})
+
+
+
+</script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<%- include('../includes/usersPartials/userEnd.ejs') %>
+     

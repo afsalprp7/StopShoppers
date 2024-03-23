@@ -62,6 +62,9 @@
             <%}%>
          
           <p class="text-danger">Total Amount : ₹<%=order[0].grandTotal%></p>
+          <% if(order[0].walletMoney){%>
+          <p class="text-danger">Payment From Wallet : ₹<%=order[0].walletMoney%></p>
+          <%}%>
         </div>
       </div>
       
@@ -131,7 +134,8 @@ async function declineRequest(orderId,text){
     if(!response.ok){
       console.log('Failed fetch');
     }else{
-     await Swal.fire({
+      const result = await response.json()
+      await Swal.fire({
       position: "center",
       icon: "success",
       title: "Done",
@@ -180,8 +184,8 @@ async function cancelAccept(orderId){
   if(!response.ok){
     console.log('failed fetch');
   }else{
-    const result = response.json();
-      Swal.fire("Order Canceled !");
+    const result = await  response.json();
+      await Swal.fire("Order Canceled !");
       window.location.reload();
     
   }

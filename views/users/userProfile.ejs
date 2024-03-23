@@ -6,7 +6,7 @@
  
     /*userprofile styles*/
 .container-main{
-      
+  min-height: 80vh;
       margin-top: 5%;
     }
    .list{
@@ -15,7 +15,7 @@
 
    .list-container{
     width: 40%;
-    background-color: rgb(176, 177, 129);
+    background-color: #b04fff;
     margin-left: -15px;
    }
     .list div:hover {
@@ -26,7 +26,7 @@
     }
     .list a{
       text-decoration: none;
-      color: black;
+      color: rgb(255, 255, 255);
       font-size: larger;
     }
 .details-container{
@@ -48,7 +48,7 @@
     }
     .list-phone a{
       text-decoration: none;
-      color: black;
+      color: rgb(0, 0, 0);
       font-size: larger;
     }  
     .button-phone{
@@ -89,10 +89,10 @@
     <div  class="list-container-phone p-2">
       <ul class="list-phone">
         <strong>
-       <a href=""><div  class=" mt-5 p-2 border-bottom "><li>Profile</li></div></a> 
-       <a href=""><div class=" mt-5 p-2 border-bottom"><li><li>Wallet</li></div></a> 
-       <a href=""><div class=" mt-5 p-2 border-bottom"><li>Coupon</li></div></a> 
-       <a href=""><div class=" mt-5 p-2 border-bottom"><li>My Orders</li></div></a> 
+          <a href="/userProfile/<%=user._id%>"><div  class=" mt-5 p-2 border-bottom "><li>Profile</li></div></a> 
+          <a href="/myWallet/<%=user._id%>"><div class=" mt-5 p-2 border-bottom"><li><li>Wallet</li></div></a> 
+          <a href=""><div class=" mt-5 p-2 border-bottom"><li>Coupon</li></div></a> 
+          <a href="/myOrders/<%=user._id%>"><div class=" mt-5 p-2 border-bottom"><li>My Orders</li></div></a> 
       </strong>
       </ul>
     </div>
@@ -103,11 +103,14 @@
     <ul class="list">
       <strong>
       
-      <a href=""><div style="background-color: rgba(31, 31, 31, 0.1);margin-left: -25px;" class=" mt-5 p-2"><li>Profile</li></div></a>
-        <a href=""><div class=" mt-5 p-2"><li><li>Wallet</li></div></a>
-        <a href=""><div class=" mt-5 p-2"><li>Coupon</li></div></a>
-        <a href="/myOrders"><div class=" mt-5 p-2"><li>My Orders</li></div></a>
-      </strong>
+        <strong>
+          <a href=""><div style="background-color: rgba(31, 31, 31, 0.1); margin-left: -25px;" class=" mt-5 p-2"><i class="fa-solid fa-user"><span class="ms-3">Profile</span></i></div></a>
+          <a href="/myWallet/<%=user._id%>"><div  class=" mt-5 p-2">
+            <i class="fa-solid fa-wallet"><span class="ms-3">Wallet</span></i>
+          </div></a>
+          <a href=""><div class=" mt-5 p-2"><i class="fa-solid fa-receipt"><span class="ms-3">Coupons</span></i></div></a>
+          <a href="/myOrders/<%=user._id%>"><div  class=" mt-5 p-2"><i class="fa-solid fa-store"><span class="ms-3">My Orders</span></i></div></a>
+        </strong>
      
     </ul>
   </div>

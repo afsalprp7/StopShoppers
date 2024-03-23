@@ -53,7 +53,7 @@ router.get('/orderDetails/:id',validateUser,shopController.getOrderDetailpage);
 router.post('/filterCategory',shopController.filterCategory);
 
 router.get('/confirmOrder/:id',validateUser,shopController.getOrderConfirmationPage);
-router.get('/myOrders',validateUser,shopController.getUserMyOrders);
+router.get('/myOrders/:id',validateUser,shopController.getUserMyOrders);
 
 router.patch('/cancelOrder/:id',validateUser,shopController.orderCancelationRequest);
 
@@ -63,6 +63,9 @@ router.patch('/removeFromWishlist/:id',validateUser,shopController.removeFromWis
 router.post('/createOrderRzp',validateUser,shopController.createOrderRzp);
 router.patch('/verifyOrderRzp/:id',validateUser,shopController.razorpayVerifyPaymentAndUpdateOrder)
 
+router.get('/myWallet/:id',validateUser,shopController.getUserWallet);
 
+router.post('/createOrderRzpFromWallet',validateUser,shopController.createOrderRzp)
+router.patch('/addMoneyToWallet/:id',validateUser,shopController.addMoneyToWallet);
 
 module.exports = router;
