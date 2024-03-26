@@ -4,16 +4,13 @@
 </div>
 <div class="container border p-5">
   <h5 style="color: crimson"></h5>
-  <form
-    id="form"
-    method="POST"
-    action="/addCoupon"
-  >
+ 
     <div class="row">
       <div class="col-md-6 mt-4">
         <div class="mb-3 me-2">
           <label for="" class="form-label">Coupon Code</label>
           <input
+            value="<%=coupon.code%>"
             type="text"
             class="form-control p-4"
             id="couponCode"
@@ -27,8 +24,9 @@
       </div>
       <div class="col-md-6 mt-4">
         <div class="mb-3 me-2">
-          <label for="" class="form-label">Coupon Value</label>
+          <label for="" class="form-label">Coupon Values<span class="text-warning"> %</span></label>
           <input
+            value="<%=coupon.value%>"
             type="number"
             class="form-control p-4"
             id="couponpercentage"
@@ -45,38 +43,43 @@
     <div class="mb-3 me-2 dropdown">
       <label for="" class="form-label">Select Eligible Category</label>
       <div   data-bs-toggle="dropdown" class="dropdown-item dropdown-toggle form-control border p-4 d-flex align-items-center justify-content-between rounded">
-        Select Categories
+        Selected Categories
       </div>
-      <%if(category){%>
-      <div class="dropdown-menu category-div">
-        <%category.forEach((item)=>{%>
-            <div class=" px-3 dropdown-item ">
-              <input class="mb-1 cat-checkbox" type="checkbox" id="<%=item.categoryName%>" name="categoryId" value="<%=item._id%>">
-              <label class="ms-2" for="<%=item.categoryName%>" ><%=item.categoryName%></label>
-            </div>
-      <%})%> 
-      </div>
-    <%}%>
+      <% if(category) { %>
+        <div class="dropdown-menu category-div">
+            <% category.forEach((item) => { %>
+                <div class="px-3 dropdown-item">
+                    <% let isChecked = coupon.eligibleCategory.some(itemCat => itemCat.toString() === item._id.toString()); %>
+                    <input class="mb-1 cat-checkbox" type="checkbox" id="<%= item.categoryName %>" name="categoryId" value="<%= item._id %>"
+                    <%= isChecked ? 'checked' : '' %>
+                    >
+                    <label class="ms-2" for="<%= item.categoryName %>"><%= item.categoryName %></label>
+                </div>
+            <% }) %> 
+        </div>
+    <% } %>
+    
       <small class="text-danger ms-1 error-tag"></small>
     </div>
   </div>
   <div class="col-md-6 mt-4">
     <div class="mb-3 me-2">
-      <label for="" class="form-label">Valid Upto <small class="text-warning">(Expiry Date)</small></label>
+      <label for="" class="form-label">Valid Upto<small class="text-warning">(Expiry Date)</small></label>
       <input
-        id="date"
-        type="date"
-        class="form-control p-4"
-        name="ExpiryDate"
+          value="<%= coupon.expiresAt ? new Date(coupon.expiresAt).toISOString().split('T')[0] : '' %>"
+          id="date"
+          type="date"
+          class="form-control p-4"
+          name="ExpiryDate"
       />
       <small class="text-danger ms-1 error-tag"></small>
-    </div>
+  </div>
   </div>
 </div>
 <div class="mt-4  d-flex justify-content-end">
   <button type="submit" class="btn btn-primary px-5 submit-btn">Add Coupon</button>
 </div>
-</form>
+
 </div>
 
 
@@ -84,21 +87,54 @@
 
 
 <script>
-  
-  const form = document.querySelector('#form');
+  // const form = document.querySelector('#form');
   const couponCode = document.getElementById('couponCode');
   const couponPerctg = document.getElementById('couponpercentage');
   const categoryInput = document.querySelectorAll('.cat-checkbox');
   const categoryDiv = document.querySelector('.category-div');
   const date = document.getElementById('date');
-  // const submitBtn = document.querySelector('.submit-btn')
+  const submitBtn = document.querySelector('.submit-btn');
+  const couponId = "<%=coupon._id%>"
   
-  form.addEventListener('submit',(e)=>{
+  submitBtn.addEventListener('click',async(e)=>{
     e.preventDefault();
     if(!validateForm()){
-      form.submit();
-    }
+      let categories = []
+      categoryInput.forEach((item)=>{
+        if(item.checked){
+          categories.push(item.value)
+        }
+      });
 
+      const response = await fetch(`/editCoupon/${couponId}`,{
+        method : "PATCH",
+        headers : {
+          'content-type' : 'application/json'
+        },
+        body : JSON.stringify({
+          couponCode : couponCode.value.trim(),
+          couponPerctg : couponPerctg.value.trim(),
+          date : date.value,
+          category : categories,
+        })
+      })
+      if(!response.ok){
+        console.log('failed');
+      }else{
+        const result = await response.json();
+        if(result === 'success'){
+         await Swal.fire({
+          position: "center",
+          icon: "success",
+          title: "Changes Saved",
+          showConfirmButton: false,
+          timer: 1500
+          });
+          window.location.href = "/adminCoupon"
+        }
+      }
+
+    }
   })
 
 
@@ -164,9 +200,11 @@ setError(date,'Selected date is not valid')
 }else{
   setError(date,'');
 }
-
 return isError;
-
 }
+
+
+
+
 </script>
 <%- include('../includes/admin/adminEnd') %>

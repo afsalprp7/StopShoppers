@@ -2118,7 +2118,7 @@ applyCoupon : async(req,res)=>{
     const userId = req.params.id ;
     // console.log(code,pId);
     const couponCode  = code.toLowerCase();
-    const coupon = await couponModel.findOne({code : couponCode});
+    const coupon = await couponModel.findOne({code : couponCode,isDeleted : false});
     console.log(coupon);
     
 if(pId){

@@ -80,7 +80,7 @@ couponBtn.addEventListener("click", async () => {
           totalPriceCart.innerHTML = "₹" + totalAmount;
         }
       }
-     
+      
     }
   } catch (error) {
     console.log(error);

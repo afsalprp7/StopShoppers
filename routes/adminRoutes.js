@@ -3,6 +3,7 @@ const router =express.Router();
 const adminController = require('../controller/adminController');
 const {categoryStg , productStg} = require('../controller/multerController');
 const {validateAdmin} = require('../middleware/authMiddleware');
+const { validate } = require('uuid');
 
 
 
@@ -50,5 +51,8 @@ router.get('/addCoupon',validateAdmin,adminController.getAddCouponForm);
 router.post('/addCoupon',validateAdmin,adminController.doAddCouponForm);
 
 router.patch('/deleteCoupon/:id',validateAdmin,adminController.deleteCoupon);
+router.get('/editCoupon/:id',validateAdmin,adminController.getEditCoupon);
+router.patch('/editCoupon/:id',validateAdmin,adminController.doEditCoupon);
+
 
 module.exports = router;

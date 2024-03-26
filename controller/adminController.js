@@ -764,5 +764,52 @@ module.exports = {
     }catch(error){
       console.log(error);
     }
+  },
+
+  getEditCoupon : async(req,res)=>{
+    try{
+      const couponId = req.params.id;
+      const coupon = await couponModel.findOne();
+      const category = await categoryModel.find({isDeleted : false});
+      console.log(coupon);
+      console.log(category);
+      res.render('admin/editCoupon',{
+        title: 'Edit Coupon',
+        coupon,
+        adminName: req.session.adminName,
+        category
+
+      })
+
+
+
+    }catch(error){
+      console.log(error);
+    }
+
+  },
+  doEditCoupon : async(req,res)=>{
+    try{
+      const couponId = req.params.id
+      const dataBody = req.body
+      // console.log(couponId);
+      // console.log(dataBody);
+      const categories = dataBody.category.map((cat)=>{
+        return new ObjectId(cat)
+      })
+
+      // console.log(typeof dataBody.date);
+      const dateValue = new Date(dataBody.date)
+     const result= await couponModel.updateOne({_id : couponId},{
+        code : dataBody.couponCode,
+        value : Number(dataBody.couponPerctg),
+        expiresAt : dateValue,
+        eligibleCategory : categories
+      });
+      // console.log(result);
+      res.json('success');
+     }catch(error){
+     console.log(error);
+    }
   }
 };
