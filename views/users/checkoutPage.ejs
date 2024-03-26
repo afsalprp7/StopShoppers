@@ -242,19 +242,23 @@
     <!--column-->
     <div class="col-md-5">
       <div class="border shadow rounded p-4">
-        <h4>Add Coupon</h4>
+        <div class="d-flex justify-content-between">
+          <h4>Add Coupon</h4>
+          <p class="text-success">Coupons Available</p>
+        </div>
         <div class="mt-3">
-          <form action="">
+          
             <label for="">Coupon Code</label>
-            <input name="coupon" type="text" class="form-control" />
+            <input name="coupon" type="text" class="form-control coupon-code" />
             <button
+              id="coupon-btn"
               type="submit"
               style="color: #ffffff; background-color: #b04fff"
               class="btn px-4 py-1 mt-3"
             >
               Add Coupon
             </button>
-          </form>
+         
         </div>
       </div>
       <div class="border rounded p-4 mt-3 shadow mb-5">
@@ -346,11 +350,7 @@
           </div>
           <div class="d-flex justify-content-between">
             <p>Coupon</p>
-            <span class="price-tag">₹-/</span>
-          </div>
-          <div class="d-flex justify-content-between">
-            <p>Delivery</p>
-            <span class="price-tag">₹-/</span>
+            <span class="coupon-tag text-danger">₹-/</span>
           </div>
         </div>
         <div class="mt-2 d-flex justify-content-between">
@@ -406,8 +406,7 @@
           class="btn px-5 razorpay-btn"
           data-grandtotal="<%= grandTotal ?  grandTotal : false %>"
           data-singleproduct="<%=productInfo ? productInfo[0].productPrice : false%>"
-            
-          
+
         >
           Pay Now
         </button>
@@ -430,6 +429,18 @@
   placeOrderForm.addEventListener("submit", (e) => {
   let walletAmount = document.querySelector('.wallet-tag').innerText;
    walletAmount = walletAmount.slice(1);
+   if(walletAmount === '-/'){
+    walletAmount = false
+   }
+   couponTag = document.querySelector('.coupon-tag').innerText;
+   couponTag = couponTag.slice(1);
+   if(couponTag === '-/'){
+    couponTag = false
+   }
+   console.log(couponTag)
+   console.log(walletAmount)
+
+
   // alert(walletAmount);
     if (!radioCashonDelivery.checked && !razorpayInput.checked) {
       e.preventDefault();
@@ -437,7 +448,7 @@
     } else {
       placeOrderForm.setAttribute(
         "action",
-        `/placeOrder/${userId}?walletAmount=${walletAmount}`
+        `/placeOrder/${userId}?walletAmount=${walletAmount}&couponDiscount=${couponTag}`
       );
       placeOrderForm.submit();
     }
@@ -459,10 +470,14 @@
       }
     }
   })
- })
-  
+ });
+
+
 
  
+
+
+
 </script>
 <script src="/scripts/validation/checkoutPageV.js"></script>
 <%- include('../includes/usersPartials/userEnd.ejs') %>

@@ -45,4 +45,10 @@ router.get('/AdminOrderDetails/:id',validateAdmin,adminController.getAdminOrderD
 router.patch('/acceptCancel/:id',validateAdmin,adminController.acceptCancelOrder);
 router.patch('/declineCancelRequest/:id',validateAdmin,adminController.declineCancelOrder);
 
+router.get('/adminCoupon',validateAdmin,adminController.getAdminCouponPage);
+router.get('/addCoupon',validateAdmin,adminController.getAddCouponForm);
+router.post('/addCoupon',validateAdmin,adminController.doAddCouponForm);
+
+router.patch('/deleteCoupon/:id',validateAdmin,adminController.deleteCoupon);
+
 module.exports = router;

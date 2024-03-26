@@ -14,6 +14,7 @@ const Razorpay = require('razorpay');
 require('dotenv').config();
 const crypto = require('crypto');
 const walletModel = require('../models/walletModel');
+const couponModel = require("../models/couponModel");
 
 
 
@@ -821,9 +822,11 @@ module.exports = {
       let result;
       const databody = req.body;
       const userId = req.params.id;
-      const walletAmount = req.query.walletAmount ;
-      console.log(userId);
-
+      const walletAmount = Number(req.query.walletAmount) ;
+      const couponDiscount = Number(req.query.couponDiscount);
+      console.log(typeof(couponDiscount));
+      console.log(typeof(walletAmount));
+      
       const deliveryAddress = await addressModel.findOne({
         userId: userId,
         isPrimary: true,
@@ -834,7 +837,103 @@ module.exports = {
       // console.log(deliveryAddress);
       if (Object.keys(req.body).length > 0) {
         // console.log(databody);
-        if(walletAmount){
+        if(couponDiscount && !walletAmount){
+          const price = (databody.price - couponDiscount).toFixed(2) ;
+          result =  await orderModel.collection.insertOne({
+            userId: new ObjectId(userId),
+            orderId : v4(),
+            deliveryAddress: new ObjectId(deliveryAddress._id),
+            orderStatus: "confirmed",
+            productsDetails: [
+              {
+                productId: new ObjectId(databody.productName),
+                quantity: 1,
+                size: databody.size,
+              },
+            ],
+            totalQuantity : 1 ,
+            paymentDetails : paymentDetails ,
+            grandTotal: Number(price),
+            cancellationReason: null,
+            orderedAt: new Date(),
+            updatedAt: new Date(),
+            isCanceled : false,
+            cancelRequested : false,
+            // walletMoney : Number(walletAmount),
+            couponDiscount : Number(couponDiscount)
+          });
+          // console.log(result);
+          // await walletModel.updateOne({userId : userId},
+          //   {$inc :{balance : -Number(walletAmount)},
+          //     $push :{
+          //       transactionDetails : {
+          //         paymentType : "debited",
+          //         date : new Date(),
+          //         amount : Number(walletAmount)
+          //       } 
+          //     }
+          //   })
+
+          //ordered product
+          await productModel.updateOne(
+            { _id: databody.productName },
+            {
+              $inc: {
+                quantity: -1,
+              },
+            }
+          );
+
+        }else if(walletAmount && couponDiscount){
+          const subamount = parseFloat(walletAmount) + parseFloat(couponDiscount);
+          const price = (databody.price - subamount).toFixed(2) ;
+
+          result =  await orderModel.collection.insertOne({
+            userId: new ObjectId(userId),
+            orderId : v4(),
+            deliveryAddress: new ObjectId(deliveryAddress._id),
+            orderStatus: "confirmed",
+            productsDetails: [
+              {
+                productId: new ObjectId(databody.productName),
+                quantity: 1,
+                size: databody.size,
+              },
+            ],
+            totalQuantity : 1 ,
+            paymentDetails : paymentDetails ,
+            grandTotal: Number(price),
+            cancellationReason: null,
+            orderedAt: new Date(),
+            updatedAt: new Date(),
+            isCanceled : false,
+            cancelRequested : false,
+            walletMoney : Number(walletAmount),
+            couponDiscount : Number(couponDiscount)
+          });
+          // console.log(result);
+          await walletModel.updateOne({userId : userId},
+            {$inc :{balance : -Number(walletAmount)},
+              $push :{
+                transactionDetails : {
+                  paymentType : "debited",
+                  date : new Date(),
+                  amount : Number(walletAmount)
+                } 
+              }
+            })
+
+          //ordered product
+          await productModel.updateOne(
+            { _id: databody.productName },
+            {
+              $inc: {
+                quantity: -1,
+              },
+            }
+          );
+
+        }else if(walletAmount && !couponDiscount){
           const price = databody.price - walletAmount ;
 
           result =  await orderModel.collection.insertOne({
@@ -915,8 +1014,142 @@ module.exports = {
           );
         }
       } else {
-        
-        if(walletAmount){
+        //cart products
+        if(walletAmount && couponDiscount){
+          const subtotal = parseFloat(walletAmount) + parseFloat(couponDiscount)
+          const price = (req.session.grandTotal - subtotal).toFixed(2) ;
+          const cartProducts = await cartModel.findOne({ userId: userId });
+          // console.log(cartProducts);
+          const productDetails = cartProducts.products.map((product) => ({
+            productId: product.productId,
+            quantity: product.quantity,
+            size: product.size,
+          }));
+  
+          const totalProducts = cartProducts.products.reduce((total,current)=>{
+            return total = total + current.quantity;
+          },0)
+  
+          console.log(productDetails);
+            result =  await orderModel.collection.insertOne({
+            userId: new ObjectId(userId),
+            orderId : v4(),
+            deliveryAddress: new ObjectId(deliveryAddress._id),
+            orderStatus: "confirmed",
+            productsDetails: productDetails,
+            paymentDetails : paymentDetails ,
+            grandTotal: Number(price),
+            totalQuantity : totalProducts,
+            cancellationReason: null,
+            orderedAt: new Date(),
+            updatedAt: new Date(),
+            isCanceled : false,
+            cancelRequested : false,
+            walletMoney : Number(walletAmount),
+            couponDiscount : Number(couponDiscount)
+          });
+  
+  
+          await walletModel.updateOne({userId : userId},
+            {$inc :{balance : -Number(walletAmount)},
+              $push : {
+                transactionDetails : {
+                  paymentType : "debited",
+                  date : new Date(),
+                  amount : Number(walletAmount)
+                }
+              }
+            });
+  
+          await cartModel.updateOne(
+            { userId: userId },
+            {
+              $set: {
+                products: [],
+              },
+            }
+          );
+  
+          productDetails.forEach(async (item) => {
+            console.log(item.quantity);
+            await productModel.updateOne(
+              { _id: item.productId },
+              {
+                $inc: {
+                  quantity: -Number(item.quantity),
+                },
+              }
+            );
+          });
+
+        }else if(couponDiscount&& !walletAmount){
+
+          const price = (req.session.grandTotal - couponDiscount).toFixed(2)
+          const cartProducts = await cartModel.findOne({ userId: userId });
+        // console.log(cartProducts);
+        const productDetails = cartProducts.products.map((product) => ({
+          productId: product.productId,
+          quantity: product.quantity,
+          size: product.size,
+        }));
+
+        const totalProducts = cartProducts.products.reduce((total,current)=>{
+          return total = total + current.quantity;
+        },0)
+
+        console.log(productDetails);
+          result =  await orderModel.collection.insertOne({
+          userId: new ObjectId(userId),
+          orderId : v4(),
+          deliveryAddress: new ObjectId(deliveryAddress._id),
+          orderStatus: "confirmed",
+          productsDetails: productDetails,
+          paymentDetails : paymentDetails ,
+          grandTotal: Number(price),
+          totalQuantity : totalProducts,
+          cancellationReason: null,
+          orderedAt: new Date(),
+          updatedAt: new Date(),
+          isCanceled : false,
+          cancelRequested : false,
+          // walletMoney : Number(walletAmount)
+          couponDiscount : Number(couponDiscount)
+        });
+
+
+        // await walletModel.updateOne({userId : userId},
+        //   {$inc :{balance : -Number(walletAmount)},
+        //     $push : {
+        //       transactionDetails : {
+        //         paymentType : "debited",
+        //         date : new Date(),
+        //         amount : Number(walletAmount)
+        //       }
+        //     }
+        //   });
+
+        await cartModel.updateOne(
+          { userId: userId },
+          {
+            $set: {
+              products: [],
+            },
+          }
+        );
+
+        productDetails.forEach(async (item) => {
+          console.log(item.quantity);
+          await productModel.updateOne(
+            { _id: item.productId },
+            {
+              $inc: {
+                quantity: -Number(item.quantity),
+              },
+            }
+          );
+        });
+
+        }else if(walletAmount && !couponDiscount){
           const price = req.session.grandTotal - walletAmount ;
           const cartProducts = await cartModel.findOne({ userId: userId });
         // console.log(cartProducts);
@@ -932,7 +1165,7 @@ module.exports = {
 
         console.log(productDetails);
           result =  await orderModel.collection.insertOne({
-          userId: userId,
+          userId: new ObjectId(userId),
           orderId : v4(),
           deliveryAddress: new ObjectId(deliveryAddress._id),
           orderStatus: "confirmed",
@@ -995,7 +1228,7 @@ module.exports = {
 
         console.log(productDetails);
           result =  await orderModel.collection.insertOne({
-          userId: userId,
+          userId: new ObjectId(userId),
           orderId : v4(),
           deliveryAddress: new ObjectId(deliveryAddress._id),
           orderStatus: "confirmed",
@@ -1368,6 +1601,7 @@ razorpayVerifyPaymentAndUpdateOrder : async(req,res)=>{
       rzpPaymentId,
       rzpSignature,
       walletAmount,
+      couponDiscount
     } = req.body;
 
       const sign = rzpOrderId + "|" + rzpPaymentId;
@@ -1378,10 +1612,88 @@ razorpayVerifyPaymentAndUpdateOrder : async(req,res)=>{
       if(rzpSignature === expectedSign){
 
         if(productId || productSize || productPrice){
+          //as single product
+          if(couponDiscount && !walletAmount){
+            let price = (productPrice - couponDiscount).toFixed(2);
+            result =  await orderModel.collection.insertOne({
+              userId: new ObjectId(userId),
+              orderId : v4(),
+              deliveryAddress: new ObjectId(address._id),
+              orderStatus: "confirmed",
+              productsDetails: [
+                {
+                  productId: new ObjectId(productId),
+                  quantity: 1,
+                  size: productSize,
+                },
+              ],
+              totalQuantity : 1 ,
+              paymentDetails :  {
+                method : "razorpay",
+                paymentId : rzpPaymentId,
+                orderId : rzpOrderId
+  
+              },
+              grandTotal: Number(price),
+              cancellationReason: null,
+              orderedAt: new Date(),
+              updatedAt: new Date(),
+              isCanceled : false,
+              cancelRequested : false,
+              couponDiscount : Number(couponDiscount)
+            });
+            await productModel.updateOne({_id : productId},{$inc:{quantity : -1}});
+            console.log('updated');
+            return res.status(200).json({message : result.insertedId});
 
-          if(walletAmount){
+          }else if(couponDiscount && walletAmount){
+            
+            const subamount = parseFloat(walletAmount) + parseFloat(couponDiscount);
+            let price = (productPrice - subamount).toFixed(2)
+            result =  await orderModel.collection.insertOne({
+              userId: new ObjectId(userId),
+              orderId : v4(),
+              deliveryAddress: new ObjectId(address._id),
+              orderStatus: "confirmed",
+              productsDetails: [
+                {
+                  productId: new ObjectId(productId),
+                  quantity: 1,
+                  size: productSize,
+                },
+              ],
+              totalQuantity : 1 ,
+              paymentDetails :  {
+                method : "razorpay",
+                paymentId : rzpPaymentId,
+                orderId : rzpOrderId
+  
+              },
+              grandTotal: Number(price),
+              cancellationReason: null,
+              orderedAt: new Date(),
+              updatedAt: new Date(),
+              isCanceled : false,
+              cancelRequested : false,
+              walletMoney : Number(walletAmount),
+              couponDiscount : Number(couponDiscount)
+            });
+            await productModel.updateOne({_id : productId},{$inc:{quantity : -1}});
+            console.log('updated');
+            await walletModel.updateOne({userId : userId},{$inc :{balance : - Number(walletAmount)},
+            $push :{
+              transactionDetails : {
+                paymentType : "debited",
+                date : new Date(),
+                amount : Number(walletAmount)
+              }
+            }
+          })
+            return res.status(200).json({message : result.insertedId});
+
+          }else if(walletAmount && !couponDiscount){
             //subtract wallet amount from total amount
-            const price = productPrice - walletAmount
+            let price = productPrice - walletAmount
 
             result =  await orderModel.collection.insertOne({
               userId: new ObjectId(userId),
@@ -1455,8 +1767,155 @@ razorpayVerifyPaymentAndUpdateOrder : async(req,res)=>{
             return res.status(200).json({message : result.insertedId});
           }
         }else{
-          //from ccart eith walletamount
-          if(walletAmount){
+          //from ccart with walletamount and  couponAmound
+          if(couponDiscount && walletAmount){
+            const subamount = parseFloat(walletAmount) + parseFloat(couponDiscount);
+            let price = (req.session.grandTotal - subamount).toFixed(2);
+            console.log(price);
+            const cartProducts = await cartModel.findOne({ userId: userId });
+          // console.log(cartProducts);
+          const productDetails = cartProducts.products.map((product) => ({
+            productId: product.productId,
+            quantity: product.quantity,
+            size: product.size,
+          }));
+  
+          const totalProducts = cartProducts.products.reduce((total,current)=>{
+            return total = total + current.quantity;
+          },0)
+  
+          // console.log(productDetails);
+            result =  await orderModel.collection.insertOne({
+            userId: new ObjectId(userId),
+            orderId : v4(),
+            deliveryAddress: new ObjectId(address._id),
+            orderStatus: "confirmed",
+            productsDetails: productDetails,
+            paymentDetails : {
+              method : "razorpay",
+              paymentId : rzpPaymentId,
+              orderId : rzpOrderId
+            },
+            grandTotal: Number(price),
+            totalQuantity : totalProducts,
+            cancellationReason: null,
+            orderedAt: new Date(),
+            updatedAt: new Date(),
+            isCanceled : false,
+            cancelRequested : false,
+            walletMoney : Number(walletAmount),
+            couponDiscount : Number(couponDiscount)
+          });
+
+          //subtract the amount from wallet and add the details
+          await  walletModel.updateOne({userId : userId},{$inc:{
+            balance : - Number(walletAmount)},
+            $push : {
+              transactionDetails :{
+                paymentType : "debited",
+                date : new Date(),
+                amount : Number(walletAmount)
+              }
+            }
+          })
+          //clear products from cart
+          await cartModel.updateOne(
+            { userId: userId },
+            {
+              $set: {
+                products: [],
+              },
+            }
+          );
+
+          //updating or decrementing the product quantity
+          productDetails.forEach(async (item) => {
+            console.log(item.quantity);
+            await productModel.updateOne(
+              { _id: item.productId },
+              {
+                $inc: {
+                  quantity: -Number(item.quantity),
+                },
+              }
+            );
+          });
+
+          return res.status(200).json({message : result.insertedId});
+          }else if(!walletAmount && couponDiscount){
+            let price = (req.session.grandTotal - couponDiscount).toFixed(2);
+            // console.log(price);
+            const cartProducts = await cartModel.findOne({ userId: userId });
+          // console.log(cartProducts);
+          const productDetails = cartProducts.products.map((product) => ({
+            productId: product.productId,
+            quantity: product.quantity,
+            size: product.size,
+          }));
+  
+          const totalProducts = cartProducts.products.reduce((total,current)=>{
+            return total = total + current.quantity;
+          },0)
+  
+          // console.log(productDetails);
+            result =  await orderModel.collection.insertOne({
+            userId: new ObjectId(userId),
+            orderId : v4(),
+            deliveryAddress: new ObjectId(address._id),
+            orderStatus: "confirmed",
+            productsDetails: productDetails,
+            paymentDetails : {
+              method : "razorpay",
+              paymentId : rzpPaymentId,
+              orderId : rzpOrderId
+            },
+            grandTotal: Number(price),
+            totalQuantity : totalProducts,
+            cancellationReason: null,
+            orderedAt: new Date(),
+            updatedAt: new Date(),
+            isCanceled : false,
+            cancelRequested : false,
+            couponDiscount : Number(couponDiscount)
+          });
+
+          // //subtract the amount from wallet and add the details
+          // await  walletModel.updateOne({userId : userId},{$inc:{
+          //   balance : - Number(walletAmount)},
+          //   $push : {
+          //     transactionDetails :{
+          //       paymentType : "debited",
+          //       date : new Date(),
+          //       amount : Number(walletAmount)
+          //     }
+          //   }
+          // })
+          //clear products from cart
+          await cartModel.updateOne(
+            { userId: userId },
+            {
+              $set: {
+                products: [],
+              },
+            }
+          );
+
+          //updating or decrementing the product quantity
+          productDetails.forEach(async (item) => {
+            console.log(item.quantity);
+            await productModel.updateOne(
+              { _id: item.productId },
+              {
+                $inc: {
+                  quantity: -Number(item.quantity),
+                },
+              }
+            );
+          });
+
+          return res.status(200).json({message : result.insertedId});
+
+          }else if(walletAmount && !couponDiscount){
             const price = req.session.grandTotal - walletAmount;
             const cartProducts = await cartModel.findOne({ userId: userId });
           // console.log(cartProducts);
@@ -1652,6 +2111,90 @@ addMoneyToWallet : async(req,res)=>{
   }
 },
 
+applyCoupon : async(req,res)=>{
+  try{
+    const code = req.body.code;
+    const pId = req.body.product;
+    const userId = req.params.id ;
+    // console.log(code,pId);
+    const couponCode  = code.toLowerCase();
+    const coupon = await couponModel.findOne({code : couponCode});
+    console.log(coupon);
+    
+if(pId){
+  const product = await productModel.findOne({_id : pId});
+  if(coupon){
+    if(coupon.code === couponCode){
+      const percentage = Number(coupon.value);
+      const discountPrice = (Number(product.productPrice) * (percentage/100)).toFixed(2) ;
+      console.log(discountPrice);
+      let totalDiscount = 0
+      coupon.eligibleCategory.forEach((item)=>{
+        if(item.equals(product.category)){
+           totalDiscount += discountPrice
+        }else{
+         return res.json('productError')
+        }
+      });
+      product.productPrice -= totalDiscount;
+      res.json({
+        product,
+        totalDiscount
+      })
+    }else{
+      console.log('code doesnt match');
+    }
+   
+  }else{
+   return res.json('errorCode');
+    
+  }
+}else{
+  if(coupon){
+    const cart = await cartModel.aggregate([{$match:{ userId :new ObjectId(userId) }},
+      {$lookup:{
+        from : "products",
+        localField : "products.productId",
+        foreignField: "_id",
+        as : "productInfo"
+  
+      }},{$unwind : "$productInfo"}
+    ]);
+    // console.log(cart);
+  
+    const percent = Number(coupon.value);
+    let totalDiscount = 0 ;
+     cart.forEach((product)=>{
+      let max= 0;
+      coupon.eligibleCategory.forEach((item)=>{
+        if(item.equals(product.productInfo.category)){
+         let currentValue =  (Number(product.productInfo.productPrice) * (percent/100)).toFixed(2);
+         if(currentValue > max){
+          max = currentValue;
+         }else{
+          max = 0;
+          return
+         }
+        }else{
+         return res.json('productError')
+        }
+      });
+      totalDiscount = max
+     });
+     console.log(totalDiscount);
+    return res.json({
+      totalDiscount
+     });
+
+
+  }else{
+    res.json('errorCode')
+  }
+}
+}catch(error){
+    console.log(error);
+}
+},
 
 userLogout: (req, res) => {
     delete req.session.user;

@@ -64,7 +64,9 @@
       <p><strong >Total Amount :</strong><span class="text-danger"> ₹<%=order[0].grandTotal%></span></p>
       <% if(order[0].walletMoney){%>
       <p><strong >Payment From Wallet :</strong><span class="text-danger"> ₹<%=order[0].walletMoney%></span></p>
-      <% }%>
+      <% }if(order[0].couponDiscount){%>
+      <p><strong >Coupon Discount :</strong><span class="text-danger"> ₹<%=order[0].couponDiscount%></span></p>
+     <% }%>
     </div>
     
 

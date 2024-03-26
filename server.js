@@ -20,6 +20,12 @@ app.set('views',__dirname+'/views');
 // app.set('layout','layouts/layout');
 // app.set(ejs);
 
+app.use(session({
+  secret:'secret',
+  resave:false,
+  saveUninitialized:false
+}));
+
 app.use((req, res, next) => {
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.setHeader('Pragma', 'no-cache');
@@ -36,11 +42,6 @@ app.use(cors());
 
 app.use(methodOverride('_method'));
 
-app.use(session({
-  secret:'secret',
-  resave:false,
-  saveUninitialized:false
-}));
 
 app.use(flash());
 app.use('/',authRouter);

@@ -7,8 +7,10 @@ const fs = require("fs");
 const adminModel = require("../models/adminModel");
 const orderModel = require("../models/orderModel");
 const walletModel = require('../models/walletModel');
+const couponModel = require('../models/couponModel');
+
 module.exports = {
-  //get category pageṭ
+  //get category page
   getCategoryPage: async (req, res) => {
     const admin = await adminModel.findOne();
     req.session.adminName = admin.name;
@@ -632,17 +634,33 @@ module.exports = {
 
 
         if(order.paymentDetails.method === 'razorpay'){
+          const price = parseFloat(order.grandTotal) + parseFloat(order.walletMoney);
           await walletModel.updateOne({
             userId : new ObjectId(order.userId)
           },
-          {$inc :{balance : order.grandTotal},$push :{
+          {$inc :{balance : Number(price)},$push :{
             transactionDetails : {
               paymentType : "credited",
               date : new Date(),
-              amount : Number(order.grandTotal)
+              amount : Number(price)
             }
           }},
           {upsert : true})
+        }else if(order.paymentDetails.method === 'COD'){
+          if(order.walletMoney){
+            await walletModel.updateOne({
+              userId : new ObjectId(order.userId)
+            },
+            {$inc :{balance : order.walletMoney},$push :{
+              transactionDetails : {
+                paymentType : "credited",
+                date : new Date(),
+                amount : Number(order.walletMoney)
+              }
+            }},
+            {upsert : true})
+
+          }
         }
 
         res.json('success');
@@ -675,4 +693,76 @@ module.exports = {
     console.log(error);
   }
   },
+
+  getAdminCouponPage : async(req,res)=>{
+    try{
+
+      const coupons = await couponModel.find({isDeleted : false});
+      console.log(req.session.success);
+      res.render('admin/adminCoupon',{
+        title : 'Admin Coupon',
+        adminName: req.session.adminName,
+        coupons, 
+        success : req.session.success ? true : false
+      })
+      delete req.session.success;
+    }catch(error){
+      console.log(error);
+    }
+  },
+  getAddCouponForm : async(req,res)=>{
+    try{
+      const category = await categoryModel.find({isDeleted : false});
+      
+      res.render('admin/addCoupon',{
+        title : 'Add Coupon',
+        adminName: req.session.adminName,
+        category ,
+  
+      });  
+    }catch(error){
+      console.log(error);
+    }
+   
+  },
+
+
+  doAddCouponForm : async(req,res)=>{
+    try{
+      const databody = req.body;
+      console.log(databody);
+      if(!Array.isArray(databody.categoryId)){
+        databody.categoryId = [databody.categoryId]
+      }
+      const catId =  databody.categoryId.map((item)=>{
+        return new ObjectId(item)
+      });
+
+      await couponModel.collection.insertOne({
+        code : databody.couponCode.toLowerCase(),
+        value : Number(databody.couponPercent),
+        expiresAt : new Date(databody.ExpiryDate),
+        eligibleCategory : catId,
+        isDeleted : false
+      });
+
+      req.session.success = true
+      res.redirect('/adminCoupon');
+
+    }catch(error){
+      console.log(error);
+    }
+  },
+
+  deleteCoupon : async(req,res)=>{
+    try{
+      const couponId = req.params.id;
+      await couponModel.updateOne({_id : couponId},{
+      isDeleted : true
+      });
+      res.json('success');
+    }catch(error){
+      console.log(error);
+    }
+  }
 };

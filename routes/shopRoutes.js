@@ -68,4 +68,6 @@ router.get('/myWallet/:id',validateUser,shopController.getUserWallet);
 router.post('/createOrderRzpFromWallet',validateUser,shopController.createOrderRzp)
 router.patch('/addMoneyToWallet/:id',validateUser,shopController.addMoneyToWallet);
 
+router.post('/applyCoupon/:id',validateUser,shopController.applyCoupon);
+
 module.exports = router;

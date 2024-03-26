@@ -56,7 +56,9 @@
           <p class="text-danger">Total Amount :  ₹<%=order[0].grandTotal%></p>
           <% if(order[0].walletMoney){%>
           <p class="text-danger">Payed From wallet :  ₹<%=order[0].walletMoney%></p>
-         <%}%>
+         <%} if(order[0].couponDiscount){%>
+          <p class="text-danger">Coupon Discount :  ₹<%=order[0].couponDiscount%></p>
+         <% }%>
         </strong>
       </div>
 
