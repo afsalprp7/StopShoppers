@@ -6,8 +6,11 @@ const flash = require("connect-flash");
 const fs = require("fs");
 const adminModel = require("../models/adminModel");
 const orderModel = require("../models/orderModel");
-const walletModel = require('../models/walletModel');
-const couponModel = require('../models/couponModel');
+const walletModel = require("../models/walletModel");
+const couponModel = require("../models/couponModel");
+const cahrt = require("chart.js");
+const PDF = require("pdfkit");
+const exceljs = require("exceljs");
 
 module.exports = {
   //get category page
@@ -387,7 +390,9 @@ module.exports = {
                     : undefined,
                 sizes: editData.Sizes !== "" ? editData.Sizes : undefined,
                 quantity:
-                  editData.Quantity !== "" ? Number(editData.Quantity) : undefined,
+                  editData.Quantity !== ""
+                    ? Number(editData.Quantity)
+                    : undefined,
                 productPrice:
                   editData.Quantity !== "" ? editData.productPrice : undefined,
                 userType:
@@ -427,7 +432,9 @@ module.exports = {
               color: editData.color !== "" ? editData.color : undefined,
               sizes: editData.Sizes !== "" ? editData.Sizes : undefined,
               quantity:
-                editData.Quantity !== "" ? Number(editData.Quantity) : undefined,
+                editData.Quantity !== ""
+                  ? Number(editData.Quantity)
+                  : undefined,
               productPrice:
                 editData.Quantity !== "" ? editData.productPrice : undefined,
               userType:
@@ -536,20 +543,22 @@ module.exports = {
       console.log(orders);
 
       let productCount = 0;
-      
-        orders.reduce((total, current) => {
-          productCount = current.productsDetails.reduce((subtotal,subcurrent)=>{
-            return subtotal += subcurrent.quantity;
-        },0)
-         return 0;
-       }, 0);
-      
+
+      orders.reduce((total, current) => {
+        productCount = current.productsDetails.reduce(
+          (subtotal, subcurrent) => {
+            return (subtotal += subcurrent.quantity);
+          },
+          0
+        );
+        return 0;
+      }, 0);
 
       orders.productCount = productCount;
       console.log(orders);
       res.render("admin/adminOrders", {
         title: "Admin Orders",
-        orders : orders ? orders : false,
+        orders: orders ? orders : false,
         adminName: req.session.adminName,
       });
     } catch (error) {
@@ -575,7 +584,7 @@ module.exports = {
           },
         },
         { $unwind: "$address" },
-        { $unwind: "$productsDetails"},
+        { $unwind: "$productsDetails" },
         {
           $lookup: {
             from: "products",
@@ -602,214 +611,557 @@ module.exports = {
     }
   },
 
-  acceptCancelOrder : async(req,res)=>{
-    try{
-      const orderId = req.params.id ;
+  acceptCancelOrder: async (req, res) => {
+    try {
+      const orderId = req.params.id;
       console.log(orderId);
-      
+
       //finding the order
       const order = await orderModel.findOne({ _id: orderId });
-      console.log('fetched order',order);
-     
+      console.log("fetched order", order);
+
       if (order && order.productsDetails) {
         const productDetails = order.productsDetails;
         console.log(productDetails);
 
         // Increment the quantity of each product back to the product collection
-        const bulkOperations = productDetails.map(product => ({
-            updateOne: {
-                filter: { _id: product.productId },
-                update: { $inc: { quantity: product.quantity } }
-            }
+        const bulkOperations = productDetails.map((product) => ({
+          updateOne: {
+            filter: { _id: product.productId },
+            update: { $inc: { quantity: product.quantity } },
+          },
         }));
 
-       
         await productModel.bulkWrite(bulkOperations);
 
-        await orderModel.updateOne ({_id : orderId},{
-          cancelRequested : false ,
-          isCanceled : true,
-          orderStatus : 'canceled'
-        });
+        await orderModel.updateOne(
+          { _id: orderId },
+          {
+            cancelRequested: false,
+            isCanceled: true,
+            orderStatus: "canceled",
+          }
+        );
 
-
-        if(order.paymentDetails.method === 'razorpay'){
-          const price = parseFloat(order.grandTotal) + parseFloat(order.walletMoney);
-          await walletModel.updateOne({
-            userId : new ObjectId(order.userId)
-          },
-          {$inc :{balance : Number(price)},$push :{
-            transactionDetails : {
-              paymentType : "credited",
-              date : new Date(),
-              amount : Number(price)
-            }
-          }},
-          {upsert : true})
-        }else if(order.paymentDetails.method === 'COD'){
-          if(order.walletMoney){
-            await walletModel.updateOne({
-              userId : new ObjectId(order.userId)
+        if (order.paymentDetails.method === "razorpay") {
+          const price = Number(order.grandTotal) + Number(order.walletMoney);
+          await walletModel.updateOne(
+            {
+              userId: new ObjectId(order.userId),
             },
-            {$inc :{balance : order.walletMoney},$push :{
-              transactionDetails : {
-                paymentType : "credited",
-                date : new Date(),
-                amount : Number(order.walletMoney)
-              }
-            }},
-            {upsert : true})
-
+            {
+              $inc: { balance: Number(price) },
+              $push: {
+                transactionDetails: {
+                  paymentType: "credited",
+                  date: new Date(),
+                  amount: Number(price),
+                },
+              },
+            },
+            { upsert: true }
+          );
+        } else if (order.paymentDetails.method === "COD") {
+          if (order.walletMoney) {
+            await walletModel.updateOne(
+              {
+                userId: new ObjectId(order.userId),
+              },
+              {
+                $inc: { balance: order.walletMoney },
+                $push: {
+                  transactionDetails: {
+                    paymentType: "credited",
+                    date: new Date(),
+                    amount: Number(order.walletMoney),
+                  },
+                },
+              },
+              { upsert: true }
+            );
           }
         }
 
-        res.json('success');
-        
-      }else{
+        res.json("success");
+      } else {
         console.log("cannot found data");
       }
-
-    }catch(error){
+    } catch (error) {
       console.log(error);
     }
-
   },
 
-  declineCancelOrder :async(req,res)=>{
-    try{
-      const orderId = req.params.id ;
+  declineCancelOrder: async (req, res) => {
+    try {
+      const orderId = req.params.id;
 
+      await orderModel.updateOne(
+        { _id: orderId },
+        {
+          cancelRequested: false,
+          orderStatus: "confirmed",
+          cancelRequestDeclined: true,
+          declineRequestReason: req.body.reason,
+        }
+      );
 
-      await orderModel.updateOne({_id : orderId},{
-        cancelRequested : false,
-        orderStatus : 'confirmed',
-        cancelRequestDeclined : true,
-        declineRequestReason : req.body.reason,
-      });
-
-      res.json('success');
-
-   } catch(error){
-    console.log(error);
-  }
+      res.json("success");
+    } catch (error) {
+      console.log(error);
+    }
   },
 
-  getAdminCouponPage : async(req,res)=>{
-    try{
-
-      const coupons = await couponModel.find({isDeleted : false});
+  getAdminCouponPage: async (req, res) => {
+    try {
+      const coupons = await couponModel.find({ isDeleted: false });
       console.log(req.session.success);
-      res.render('admin/adminCoupon',{
-        title : 'Admin Coupon',
+      res.render("admin/adminCoupon", {
+        title: "Admin Coupon",
         adminName: req.session.adminName,
-        coupons, 
-        success : req.session.success ? true : false
-      })
+        coupons,
+        success: req.session.success ? true : false,
+      });
       delete req.session.success;
-    }catch(error){
+    } catch (error) {
       console.log(error);
     }
   },
-  getAddCouponForm : async(req,res)=>{
-    try{
-      const category = await categoryModel.find({isDeleted : false});
-      
-      res.render('admin/addCoupon',{
-        title : 'Add Coupon',
+  getAddCouponForm: async (req, res) => {
+    try {
+      const category = await categoryModel.find({ isDeleted: false });
+
+      res.render("admin/addCoupon", {
+        title: "Add Coupon",
         adminName: req.session.adminName,
-        category ,
-  
-      });  
-    }catch(error){
+        category,
+      });
+    } catch (error) {
       console.log(error);
     }
-   
   },
 
-
-  doAddCouponForm : async(req,res)=>{
-    try{
+  doAddCouponForm: async (req, res) => {
+    try {
       const databody = req.body;
       console.log(databody);
-      if(!Array.isArray(databody.categoryId)){
-        databody.categoryId = [databody.categoryId]
+      if (!Array.isArray(databody.categoryId)) {
+        databody.categoryId = [databody.categoryId];
       }
-      const catId =  databody.categoryId.map((item)=>{
-        return new ObjectId(item)
+      const catId = databody.categoryId.map((item) => {
+        return new ObjectId(item);
       });
 
       await couponModel.collection.insertOne({
-        code : databody.couponCode.toLowerCase(),
-        value : Number(databody.couponPercent),
-        expiresAt : new Date(databody.ExpiryDate),
-        eligibleCategory : catId,
-        isDeleted : false
+        code: databody.couponCode.toLowerCase(),
+        value: Number(databody.couponPercent),
+        expiresAt: new Date(databody.ExpiryDate),
+        eligibleCategory: catId,
+        isDeleted: false,
       });
 
-      req.session.success = true
-      res.redirect('/adminCoupon');
-
-    }catch(error){
+      req.session.success = true;
+      res.redirect("/adminCoupon");
+    } catch (error) {
       console.log(error);
     }
   },
 
-  deleteCoupon : async(req,res)=>{
-    try{
+  deleteCoupon: async (req, res) => {
+    try {
       const couponId = req.params.id;
-      await couponModel.updateOne({_id : couponId},{
-      isDeleted : true
-      });
-      res.json('success');
-    }catch(error){
+      await couponModel.updateOne(
+        { _id: couponId },
+        {
+          isDeleted: true,
+        }
+      );
+      res.json("success");
+    } catch (error) {
       console.log(error);
     }
   },
 
-  getEditCoupon : async(req,res)=>{
-    try{
+  getEditCoupon: async (req, res) => {
+    try {
       const couponId = req.params.id;
       const coupon = await couponModel.findOne();
-      const category = await categoryModel.find({isDeleted : false});
+      const category = await categoryModel.find({ isDeleted: false });
       console.log(coupon);
       console.log(category);
-      res.render('admin/editCoupon',{
-        title: 'Edit Coupon',
+      res.render("admin/editCoupon", {
+        title: "Edit Coupon",
         coupon,
         adminName: req.session.adminName,
-        category
-
-      })
-
-
-
-    }catch(error){
+        category,
+      });
+    } catch (error) {
       console.log(error);
     }
-
   },
-  doEditCoupon : async(req,res)=>{
-    try{
-      const couponId = req.params.id
-      const dataBody = req.body
+  doEditCoupon: async (req, res) => {
+    try {
+      const couponId = req.params.id;
+      const dataBody = req.body;
       // console.log(couponId);
       // console.log(dataBody);
-      const categories = dataBody.category.map((cat)=>{
-        return new ObjectId(cat)
-      })
+      const categories = dataBody.category.map((cat) => {
+        return new ObjectId(cat);
+      });
 
       // console.log(typeof dataBody.date);
-      const dateValue = new Date(dataBody.date)
-     const result= await couponModel.updateOne({_id : couponId},{
-        code : dataBody.couponCode,
-        value : Number(dataBody.couponPerctg),
-        expiresAt : dateValue,
-        eligibleCategory : categories
-      });
+      const dateValue = new Date(dataBody.date);
+      const result = await couponModel.updateOne(
+        { _id: couponId },
+        {
+          code: dataBody.couponCode,
+          value: Number(dataBody.couponPerctg),
+          expiresAt: dateValue,
+          eligibleCategory: categories,
+        }
+      );
       // console.log(result);
-      res.json('success');
-     }catch(error){
-     console.log(error);
+      res.json("success");
+    } catch (error) {
+      console.log(error);
     }
-  }
+  },
+
+  getAdminDashboard: async (req, res) => {
+    try {
+      const sales = await orderModel.aggregate([
+        {
+          $match: {
+            orderStatus: "confirmed",
+            isCanceled: false,
+          },
+        },
+        {
+          $group: {
+            _id: "$orderId",
+            total: {
+              $sum: { $add: ["$grandTotal", { $ifNull: ["$walletMoney", 0] }] },
+            },
+          },
+        },
+        {
+          $sort: {
+            _id: 1,
+          },
+        },
+      ]);
+
+      // console.log(sales);
+      res.render("admin/adminDashboard", {
+        title: "Admin Dashboard",
+        adminName: req.session.adminName,
+        sales: JSON.stringify(sales),
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  },
+
+  createChartSalesReport: async (req, res) => {
+    try {
+      const reportOn = req.body.salesValue;
+      const startDate = req.body.startDate;
+      const endDate = req.body.endDate;
+
+      if (reportOn === "daily") {
+        let days = [];
+        const currentDate = new Date(startDate);
+        const endDateObj = new Date(endDate);
+        while (currentDate <= endDateObj) {
+          // Format the current date to 'YYYY-MM-DD' string format
+          let year = currentDate.getFullYear();
+          let month = String(currentDate.getMonth() + 1).padStart(2, "0"); // Months are 0-based
+          let day = String(currentDate.getDate()).padStart(2, "0");
+
+          let currentDateStr = `${year}-${month}-${day}`;
+
+          days.push({
+            _id: currentDateStr,
+            total: 0,
+          });
+
+          currentDate.setDate(currentDate.getDate() + 1); // Increment the date by 1 day
+        }
+        const sales = await orderModel.aggregate([
+          {
+            $match: {
+              orderedAt: {
+                $gte: new Date(startDate),
+                $lte: new Date(endDate),
+              },
+              isCanceled: false,
+              orderStatus: "confirmed",
+            },
+          },
+          {
+            $group: {
+              _id: {
+                $dateToString: {
+                  date: "$orderedAt",
+                  format: "%Y-%m-%d",
+                },
+              },
+              total: {
+                $sum: {
+                  $add: ["$grandTotal", { $ifNull: ["$walletMoney", 0] }],
+                },
+              },
+            },
+          },
+          {
+            $sort: {
+              _id: 1,
+            },
+          },
+        ]);
+        console.log(sales);
+        days.forEach((item) => {
+          sales.forEach((sale) => {
+            if (item._id === sale._id) {
+              item.total = sale.total;
+            }
+          });
+        });
+        // console.log(days);
+
+        res.json(days);
+
+        //weekly
+      } else if (reportOn === "weekly") {
+        const sales = await orderModel.aggregate([
+          {
+            $match: {
+              orderedAt: {
+                $gte: new Date(startDate),
+                $lte: new Date(endDate),
+              },
+              isCanceled: false,
+              orderStatus: "confirmed",
+            },
+          },
+          {
+            $group: {
+              _id: {
+                $dateToString: {
+                  format: "%Y-%U",
+                  date: "$orderedAt",
+                },
+              },
+              total: {
+                $sum: {
+                  $add: ["$grandTotal", { $ifNull: ["$walletMoney", 0] }],
+                },
+              },
+            },
+          },
+          {
+            $sort: {
+              _id: 1,
+            },
+          },
+        ]);
+        // console.log(sales);
+        // console.log(weeks);
+
+        res.json(sales);
+      } else if (reportOn === "monthly") {
+        let months = [];
+        const currentDate = new Date(startDate);
+        const endDateObj = new Date(endDate);
+
+        while (currentDate <= endDateObj) {
+          // Format the current date to 'YYYY-MM' string format
+          let year = currentDate.getFullYear();
+          let month = String(currentDate.getMonth() + 1).padStart(2, "0"); // Months are 0-based
+
+          let currentMonthStr = `${year}-${month}`;
+
+          months.push({
+            _id: currentMonthStr,
+            total: 0,
+          });
+
+          // Set the date to the first day of the next month
+          currentDate.setMonth(currentDate.getMonth() + 1);
+          currentDate.setDate(1);
+        }
+
+        const sales = await orderModel.aggregate([
+          {
+            $match: {
+              orderedAt: {
+                $gte: new Date(startDate),
+                $lte: new Date(endDate),
+              },
+              isCanceled: false,
+              orderStatus: "confirmed",
+            },
+          },
+          {
+            $group: {
+              _id: {
+                $dateToString: {
+                  date: "$orderedAt",
+                  format: "%Y-%m",
+                },
+              },
+              total: {
+                $sum: {
+                  $add: ["$grandTotal", { $ifNull: ["$walletMoney", 0] }],
+                },
+              },
+            },
+          },
+          {
+            $sort: {
+              _id: 1,
+            },
+          },
+        ]);
+
+        months.forEach((item) => {
+          sales.forEach((sale) => {
+            if (item._id === sale._id) {
+              item.total = sale.total;
+            }
+          });
+        });
+
+        res.json(months);
+      } else {
+        let startYear = req.body.startDate;
+        let endYear = req.body.endDate;
+        let years = [];
+        for (let year = startYear; year <= endYear; year++) {
+          years.push({
+            _id: year.toString(),
+            total: 0,
+          });
+        }
+        console.log(startYear);
+        console.log(endYear);
+        const sales = await orderModel.aggregate([
+          {
+            $match: {
+              orderedAt: {
+                $gte: new Date(startYear, 0, 1),
+                $lte: new Date(endYear, 11, 31, 23, 59, 59, 999),
+              },
+              isCanceled: false,
+              orderStatus: "confirmed",
+            },
+          },
+          {
+            $group: {
+              _id: {
+                $dateToString: {
+                  format: "%Y",
+                  date: "$orderedAt",
+                },
+              },
+              total: {
+                $sum: {
+                  $add: ["$grandTotal", { $ifNull: ["$walletMoney", 0] }],
+                },
+              },
+            },
+          },
+          {
+            $sort: {
+              _id: 1,
+            },
+          },
+        ]);
+        years.forEach((item) => {
+          sales.forEach((sale) => {
+            if (item._id === sale._id) {
+              item.total = sale.total;
+            }
+          });
+        });
+
+        // console.log(sales);
+        // console.log(years);
+        res.json(years);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  },
+  
+  downloadReportPdf: async (req, res) => {
+    try {
+      console.log(req.body);
+      const basis = req.body.basis;
+      const sales = req.body.salesData;
+
+      const doc = new PDF();
+
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename=Sales-Report-on-${basis}-Basis.pdf`
+      );
+      doc.pipe(res);
+
+      // Add content to the PDF
+      doc.fontSize(18).text(`StopShoppers`, {
+        align: "center",
+      });
+
+      doc.fontSize(18).text(`Sales Report on ${basis} Basis`, {
+        align: "center",
+      });
+
+      doc.moveDown();
+      doc.fontSize(12).text("Sales Data:", {
+        underline: true,
+      });
+
+      sales.forEach((item) => {
+        doc.text(`${item._id}: $${item.total.toFixed(2)}`);
+      });
+
+      doc.end();
+    } catch (error) {
+      console.log(error);
+    }
+  },
+
+  downloadAsExcel: async (req, res) => {
+    try {
+      const sales = req.body.salesData;
+      const basis = req.body.basis;
+      console.log(req.body);
+
+      const workbook = new exceljs.Workbook();
+      const worksheet = workbook.addWorksheet("Stop Shoppers Sales Data");
+      worksheet.columns = [
+        { header: "Date/Year", key: "_id", width: 15 },
+        { header: "Total", key: "total", width: 15 },
+      ];
+
+      sales.forEach((item) => {
+        worksheet.addRow({ _id: item._id, total: item.total });
+      });
+
+      const buffer = await workbook.xlsx.writeBuffer();
+
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename=sales-report-${basis} Basis.xlsx`
+      );
+      res.setHeader(
+        "Content-Type",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      );
+      res.send(buffer);
+    } catch (error) {
+      console.log(error);
+    }
+  },
 };

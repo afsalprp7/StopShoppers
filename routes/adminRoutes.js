@@ -53,6 +53,11 @@ router.post('/addCoupon',validateAdmin,adminController.doAddCouponForm);
 router.patch('/deleteCoupon/:id',validateAdmin,adminController.deleteCoupon);
 router.get('/editCoupon/:id',validateAdmin,adminController.getEditCoupon);
 router.patch('/editCoupon/:id',validateAdmin,adminController.doEditCoupon);
+router.get('/adminDashboard',validateAdmin,adminController.getAdminDashboard);
+
+router.post('/createChart',validateAdmin,adminController.createChartSalesReport);
+router.post('/downloadAsPdf',validateAdmin,adminController.downloadReportPdf);
+router.post('/downloadAsExcel',validateAdmin,adminController.downloadAsExcel);
 
 
 module.exports = router;

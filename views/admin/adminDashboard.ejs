@@ -1,11 +1,107 @@
 <%- include('../includes/admin/adminHead') %>
 <div class="container mt-5 mb-5">
-  <h3>ADD PRODUCTS</h3>
+  <h3>ADMIN DASHBOARD</h3>
+</div>
+<div class="container container1 border p-5 mb-5">
+<div class="mb-5">
+
+</div>
+<div class="mb-5">
+  <h2>Sales Details</h2>
+</div>
+  <div class="d-flex justify-content-between mb-5">
+    
+    <div>
+      <div class="dropdown">
+        <button class="btn border dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Download Report as
+        </button>
+        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+          <div style="width: 100%;" class="btn d-flex justify-content-start pdf-content">
+            <i style="font-size: small;" class="fa-solid fa-file-pdf text-danger"><span class="ms-2"> pdf</span></i>
+          </div>
+          <div style="width: 100%;" class="btn d-flex justify-content-start mt-3 excel-content">
+              <i style="font-size: small;font-weight: bolder;" class="fa-regular fa-file-lines text-success"><span class="ms-2"> excel</span></i>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <span class="me-3">Sales : </span>
+      <button class="btn border salesReport-btn">Daily</button>
+      <button class="btn border salesReport-btn">Weekly</button>
+      <button class="btn border salesReport-btn">Monthly</button>
+      <button class="btn border salesReport-btn">Yearly</button>
+      
+    </div>
+  </div>
+  <div style="display: none;" class="year-container">
+    <div class="d-flex justify-content-end">
+      <div class="row">
+        <div class="col-md-6">
+          <select class="form-select select-year-from">
+            <option selected>choose the year from</option>
+            <option value="2020">2020</option>
+            <option value="2021">2021</option>
+            <option value="2022">2022</option>
+            <option value="2023">2023</option>
+            <option value="2024">2024</option>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <select class="form-select select-year-to">
+            <option selected>choose the year to</option>
+            <option value="2020">2020</option>
+            <option value="2021">2021</option>
+            <option value="2022">2022</option>
+            <option value="2023">2023</option>
+            <option value="2024">2024</option>
+          </select>
+        </div>
+        <div class="mt-3 d-flex justify-content-start">
+          <button class="btn btn-primary submit-btn-yearly">Submit</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="date-container" style="display: none ;">
+    <div class="d-flex justify-content-end">
+    <div class="row">
+      <div class="col-md-6">
+        <label>Date from</label>
+        <input style="border: none;border-radius: 0;"  
+        class="form-control border-bottom border-black date-from" 
+        type="date">
+      </div>
+      <div class="col-md-6">
+        <label>Date Upto</label>
+        <input style="border: none;border-radius: 0;"  
+        class="form-control border-bottom border-black date-to" 
+        type="date">
+      </div>
+      <div class="mt-3 d-flex justify-content-start">
+        <button class="btn btn-primary btn-submit-sales">Submit</button>
+      </div>
+    </div>
+  </div>
+</div>
+  <canvas style="margin-top: 100px;" id="myChart"></canvas>
 </div>
 
 
+<script>
+let myChart;  
+
+window.onload = function(){
+  const salesData = JSON.parse('<%-sales%>');
+  // console.log(salesData);
+  initialsale(salesData);
+};
 
 
+
+</script>
+<script src="/scripts/adminScripts/dashBoard.js"></script>
 
 <%- include('../includes/admin/adminEnd') %>
 

@@ -226,9 +226,18 @@
           <h4>
             <i style="color: #b04fff;" class="fa-solid fa-wallet me-2"></i>
             Wallet</h4>
-            <p class="me-3">Bal : ₹<span class="balance-wallet">
+            <p class="me-3">
+              Bal : ₹
+              <% if(wallet){%>
+              <span class="balance-wallet">
               <%=wallet.balance%>
-            </span><span style="font-size: small;" class="text-warning">(You can Only Use 80%) *</span>
+            </span>
+            <% }else{%>
+            <span class="balance-wallet">
+              0
+            </span>
+            <%}%>
+            <span style="font-size: small;" class="text-warning">(You can Only Use 80%) *</span>
             </p>
         </div>
         
