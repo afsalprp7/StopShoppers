@@ -1092,7 +1092,7 @@ module.exports = {
       console.log(error);
     }
   },
-  
+
   downloadReportPdf: async (req, res) => {
     try {
       console.log(req.body);
@@ -1164,4 +1164,25 @@ module.exports = {
       console.log(error);
     }
   },
+
+  getAddOfferPage : async(req,res)=>{
+    const category = await categoryModel.find({isDeleted : false})
+    const products = await productModel.find({isDeleted : false})
+
+    res.render('admin/addOffer',{
+      title : 'Add Offer',
+      adminName: req.session.adminName,
+      category,
+      products
+    })
+  },
+  
+  doAddOffer : async(req,res)=>{
+    try{
+
+    }catch(error){
+      console.log(object);
+    }
+
+  }
 };

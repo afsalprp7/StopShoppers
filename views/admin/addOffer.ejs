@@ -1,0 +1,159 @@
+<%- include('../includes/admin/adminHead.ejs') %>
+<div class="container mt-5 mb-5">
+  <h3>ADD OFFER</h3>
+</div>
+<div class="container border p-5">
+  <div>
+    <form id="form" action="/addOffer" method="post">
+      <div class="row">
+        <div class="col-md-6 mt-4">
+          <label for="">Offer Name</label>
+          <input id="offername" name="offername" class="form-control p-4" type="text" placeholder="Offer Name">
+          <small class="text-danger ms-1 error-tag"></small>
+        </div>
+        <div class="col-md-6 mt-4">
+          <div class="mb-3">
+            <label for="" class="form-label">Offer Value</label>
+            <input
+              type="number"
+              class="form-control p-4"
+              id="offerpercentage"
+              name="couponPercent"
+              placeholder="Discount in percentage(%)"
+            />
+            <small class="text-danger ms-1 error-tag"></small>
+          </div>
+        </div>
+        
+        <div class="col-md-6 mt-4">
+          <div class="mb-3 me-2 dropdown">
+            <label for="" class="form-label">Select Eligible Category</label>
+            <div   data-bs-toggle="dropdown" class="dropdown-item dropdown-toggle form-control border p-4 d-flex align-items-center justify-content-between rounded">
+              Select Categories
+            </div>
+            <%if(category){%>
+            <div class="dropdown-menu category-div">
+              <%category.forEach((item)=>{%>
+                  <div class=" px-3 dropdown-item">
+                    <input class="mb-1 cat-checkbox" type="checkbox" id="<%=item.categoryName%>" name="categoryId" value="<%=item._id%>">
+                    <label class="ms-2" for="<%=item.categoryName%>" ><%=item.categoryName%></label>
+                  </div>
+            <%})%> 
+            </div>
+          <%}%>
+            <small class="text-danger ms-1 error-tag"></small>
+          </div>
+        </div>
+        <div class="col-md-6 mt-4">
+          <div class="mb-3 me-2">
+            <label for="" class="form-label">Valid Upto <small class="text-warning">(Expiry Date)</small></label>
+            <input
+              id="date"
+              type="date"
+              class="form-control p-4"
+              name="ExpiryDate"
+            />
+            <small class="text-danger ms-1 error-tag"></small>
+          </div>
+        </div>
+      </div>
+      
+      </div>
+      <div class="d-flex justify-content-end">
+        <button type="submit" class="btn btn-primary">Add Coupon</button>
+      </div>
+    </form>
+  </div>
+  </div>
+
+
+
+<script>
+   const form = document.querySelector('#form');
+  const offerName = document.getElementById('offername');
+  const offerPerctg = document.getElementById('offerpercentage');
+  const categoryInput = document.querySelectorAll('.cat-checkbox');
+  const categoryDiv = document.querySelector('.category-div');
+  const date = document.getElementById('date');
+  // const submitBtn = document.querySelector('.submit-btn')
+  
+  form.addEventListener('submit',(e)=>{
+    e.preventDefault();
+    if(!validateForm()){
+      form.submit();
+    }
+
+  })
+
+
+function setError(element,message){
+  const parentElement = element.parentElement;
+  const errorTag = parentElement.querySelector('.error-tag');
+  errorTag.innerText = message;
+
+}
+
+function validateForm (){
+  const couponCodeValue = couponCode.value.trim();
+  const couponPerctgValue = couponPerctg.value.trim();
+  const dateValue = date.value.trim();
+
+  let isError = false;
+
+  if(couponCodeValue === ''){
+    isError = true
+    setError(couponCode,'This Field Cannot be Empty');
+  }else{
+    setError(couponCode,'');
+  }
+
+  const priceRegex = /^\d+(\.\d{1,2})?$/;
+  if(couponPerctgValue === ''){
+    isError = true;
+    setError(couponPerctg,'This Field Cannot be Empty');
+  }else if(!priceRegex.test(couponPerctgValue)){
+    isError = true
+    setError(couponPerctg,'Invalid Entry')
+  }else if(couponPerctgValue >= 100){
+    isError = true;
+    setError(couponPerctg,'Invalid Entry value must be less than 100');
+  }else{
+    setError(couponPerctg,'');
+  }
+
+// input checkbox
+let selectedCat = false
+categoryInput.forEach((item)=>{
+  if(item.checked){
+    selectedCat = true
+  }
+});
+
+if(selectedCat === false){
+isError = true;
+setError(categoryDiv,'Select the eligible categories')
+}else{
+  setError(categoryDiv,'');
+}
+
+const inputDate = new Date(dateValue);
+const currentDate = new Date();
+
+if(!dateValue){
+  isError = true;
+  setError(date,'Set the expiry date');
+}else if(inputDate < currentDate){
+isError = true;
+setError(date,'Selected date is not valid')
+}else{
+  setError(date,'');
+}
+
+return isError;
+
+}
+  
+
+</script>
+
+<%- include('../includes/admin/adminEnd') %>

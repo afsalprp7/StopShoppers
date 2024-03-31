@@ -58,6 +58,8 @@ router.get('/adminDashboard',validateAdmin,adminController.getAdminDashboard);
 router.post('/createChart',validateAdmin,adminController.createChartSalesReport);
 router.post('/downloadAsPdf',validateAdmin,adminController.downloadReportPdf);
 router.post('/downloadAsExcel',validateAdmin,adminController.downloadAsExcel);
+router.get('/getAddOffer',validateAdmin,adminController.getAddOfferPage);
+router.post('/addOffer',validateAdmin,adminController.doAddOffer)
 
 
 module.exports = router;
