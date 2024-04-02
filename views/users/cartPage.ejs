@@ -79,9 +79,19 @@
                       <strong>+</strong>
                     </button>
                   </div>
-
-                  <div class="justify-content-end">
-                    <strong  class="text-danger price">₹<%=item.totalPrice%></strong>
+                  
+                  <div class="d-flex">
+                    <% if(item.productDetails.offer){%>
+                      <div class="me-3">
+                      <s class="me text-danger">₹<%=item.productDetails.offer.actualAmount%></s>
+                      <span style="font-size: larger;color: #b04fff;"><%=item.productDetails.offer.offerValue%>% OFF</span>
+                      </div>
+                      <strong  class="text-danger price">₹<%=item.totalPrice%></strong>
+                      <%}else{%>
+                        <strong  class="text-danger price">₹<%=item.totalPrice%></strong>
+                      <%}%>
+                    
+                    
                   </div>
                 </div>
               </div>
@@ -185,6 +195,8 @@
 
       if(!response.ok){
           console.log('Remove From Cart Failed');
+        }else{
+          await response.json();
         }
       }catch(error){
         console.log(error);

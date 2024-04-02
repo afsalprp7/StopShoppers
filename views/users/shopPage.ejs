@@ -26,7 +26,7 @@
       <i style="font-size: x-large;" class="fa-solid fa-bag-shopping"><span class="ms-2">Shop</span></i>
     </div>
     <div class="form-group col-md-6 ">
-      <input class="form-control rounded-0 py-2" type="search"  id="example-search-input" placeholder="search">
+      <input class="form-control rounded-0 py-2" type="search"  id="example-search-input" data-userid="<%=user._id%>" placeholder="search">
     </div> 
   </div>
   <div class="row">
@@ -149,11 +149,28 @@
                 <a  class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
                   <%= item.productName %>
                 </a>
-  
-                <span class="stext-105 cl3">
-                  ₹<%= item.productPrice%>
-                  
-                </span>
+                
+                  <%if(item.offer.actualAmount){%>
+                    <div>
+                    <s class="stext-105 cl3 ">
+                      ₹<%= item.offer.actualAmount%>
+                    </s>
+                    <span style="font-size: medium;color: #b04fff;" class=" ms-2"><%=item.offer.offerValue%>% OFF</span>
+                    <div>
+                      <span style="font-size: medium;" class="stext-105 cl3 text-success">
+                        ₹<%= item.productPrice%>
+                      </span>
+                    </div>
+                   
+                  </div>
+                    <%}else{%>
+                      <span class="stext-105 cl3">
+                        ₹<%= item.productPrice%>
+                      </span>
+                   <% }%>
+                
+               
+                
               </div>
               <div style="cursor: pointer;" class="block2-txt-child2 flex-r p-t-3 heart-wishlist" data-userid="<%=user._id%>" data-productid="<%=item._id%>">
                 <!-- <a href="#" class="btn-addwish-b2 dis-block pos-relative  "> -->
@@ -207,44 +224,7 @@ category.forEach((element)=>{
 });
 
 
-const wishlistBtn = document.querySelectorAll('.heart-wishlist');
 
-wishlistBtn.forEach((item)=>{
-const productId = item.dataset.productid ;
-const userId = item.dataset.userid ;
-
-item.addEventListener('click',async()=>{
-//   console.log(userId);
-// console.log(productId);
-  const response = await fetch(`/addToWishlist/${productId}`,{
-    method : "POST",
-    headers:{
-      'content-type' : 'application/json'
-    },
-    body : JSON.stringify({
-      userId
-    })
-  })
-  const result = await response.json();
-  console.log(result);
-  if(!response.ok){
-    // const icon = item.querySelector('.wishlist-icon');
-    // icon.setAttribute('src','/images/icons/icon-heart-02.png');
-    console.log('failed to do task');
-  }
-  if(result === 'success'){
-  await Swal.fire({
-  position: "center",
-  icon: "success",
-  title: "Added to wishlist",
-  showConfirmButton: false,
-  timer: 1500
-});
-  }else if(result === 'error'){
-    Swal.fire('Product Already Exists')
-  }
-})
-})
 </script>
 
 <%- include('../includes/usersPartials/userEnd.ejs') %>

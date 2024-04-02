@@ -8,6 +8,7 @@ const adminModel = require("../models/adminModel");
 const orderModel = require("../models/orderModel");
 const walletModel = require("../models/walletModel");
 const couponModel = require("../models/couponModel");
+const offerModel = require("../models/offerModel")
 const cahrt = require("chart.js");
 const PDF = require("pdfkit");
 const exceljs = require("exceljs");
@@ -743,7 +744,7 @@ module.exports = {
   doAddCouponForm: async (req, res) => {
     try {
       const databody = req.body;
-      console.log(databody);
+      // console.log(databody);
       if (!Array.isArray(databody.categoryId)) {
         databody.categoryId = [databody.categoryId];
       }
@@ -918,7 +919,7 @@ module.exports = {
             },
           },
         ]);
-        console.log(sales);
+        // console.log(sales);
         days.forEach((item) => {
           sales.forEach((sale) => {
             if (item._id === sale._id) {
@@ -1167,22 +1168,129 @@ module.exports = {
 
   getAddOfferPage : async(req,res)=>{
     const category = await categoryModel.find({isDeleted : false})
-    const products = await productModel.find({isDeleted : false})
 
     res.render('admin/addOffer',{
       title : 'Add Offer',
       adminName: req.session.adminName,
       category,
-      products
+      error : req.session.error ? req.session.error : ''
     })
   },
   
-  doAddOffer : async(req,res)=>{
+  getAdminOffer : async(req,res)=>{
     try{
+      const offers = await offerModel.find({isDeleted : false});
+      
 
+      res.render('admin/adminOffers',{
+        title : 'Admin Offers',
+        adminName: req.session.adminName,
+        offers,
+      })
     }catch(error){
-      console.log(object);
+      console.log(error);
+
     }
 
+  },
+
+  doAddOffer : async(req,res)=>{
+    try{
+      const databody = req.body
+      // console.log(databody); 
+      if (!Array.isArray(databody.categoryId)) {
+        databody.categoryId = [new ObjectId(databody.categoryId)];
+      }else{ 
+        databody.categoryId =  databody.categoryId.map((item)=>{
+          return new ObjectId(item);
+        })
+      }
+      console.log(databody.categoryId);
+      const existingOffers = await offerModel.findOne({isDeleted:false,categories:{ $all : databody.categoryId}});
+      console.log(existingOffers);
+      
+      if(existingOffers){
+        req.session.error = "Offer Already Exists to the Category";
+        res.redirect('/getAddOffer')
+      }else if(databody.offerPercent > 100){
+        req.session.error = "Offer discount cannot be more than 100%";
+        res.redirect('/getAddOffer');
+      }else{
+        const result =  await offerModel.collection.insertOne({
+          offerName : databody.offername,
+          offerValue :Number(databody.offerPercent),
+          categories : databody.categoryId,
+          expiryDate : new Date(databody.ExpiryDate),
+          isDeleted : false,
+          status : 'Active'
+        });
+  
+        const offer = await offerModel.findOne({_id : result.insertedId});
+        let products = await productModel.find({isDeleted : false,
+          category : {$in : offer.categories}
+        });
+  
+        // console.log(products);
+        products.forEach(async (item) => {
+          const actualAmount  = Number(item.productPrice);
+          const updatedPrice = (item.productPrice  - (item.productPrice * offer.offerValue) / 100).toFixed(2);
+          const offerPrice = Number((item.productPrice * offer.offerValue) / 100).toFixed(2);
+          
+          item.productPrice = updatedPrice;
+  
+          if (!item.offer) {
+              item.offer = {};
+          }
+  
+          item.offer.price = offerPrice;
+          item.offer.offerName = offer.offerName;
+          item.offer.offerValue = offer.offerValue;
+          item.offer.actualAmount = actualAmount;
+          
+          await item.save();  
+      });
+      
+        // console.log(products);
+        res.redirect('/adminOffer');
+      }
+    
+    }catch(error){
+      console.log(error);
+    }
+
+  },
+
+ deleteOffer : async(req,res)=>{
+  try{
+    // console.log('hello');
+    const offerId = req.params.id ;
+   
+    const offer = await offerModel.findOne({_id : offerId});
+
+    let products = await productModel.find({isDeleted : false,
+          category : {$in : offer.categories}
+        });
+       if(products){
+       for (let item of products) {
+        if (item.offer) {
+          const actualAmount = Number(item.offer.actualAmount);
+          item.productPrice = actualAmount;
+
+            item.set('offer', undefined, { strict: false });
+
+          await item.save();
+        }
+      }
+    }
+      await offerModel.updateOne({_id : offerId},{ $set : {
+      isDeleted : true,
+    }});
+
+
+    res.json('success');
+  }catch(error){
+    console.log(error);
   }
+
+ }
 };

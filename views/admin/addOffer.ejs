@@ -4,6 +4,9 @@
 </div>
 <div class="container border p-5">
   <div>
+    <h4 class="text-danger"><%=error%></h4>
+  </div>
+  <div>
     <form id="form" action="/addOffer" method="post">
       <div class="row">
         <div class="col-md-6 mt-4">
@@ -18,7 +21,7 @@
               type="number"
               class="form-control p-4"
               id="offerpercentage"
-              name="couponPercent"
+              name="offerPercent"
               placeholder="Discount in percentage(%)"
             />
             <small class="text-danger ms-1 error-tag"></small>
@@ -69,7 +72,7 @@
 
 
 <script>
-   const form = document.querySelector('#form');
+  const form = document.querySelector('#form');
   const offerName = document.getElementById('offername');
   const offerPerctg = document.getElementById('offerpercentage');
   const categoryInput = document.querySelectorAll('.cat-checkbox');
@@ -94,31 +97,31 @@ function setError(element,message){
 }
 
 function validateForm (){
-  const couponCodeValue = couponCode.value.trim();
-  const couponPerctgValue = couponPerctg.value.trim();
+  const offerNameVal = offerName.value.trim();
+  const offerPerctgValue =  offerPerctg.value.trim();
   const dateValue = date.value.trim();
 
   let isError = false;
 
-  if(couponCodeValue === ''){
+  if(offerNameVal === ''){
     isError = true
-    setError(couponCode,'This Field Cannot be Empty');
+    setError(offerName,'This Field Cannot be Empty');
   }else{
-    setError(couponCode,'');
+    setError(offerName,'');
   }
 
   const priceRegex = /^\d+(\.\d{1,2})?$/;
-  if(couponPerctgValue === ''){
+  if(offerPerctgValue === ''){
     isError = true;
-    setError(couponPerctg,'This Field Cannot be Empty');
-  }else if(!priceRegex.test(couponPerctgValue)){
+    setError(offerPerctg,'This Field Cannot be Empty');
+  }else if(!priceRegex.test(offerPerctgValue)){
     isError = true
-    setError(couponPerctg,'Invalid Entry')
-  }else if(couponPerctgValue >= 100){
+    setError(offerPerctg,'Invalid Entry')
+  }else if(offerPerctgValue >= 100){
     isError = true;
-    setError(couponPerctg,'Invalid Entry value must be less than 100');
+    setError(offerPerctg,'Invalid Entry value must be less than 100');
   }else{
-    setError(couponPerctg,'');
+    setError(offerPerctg,'');
   }
 
 // input checkbox

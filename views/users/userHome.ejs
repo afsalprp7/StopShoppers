@@ -457,11 +457,24 @@
               <a  class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
                 <%= item.productName %>
               </a>
-
-              <span class="stext-105 cl3">
-                ₹<%= item.productPrice%>
-                
-              </span>
+              <%if(item.offer.actualAmount){%>
+                <div>
+                <s class="stext-105 cl3">
+                  ₹<%= item.offer.actualAmount%>
+                </s>
+                <span style="font-size: medium;color: #b04fff;" class=" ms-2"><%=item.offer.offerValue%>% OFF</span>
+                <div>
+                  <span style="font-size: medium;" class="stext-105 cl3 text-success">
+                    ₹<%= item.productPrice%>
+                  </span>
+                </div>
+               
+              </div>
+                <%}else{%>
+                  <span class="stext-105 cl3">
+                    ₹<%= item.productPrice%>
+                  </span>
+               <% }%>
             </div>
             <div class="block2-txt-child2 flex-r p-t-3">
               <a href="#" class="btn-addwish-b2 dis-block pos-relative js-addwish-b2">

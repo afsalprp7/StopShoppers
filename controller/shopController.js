@@ -15,7 +15,7 @@ require('dotenv').config();
 const crypto = require('crypto');
 const walletModel = require('../models/walletModel');
 const couponModel = require("../models/couponModel");
-
+const offerModel  = require('../models/offerModel');
 
 
 
@@ -437,10 +437,10 @@ module.exports = {
       productDetails.forEach((cartItem) => {
         const quantity = cartItem.products.quantity;
         const price = cartItem.productDetails.productPrice;
-        console.log("Quantity:", quantity);
-        console.log("Price:", price);
+        // console.log("Quantity:", quantity);
+        // console.log("Price:", price);
         if (isNaN(quantity) || isNaN(price)) {
-          console.log("Error: Quantity or price is not a number");
+          // console.log("Error: Quantity or price is not a number");
           cartItem.totalPrice = "Not a Number";
         } else {
           cartItem.totalPrice = quantity * price;
@@ -2118,7 +2118,11 @@ applyCoupon : async(req,res)=>{
     const userId = req.params.id ;
     // console.log(code,pId);
     const couponCode  = code.toLowerCase();
-    const coupon = await couponModel.findOne({code : couponCode,isDeleted : false});
+    const currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0)
+    // console.log(currentDate);
+ 
+    const coupon = await couponModel.findOne({code : couponCode,isDeleted : false, expiresAt :{$gt : currentDate}});
     console.log(coupon);
     
 if(pId){
@@ -2195,6 +2199,80 @@ if(pId){
     console.log(error);
 }
 },
+
+getOfferPage : async(req,res)=>{
+  try{
+    const token = req.cookies.UserToken;
+    let user;
+    if (token) {
+      const data = jwt.verify(token, "secretKeyUser");
+      user = data.user;
+    } else {
+      user = false;
+    }
+
+    const currentDate = new Date()
+
+    const offers = await offerModel.aggregate([
+      {
+        $match: {
+          isDeleted: false,
+          expiryDate: { $gt: currentDate }
+        }
+      },
+      {
+        $lookup: {
+          from: "products",
+          localField: "categories",
+          foreignField: "category",
+          as: "productInfo"
+        }
+      },
+      {
+        $lookup: {
+          from: "categories",
+          localField: "categories",
+          foreignField: "_id",
+          as: "categoryInfo"
+        }
+      },
+      {
+        $unwind: "$categoryInfo"
+      },
+      {
+        $unwind: {
+          path: "$productInfo",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $group: {
+          _id: "$_id",
+          offerName: { $first: "$offerName" },
+          offerValue: { $first: "$offerValue" },
+          categories: { $addToSet: "$categories" },
+          expiryDate: { $first: "$expiryDate" },
+          isDeleted: { $first: "$isDeleted" },
+          status: { $first: "$status" },
+          productInfo: { $push: "$productInfo" },
+          categoryInfo: { $first: "$categoryInfo" }
+        }
+      }
+    ]);
+    
+    console.log(offers);
+
+  res.render('users/offerPage',{
+    title : 'Offers',
+    user,
+    offers
+  })
+  }catch(error){
+    console.log(error);
+  }
+
+},
+
 
 userLogout: (req, res) => {
     delete req.session.user;

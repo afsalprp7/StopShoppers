@@ -50,6 +50,21 @@ const productSchema = new mongoose.Schema({
   isDeleted : {
       type : Boolean,
       default : false
+    },
+
+    offer :{
+      price : {
+        type : Number,
+      },
+      offerName : {
+        type : String
+      },
+      offerValue : {
+        type : Number
+      },
+      actualAmount :{
+        type : Number
+      }
     }
 });
 

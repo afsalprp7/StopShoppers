@@ -18,8 +18,6 @@ const quantityDiv = document.querySelectorAll(".quantity");
       // console.log(size);
       updateCartQuantity(productId, userId, newQuantity,size);
       
-      window.location.reload();
-      
     });
     minus.addEventListener("click", () => {
       if (input.value > 1) 
@@ -48,10 +46,11 @@ const quantityDiv = document.querySelectorAll(".quantity");
               size  : size
             })
         });
-        const result = await response.json();
+        
         if (!response.ok) {
           console.log('failed to update cart');
         }else{
+          const result = await response.json();
           if(result === 'success'){
             window.location.reload();
           }else{

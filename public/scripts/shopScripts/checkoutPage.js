@@ -21,6 +21,9 @@ const couponTag = document.querySelector(".coupon-tag");
 const couponBtn = document.getElementById("coupon-btn");
 couponBtn.addEventListener("click", async () => {
   const couponCode = document.querySelector(".coupon-code").value.trim();
+  if(couponCode === ''){
+    return Swal.fire('Please Enter The Coupon Code')
+  }
   const productId = document.querySelector(".form-product-id")
     ? document.querySelector(".form-product-id").value.trim()
     : false;
@@ -46,8 +49,8 @@ couponBtn.addEventListener("click", async () => {
     }else if(data === 'errorCode'){
       Swal.fire({
         icon: "error",
-        title: "Invalid Code",
-        text: "No Coupon Found",
+        title: "Something Went Wrong",
+        text: "No Coupon Found or Coupon Expired",
       });
     }else{
       if(productId){

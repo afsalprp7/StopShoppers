@@ -32,8 +32,15 @@ Home/Product Details
       <div class="me-5">
       <div class=" p-5 me-2">
         <h2><%= product.productName %></h2>
-
-        <h4 class="mt-3 ">Price : <span class="text-danger">₹<%= product.productPrice %></span></h4>
+        <%if(product.offer){%>
+        <h4 class="mt-3 ">Price : <s style="font-size: medium;" class="">₹<%=product.offer.actualAmount%></s>
+          <span style="font-size: medium;color: #b04fff;" ><%=product.offer.offerValue%>% OFF</span>
+          <span class="text-success ms-2">₹<%= product.productPrice%></span>
+          
+        </h4>
+        <%}else{%>
+          <h4 class="mt-3 ">Price : <span class="text-danger">₹<%= product.productPrice %></span></h4>
+        <%}%>
         <div class="mt-4">
           <h4>Details</h4>
           <p class="mt-3"><%= product.description %></p>

@@ -12,14 +12,24 @@ const offerSchema = new mongoose.Schema({
   },
 
   categories :{
-    type : [mongoose.Schema.Types.ObjectId]
+    type : [mongoose.Schema.Types.ObjectId],
+    required : true
   },
 
-  products : {
-    type : [mongoose.Schema.Types.ObjectId] 
+  expiryDate :{
+    type : Date,
+    require : true
+  },
+  
+  isDeleted :{
+    type : Boolean,
+    required : true,
+    default : false
+  },
+  status :{
+    type : String,
+    required : true
   }
-
-
 
 });
 

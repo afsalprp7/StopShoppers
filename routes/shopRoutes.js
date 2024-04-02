@@ -3,11 +3,11 @@ const express = require('express');
 const router= express.Router();
 const shopController = require('../controller/shopController');
 const {validateUser} = require('../middleware/authMiddleware');
-
+const checkExpiryOffer = require('../middleware/offerValidtyMiddleware');
 
 router.get('/',shopController.getHomePage);
-router.get('/home',validateUser,shopController.getHomePage);
-router.get('/productDetail/:id',shopController.getProductDetailpage);
+router.get('/home',validateUser,checkExpiryOffer,shopController.getHomePage);
+router.get('/productDetail/:id',checkExpiryOffer,shopController.getProductDetailpage);
 
 router.get('/userProfile/:id',validateUser,shopController.getUserProfilePage);
 
@@ -29,9 +29,9 @@ router.post('/searchFromShopPage',shopController.searchProductHome);
 
 
 
-router.get('/shopPage',validateUser,shopController.getShopPage);
+router.get('/shopPage',validateUser,checkExpiryOffer,shopController.getShopPage);
 router.get('/userLogout',validateUser,shopController.userLogout);
-router.get('/cartPage',validateUser,shopController.getCartPage);
+router.get('/cartPage',validateUser,checkExpiryOffer,shopController.getCartPage);
 router.post('/addToCart/:id',shopController.AddToCart);
 router.post('/updateCartQuantity/:productId/:userId',shopController.cartUpdateFetch);
 router.post('/removeFromCart/:id',shopController.removeFromCart);
@@ -57,7 +57,7 @@ router.get('/myOrders/:id',validateUser,shopController.getUserMyOrders);
 
 router.patch('/cancelOrder/:id',validateUser,shopController.orderCancelationRequest);
 
-router.get('/wishlist/:id',validateUser,shopController.getWishlistPage);
+router.get('/wishlist/:id',validateUser,checkExpiryOffer,shopController.getWishlistPage);
 router.post('/addToWishlist/:id',validateUser,shopController.addToWishlist);
 router.patch('/removeFromWishlist/:id',validateUser,shopController.removeFromWishlist);
 router.post('/createOrderRzp',validateUser,shopController.createOrderRzp);
@@ -69,5 +69,7 @@ router.post('/createOrderRzpFromWallet',validateUser,shopController.createOrderR
 router.patch('/addMoneyToWallet/:id',validateUser,shopController.addMoneyToWallet);
 
 router.post('/applyCoupon/:id',validateUser,shopController.applyCoupon);
+
+router.get('/offers',shopController.getOfferPage);
 
 module.exports = router;

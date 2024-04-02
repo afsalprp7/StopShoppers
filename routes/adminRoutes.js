@@ -4,14 +4,14 @@ const adminController = require('../controller/adminController');
 const {categoryStg , productStg} = require('../controller/multerController');
 const {validateAdmin} = require('../middleware/authMiddleware');
 const { validate } = require('uuid');
-
+const offerExpiryCheck = require('../middleware/offerValidtyMiddleware');
 
 
 
 
 
 router.get('/adminProduct',validateAdmin,adminController.getProductPage);
-router.get('/addProduct',validateAdmin,adminController.getAddProductPage);
+router.get('/addProduct',validateAdmin,offerExpiryCheck,adminController.getAddProductPage);
 router.post('/addProduct',productStg.array('productPhoto'),adminController.doAddProduct);
 router.patch('/deleteProduct/:id',adminController.DeleteProduct);
 router.get('/editProduct/:id',validateAdmin,adminController.getEditProductPage);
@@ -53,13 +53,19 @@ router.post('/addCoupon',validateAdmin,adminController.doAddCouponForm);
 router.patch('/deleteCoupon/:id',validateAdmin,adminController.deleteCoupon);
 router.get('/editCoupon/:id',validateAdmin,adminController.getEditCoupon);
 router.patch('/editCoupon/:id',validateAdmin,adminController.doEditCoupon);
+
+
 router.get('/adminDashboard',validateAdmin,adminController.getAdminDashboard);
 
 router.post('/createChart',validateAdmin,adminController.createChartSalesReport);
 router.post('/downloadAsPdf',validateAdmin,adminController.downloadReportPdf);
 router.post('/downloadAsExcel',validateAdmin,adminController.downloadAsExcel);
+
+
+router.get('/adminOffer',validateAdmin,offerExpiryCheck,adminController.getAdminOffer)
 router.get('/getAddOffer',validateAdmin,adminController.getAddOfferPage);
-router.post('/addOffer',validateAdmin,adminController.doAddOffer)
+router.post('/addOffer',validateAdmin,adminController.doAddOffer);
+router.delete('/deleteOffer/:id',validateAdmin,adminController.deleteOffer);
 
 
 module.exports = router;
