@@ -71,5 +71,11 @@ router.patch('/addMoneyToWallet/:id',validateUser,shopController.addMoneyToWalle
 router.post('/applyCoupon/:id',validateUser,shopController.applyCoupon);
 
 router.get('/offers',shopController.getOfferPage);
+router.post('/createOrderInFailure/:id',validateUser,shopController.createOrderInPaymentFailure);
+
+router.post('/createOrderFromOrderDetail',validateUser,shopController.createOrderRzp);
+router.patch('/updateOrderFromOrderDetail/:id',validateUser,shopController.updateOrderFromOrderDetailPage);
+
+router.get('/downloadInvoiceAsPdf/:id',validateUser,shopController.downloadInvoiceAsPdf);
 
 module.exports = router;

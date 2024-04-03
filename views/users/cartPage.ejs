@@ -164,7 +164,6 @@
       }).then(async(result) => {
         if (result.isConfirmed) {
           updateCartRemove(userId,productId,size);
-          window.location.reload();
         }else{
           return false
         }
@@ -197,6 +196,7 @@
           console.log('Remove From Cart Failed');
         }else{
           await response.json();
+          window.location.reload();
         }
       }catch(error){
         console.log(error);

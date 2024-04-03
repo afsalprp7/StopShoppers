@@ -21,7 +21,11 @@
       StopShoppers
     </div>
     <div>
+      <%if(order[0].orderStatus === 'pending'){%>
+        <i class="fa-solid fa-triangle-exclamation text-danger"></i><span class="text-danger ms-1">Payment Pending</span>
+        <%}else{%>
       <span class="text-success">Order Confirmed</span><i class="fa-solid fa-circle-check text-success"></i>
+      <%}%>
     </div>
   </div>
     <div class="mt-3 border-bottom">

@@ -14,7 +14,10 @@
   <div class="d-flex justify-content-center"><h2>Order Details</h2></div>
 
   <div class="mt-3 border-bottom shadow-sm border-primary-subtle">
-    <h3>Delivery Address :</h3>
+    
+      <h3>Delivery Address :</h3>
+    
+    
     <div class="ms-1 mt-3 p-div">
       <strong>
         <p>Name : <%=order[0].address.firstname%> <%=order[0].address.lastname%></p>
@@ -53,7 +56,9 @@
       <div class="ms-1 mt-3 p-div">
         <strong>
           <p>Payment Method : <%=order[0].paymentDetails.method%></p>
+          <p>Payment Id : <%=order[0].paymentDetails.paymentId%></p>
           <p class="text-danger">Total Amount :  ₹<%=order[0].grandTotal%></p>
+
           <% if(order[0].walletMoney){%>
           <p class="text-danger">Payed From wallet :  ₹<%=order[0].walletMoney%></p>
          <%} if(order[0].couponDiscount){%>
@@ -77,10 +82,14 @@
           <h4 class="text-warning">Request Status : <span class="text-danger">Declined</span></h4>
           <p class="ms-4"> (Reason : <%=order[0].declineRequestReason%>)</p>
         </div>
-
-        <%}else{%>
+        
+        <%}else if(order[0].orderStatus !== 'pending'){%>
         <div class="d-flex justify-content-end">
+          <button onclick="downloadPdf('<%=order[0]._id%>')"  style="background-color: #b04fff;" class="btn text-white me-5">Download PDF</button>
+
           <button id="cancel-order-btn" style="background-color: #b04fff;" class="btn text-white">Cancel Order</button>
+
+          
           </div>
         <div
         class="border shadow-sm p-4 mt-4 rounded form-div"
@@ -111,7 +120,14 @@
         
       </div>
       <%}%>
-      
+      <div class="d-flex justify-content-end align-items-center">
+        <%if(order[0].orderStatus === 'pending' && order[0].cancelRequested !== true){%>
+          <i class="fa-solid fa-triangle-exclamation text-danger me-1"></i><strong class="text-danger me-4">Payment Pending</strong>
+          <div>
+            <button data-totalamount="<%=order[0].grandTotal%>" data-orderid="<%=order[0]._id%>" style="background-color: #b04fff;" class="btn text-white payment-btn">Complete your Payment</button>
+          </div>
+          <%}%>
+      </div>
     </div>
   </div>
 </div>
@@ -182,6 +198,95 @@
   }
 
 
+  function validateOrderAndUpdateOrder(data,rzpId,orderId){
+    const amount = data.amount/100 ; 
+  var options = {
+    "key": rzpId,
+    "amount": amount,
+    "currency": "INR",
+    "name": "StopShoppers",
+    "description": "Test Transaction",
+    "image" : "authPic.jpg",
+    "order_id": data.id,
+    "handler": async function(responserzp){
+      try{
+       const response = await fetch(`/updateOrderFromOrderDetail/${orderId}`,{
+        method :"PATCH",
+        headers :{
+          'content-type' : 'application/json'
+        },
+        body : JSON.stringify({
+          amount,
+          rzpOrderId: responserzp.razorpay_order_id,
+          rzpPaymentId: responserzp.razorpay_payment_id
+        })
+       });
+       if(!response.ok){
+        console.log('something went Wrong');
+       }else{
+        const result = await response.json();
+        if(result === 'success'){
+         await Swal.fire({
+            position: "center",
+            icon: "success",
+            title: "Your work has been saved",
+            showConfirmButton: false,
+            timer: 1500
+          });
+          window.location.reload();
+        }
+       }
+      
+      }catch(error){
+        console.log(error);
+      }
+    },
+    "prefill": {
+      "name": 'something',
+      "email": 'something@getMaxListeners.com',
+      
+    },
+    "theme": {
+      "color": "#b04fff"
+    }
+  };
+
+  var rzp = new Razorpay(options);
+  rzp.open();
+
+}
+
+  const buttonPayment = document.querySelector('.payment-btn');
+  buttonPayment.addEventListener('click',async()=>{
+   const amount =  buttonPayment.dataset.totalamount;
+   const orderId = buttonPayment.dataset.orderid;
+   console.log(orderId);
+  const response = await fetch('/createOrderFromOrderDetail',{
+    method : "POST",
+    headers :{
+      'content-type' : 'application/json'
+    },
+    body : JSON.stringify({
+      totalAmount : amount
+    })
+  });
+
+  if(!response.ok){
+    console.log('failed to create order');
+  }else{ 
+    const {data,rzpId} = await response.json();
+    
+    validateOrderAndUpdateOrder(data,rzpId,orderId)
+  }
+
+  })
+
+
+
+function downloadPdf(orderId){
+  window.location.href = `/downloadInvoiceAsPdf/${orderId}`;
+}
 </script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
 <%- include('../includes/usersPartials/userEnd.ejs') %>

@@ -80,7 +80,7 @@ couponBtn.addEventListener("click", async () => {
           couponDiscount = data.totalDiscount;
           couponTag.textContent = "₹" + couponDiscount;
           const totalAmount = cartTotal - couponDiscount;
-          totalPriceCart.innerHTML = "₹" + totalAmount;
+          totalPriceCart.innerHTML = "₹" + totalAmount.toFixed(2);
         }
       }
       
@@ -206,7 +206,7 @@ function validatePayment(data, rzpId, walletAmount, couponDiscount) {
     order_id: data.id,
     handler: async function (response) {
       try {
-        Swal.fire(
+       await Swal.fire(
           "Payment successful! Payment ID: " + response.razorpay_payment_id
         );
         console.log(userDetails);
@@ -246,10 +246,19 @@ function validatePayment(data, rzpId, walletAmount, couponDiscount) {
     theme: {
       color: "#b04fff",
     },
+    
   };
 
   var rzp = new Razorpay(options);
   rzp.open();
+
+  rzp.on('payment.failed',async function(response){
+   await Swal.fire(
+      "Payment Failed !"
+    );
+    createOrderInFailure(walletAmount,couponDiscount);
+  })
+
 }
 
 razorpayBtn.addEventListener("click", async () => {
@@ -313,3 +322,42 @@ razorpayBtn.addEventListener("click", async () => {
 });
 
 //coupon
+async function createOrderInFailure(walletAmount,couponDiscount){
+  try{
+    const productIdElement = document.querySelector(".form-product-id");
+  const productSizeElement = document.querySelector(".form-product-size");
+  const productPriceElement = document.querySelector(".form-product-price");
+
+  // Check if the elements exist before accessing their values
+  const productId = productIdElement ? productIdElement.value : "";
+  const productSize = productSizeElement ? productSizeElement.value : "";
+  const productPrice = productPriceElement ? productPriceElement.value : "";
+
+
+    const response = await fetch(`/createOrderInFailure/${userDetails}`,{
+      method : "POST",
+      headers: {
+        'content-type' : 'application/json'
+      },
+      body : JSON.stringify({
+        productId: productId ? productId : false,
+        productSize: productSize ? productSize : false,
+        productPrice: productSize ? productPrice : false,
+        walletAmount: walletAmount ? walletAmount : false,
+        couponDiscount: couponDiscount ? couponDiscount : false,
+      })
+
+    });
+    if(!response.ok){
+      console.log('something went wrong');
+    }else{
+      const message = await response.json();
+      const result = message.message
+      window.location.href = `/confirmOrder/${result}`
+    }
+  }catch(error){
+    console.log(error);
+  }
+  
+
+}

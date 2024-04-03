@@ -211,7 +211,7 @@ function validateKeyAndUpdateWallet(data , rzpId){
     "order_id": data.id,
     "handler": async function(response){
       try{
-        
+       
         Swal.fire('Payment successful! Payment ID: ' + response.razorpay_payment_id);
         // console.log(userDetails);
         const responseFetch = await fetch(`/addMoneyToWallet/${userId}`,{
@@ -285,8 +285,8 @@ if (amount < 5000 && amount !== '' ) {
     body : JSON.stringify({
       totalAmount : amount
     })
-  })
-
+  });
+  
   const result = await response.json();
   const {data , rzpId} = result;
 

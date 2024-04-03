@@ -11,8 +11,8 @@
   </div>
   <% if(offers.length > 0) { %>
     <% offers.forEach((item) => { %>
-      <div class="border-bottom shadow-sm">
-        <div style="background-color: rgba(149, 88, 255, 0.271);" class="mt-4 border rounded p-4 d-flex justify-content-center shadow offer-container">
+      <div class="border-bottom">
+        <div style="background-color: rgba(149, 88, 255, 0.271);" class="mt-4 border rounded p-5 d-flex justify-content-center shadow offer-container">
           <div>
             <h1 style="color: #b04fff; text-transform: uppercase;">
               <%= item.offerName %> :- <%= item.offerValue %>% Discount For "<%= item.categoryInfo.categoryName %>"
@@ -36,7 +36,7 @@
                     <a class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
                       <%= product.productName %>
                     </a>
-                    <% if(product.offer) { %>
+                    <!-- <% if(product.offer) { %> -->
                       <div>
                         <s class="stext-105 cl3">
                           ₹<%= product.offer.actualAmount %>
@@ -50,7 +50,7 @@
                           </span>
                         </div>
                       </div>
-                    <% } %>
+                    <!-- <% } %> -->
                   </div>
                 </div>
               </div>
@@ -62,7 +62,7 @@
     <% }); %>
   <% } else { %>
     <div class="d-flex justify-content-center align-items-center mt-5">
-      <h2 style="color: #b04fff;" class="mt-5">No Offers</h2>
+      <h1 style="color: #b04fff;" class="mt-5">No Offers</h1>
     </div>
   <% } %>
 </div>
