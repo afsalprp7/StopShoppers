@@ -15,11 +15,12 @@
       </tr>
     </thead>
     <tbody>
-      <%if(coupons){%> <%coupons.forEach((item)=>{%>
+      <%if(coupons){%> 
+        <%coupons.forEach((item)=>{%>
       <tr>
         <td style="text-transform: uppercase"><%=item.code%></td>
         <td><%=item.value%>%</td>
-        <td><%=item.expiresAt%></td>
+        <td><%= String(item.expiresAt).split(' ').slice(0, 4).join(' ') %></td>
         <td style="cursor: pointer">
           <a href="/editCoupon/<%=item._id%>">
             <i class="fa-solid fa-pen-to-square text-primary edit-btn"></i>
@@ -31,7 +32,8 @@
           ></i>
         </td>
       </tr>
-      <%})%> <%}%>
+      <%})%> 
+      <%}%>
     </tbody>
   </table>
 </div>
@@ -105,24 +107,24 @@
   });
 
 
-  const editBtn = document.querySelectorAll('.edit-btn');
+  // const editBtn = document.querySelectorAll('.edit-btn');
 
-  editBtn.forEach((item)=>{
-    item.addEventListener('click',async()=>{
-      const couponId = item.dataset.id ;
-      const response = await fetch(`/editCoupon/${couponId}`,{
-        method: "POST",
-        headers: {
-          "content-type" : "application/json"
-        },
-      })
-      if(!response.ok){
-        console.log('Operation Failed');
-      }else{
+  // editBtn.forEach((item)=>{
+  //   item.addEventListener('click',async()=>{
+  //     const couponId = item.dataset.id ;
+  //     const response = await fetch(`/editCoupon/${couponId}`,{
+  //       method: "POST",
+  //       headers: {
+  //         "content-type" : "application/json"
+  //       },
+  //     })
+  //     if(!response.ok){
+  //       console.log('Operation Failed');
+  //     }else{
 
-      }
-    })
-  })
+  //     }
+  //   })
+  // })
 
 
 </script>

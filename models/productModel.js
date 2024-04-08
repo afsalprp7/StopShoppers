@@ -65,6 +65,9 @@ const productSchema = new mongoose.Schema({
       actualAmount :{
         type : Number
       }
+    },
+    salesCount :{
+      type : Number
     }
 });
 

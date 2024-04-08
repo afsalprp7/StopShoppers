@@ -33,9 +33,17 @@
           <label for="userType" class="form-label">Category</label>
           <select class="form-select p-3" id="userType" name="category">
             <% catData.forEach(function(item) { %>
-            <option value="<%= item._id %>">
-              <%= item.categoryName %>
-            </option>
+              <% if(item._id.equals(data.category)) { %>
+                <!-- If data.category matches item._id, set option as selected -->
+                <option selected value="<%= item._id %>">
+                  <%= item.categoryName %>
+                </option>
+              <% } else { %>
+                <!-- Otherwise, generate a regular option -->
+                <option value="<%= item._id %>">
+                  <%= item.categoryName %>
+                </option>
+              <% } %>
             <% }); %>
           </select>
         </div>
@@ -44,9 +52,9 @@
         <div class="mb-3">
           <label for="userType" class="form-label">User Type</label>
           <select class="form-select p-3" id="userType" name="userType">
-            <option value="male">Male</option>
-            <option value="Female">Female</option>
-            <option value="Unisex">Unisex</option>
+            <option <%= data.userType === 'male' ? 'selected' : '' %> value="male">Male</option>
+            <option <%= data.userType === 'female' ? 'selected' : '' %> value="female">Female</option>
+            <option value="unisex">Unisex</option>
           </select>
         </div>
       </div>

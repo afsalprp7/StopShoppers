@@ -18,38 +18,36 @@ const couponModel = require("../models/couponModel");
 const offerModel  = require('../models/offerModel');
 const PDF = require('pdfkit');
 
+async function userValidation(token){
 
+      let user;
+      let cartCount;
+      let wishlistCount;
+      if (token) {
+        const data = jwt.verify(token, process.env.SECRET_KEY_USERTOKEN );
+        
+        user = data.user;
+        console.log(user)
+        const  cart = await cartModel.findOne({userId : user._id});
 
+       console.log(cart);
+        cartCount = cart.products.length
 
+        const wishlist = await wishlistModel.findOne({userId : user._id});
 
+        wishlistCount = wishlist.productDetails.length ;
+      } else {
+        user = false;
+      }
+      console.log(cartCount);
+      return {user : user ? user : '', cartCount : cartCount ? cartCount : 0 ,wishlistCount : wishlistCount ? wishlistCount : 0}
+    }
 module.exports = {
   getHomePage: async (req, res) => {
     try {
       const token = req.cookies.UserToken;
+      const {user,cartCount,wishlistCount} = await userValidation(token);
 
-      let user;
-      if (token) {
-        const data = jwt.verify(token, "secretKeyUser");
-        user = data.user;
-        const cartCount = await cartModel.aggregate([
-          {
-            $group: {
-              _id: "$_id",
-              count: { $sum: 1 },
-            },
-          },
-          {
-            $project: {
-              _id: 0,
-              count: 1,
-            },
-          },
-        ]);
-        // user.cartCount = cartCount
-        // console.log(user.cartCount);
-      } else {
-        user = false;
-      }
       // Pagination parameters
       const page = req.query.page ? parseInt(req.query.page) : 1;
       const limit = req.query.limit ? parseInt(req.query.limit) : 8;
@@ -73,7 +71,8 @@ module.exports = {
         allProducts: products,
         title: "Home",
         user: user,
-
+        cartCount,
+        wishlistCount,
         pagination: {
           currentPage: page,
           totalPages: Math.ceil(totalCount / limit),
@@ -87,14 +86,8 @@ module.exports = {
 
   getProductDetailpage: async (req, res) => {
     const token = req.cookies.UserToken;
+    const {user,cartCount,wishlistCount} = await userValidation(token);
 
-    let user;
-    if (token) {
-      const data = jwt.verify(token, "secretKeyUser");
-      user = data.user;
-    } else {
-      user = false;
-    }
     const id = req.params.id;
     const allProducts = await productModel.find({
       _id: { $ne: id },
@@ -102,17 +95,20 @@ module.exports = {
     }).limit(8);
     console.log('detailPage',allProducts);
     const productInfo = await productModel.findOne({ _id: id });
-    if (productInfo.quantity <= 0) {
-      req.session.detailpageError = true;
-    } else {
-      req.session.detailpageError = false;
+    if(productInfo){
+      if (productInfo.quantity <= 0) {
+        req.session.detailpageError = true;
+      } else {
+        req.session.detailpageError = false;
+      }
     }
-
     res.render("users/productDetailPage", {
       title: "Product Detail",
       product: productInfo,
       allProducts: allProducts,
       user: user,
+      cartCount,
+      wishlistCount,
       error: req.session.detailpageError ? req.session.detailpageError : false,
     });
     req.session.quantityError = false;
@@ -121,15 +117,8 @@ module.exports = {
   getUserProfilePage: async (req, res) => {
     try {
       const token = req.cookies.UserToken;
-      //  console.log(token);
-      let user;
-      if (token) {
-        const data = jwt.verify(token, "secretKeyUser");
-        user = data.user;
-        //  console.log(user);
-      } else {
-        user = false;
-      }
+    const {user,cartCount,wishlistCount} = await userValidation(token);
+
       const Id = req.params.id;
       const userId = new mongoose.Types.ObjectId(Id);
       console.log(userId);
@@ -140,6 +129,8 @@ module.exports = {
         title: "User Profile",
         userInfo: userDetails,
         user: user,
+        cartCount,
+        wishlistCount,
         userAddress: userAddress,
       });
     } catch (error) {
@@ -147,21 +138,15 @@ module.exports = {
     }
   },
 
-  getAddAddressPage: (req, res) => {
+  getAddAddressPage: async(req, res) => {
     const token = req.cookies.UserToken;
-    //  console.log(token);
-    let user;
-    if (token) {
-      const data = jwt.verify(token, "secretKeyUser");
-      user = data.user;
-      //  console.log(user);
-    } else {
-      user = false;
-    }
+    const {user,cartCount,wishlistCount} = await userValidation(token);
     const id = req.params.id;
     res.render("users/addAddress", {
       title: "Add Address",
       user: user,
+      cartCount,
+      wishlistCount,
       userid: id,
     });
   },
@@ -197,15 +182,8 @@ module.exports = {
   getEditAddress: async (req, res) => {
     try {
       const token = req.cookies.UserToken;
-      // console.log(token);
-      let user;
-      if (token) {
-        const data = jwt.verify(token, "secretKeyUser");
-        user = data.user;
-        // console.log(user);
-      } else {
-        user = false;
-      }
+    const {user,cartCount,wishlistCount} = await userValidation(token);
+
       const id = req.params.id;
       const userid = req.query.userId;
       console.log(userid);
@@ -215,6 +193,8 @@ module.exports = {
         title: "Edit Address",
         addressDetails,
         userid,
+        wishlistCount,
+        cartCount,
         user: user,
       });
     } catch (error) {
@@ -296,20 +276,14 @@ module.exports = {
   getEditProfilePage: async (req, res) => {
     try {
       const token = req.cookies.UserToken;
-      // console.log(token);
-      let user;
-      if (token) {
-        const data = jwt.verify(token, "secretKeyUser");
-        user = data.user;
-        // console.log(user);
-      } else {
-        user = false;
-      }
+      const {user,cartCount,wishlistCount} = await userValidation(token);
       const userId = req.params.id;
       const userdet = await userModel.findOne({ _id: userId });
       res.render("users/editProfile", {
         title: "Edit Profile",
         user: user,
+        cartCount,
+        wishlistCount,
         userDetails: userdet,
       });
     } catch (error) {
@@ -363,15 +337,7 @@ module.exports = {
   getShopPage: async (req, res) => {
     try {
       const token = req.cookies.UserToken;
-      // console.log(token);
-      let user;
-      if (token) {
-        const data = jwt.verify(token, "secretKeyUser");
-        user = data.user;
-        // console.log(user);
-      } else {
-        user = false;
-      }
+      const {user,cartCount,wishlistCount} = await userValidation(token);
       // Pagination parameters
       const page = req.query.page ? parseInt(req.query.page) : 1;
       const limit = req.query.limit ? parseInt(req.query.limit) : 16;
@@ -390,11 +356,13 @@ module.exports = {
       const categories = await categoryModel.find({
         isDeleted: false,
       });
-      console.log(categories);
+      // console.log(categories);
       res.render("users/shopPage", {
         title: "Shop",
         allProducts: products,
         user: user,
+        cartCount,
+        wishlistCount,
         category: categories,
         pagination: {
           currentPage: page,
@@ -410,14 +378,8 @@ module.exports = {
   getCartPage: async (req, res) => {
     try {
       const token = req.cookies.UserToken;
+    const {user,cartCount,wishlistCount} = await userValidation(token);
 
-      let user;
-      if (token) {
-        const data = jwt.verify(token, "secretKeyUser");
-        user = data.user;
-      } else {
-        user = false;
-      }
       const cart = await cartModel.find();
       const productDetails = await cartModel.aggregate([
         { $match: { userId: new ObjectId(user._id) } },
@@ -457,6 +419,8 @@ module.exports = {
         user: user,
         carts: productDetails,
         grandTotal,
+        wishlistCount,
+        cartCount
       });
     } catch (error) {
       console.log(error);
@@ -673,13 +637,7 @@ module.exports = {
   getCheckoutPage: async (req, res) => {
     try {
       const token = req.cookies.UserToken;
-      let user;
-      if (token) {
-        const data = jwt.verify(token, "secretKeyUser");
-        user = data.user;
-      } else {
-        user = false;
-      }
+      const {user,cartCount,wishlistCount} = await userValidation(token);
       // console.log(user._id);
       //function route starts
 
@@ -701,7 +659,9 @@ module.exports = {
           : false,
         productInfo: req.session.productInfo ? req.session.productInfo : false,
         wallet,
-        error : req.session.warning ? req.session.warning : ''
+        error : req.session.warning ? req.session.warning : '',
+        cartCount,
+        wishlistCount
       });
     } catch (error) {
       console.log(error);
@@ -840,12 +800,13 @@ module.exports = {
       if (Object.keys(req.body).length > 0) {
         // console.log(databody);
       const product = await productModel.findOne({_id : databody.productName});
-      if(product.productPrice > 1000){
-        req.session.warning = '! Cannot Use Cash on Delivery for the Orders Above 1000rs';
-        return res.redirect(`/checkoutDirect/${databody.productName}?size=${databody.size}`)
-      }else
+     
         if(couponDiscount && !walletAmount){
           const price = (databody.price - couponDiscount).toFixed(2) ;
+          if(price > 1000){
+            req.session.warning = '! Cannot Use Cash on Delivery for the Orders Above 1000rs';
+            return res.redirect(`/checkoutDirect/${databody.productName}?size=${databody.size}`)
+          }
           result =  await orderModel.collection.insertOne({
             userId: new ObjectId(userId),
             orderId : v4(),
@@ -894,7 +855,10 @@ module.exports = {
         }else if(walletAmount && couponDiscount){
           const subamount = parseFloat(walletAmount) + parseFloat(couponDiscount);
           const price = (databody.price - subamount).toFixed(2) ;
-
+          if(price > 1000){
+            req.session.warning = '! Cannot Use Cash on Delivery for the Orders Above 1000rs';
+            return res.redirect(`/checkoutDirect/${databody.productName}?size=${databody.size}`)
+          }
           result =  await orderModel.collection.insertOne({
             userId: new ObjectId(userId),
             orderId : v4(),
@@ -942,7 +906,10 @@ module.exports = {
 
         }else if(walletAmount && !couponDiscount){
           const price = databody.price - walletAmount ;
-
+          if(price > 1000){
+            req.session.warning = '! Cannot Use Cash on Delivery for the Orders Above 1000rs';
+            return res.redirect(`/checkoutDirect/${databody.productName}?size=${databody.size}`)
+          }
           result =  await orderModel.collection.insertOne({
             userId: new ObjectId(userId),
             orderId : v4(),
@@ -988,6 +955,10 @@ module.exports = {
           );
 
         }else{
+          if(databody.price > 1000){
+            req.session.warning = '! Cannot Use Cash on Delivery for the Orders Above 1000rs';
+            return res.redirect(`/checkoutDirect/${databody.productName}?size=${databody.size}`)
+          }
           result =  await orderModel.collection.insertOne({
             userId: new ObjectId(userId),
             orderId : v4(),
@@ -1289,13 +1260,8 @@ module.exports = {
   getOrderDetailpage: async (req, res) => {
     try {
       const token = req.cookies.UserToken;
-      let user;
-      if (token) {
-        const data = jwt.verify(token, "secretKeyUser");
-        user = data.user;
-      } else {
-        user = false;
-      }
+      const {user,cartCount,wishlistCount} = await userValidation(token);
+
       const orderId = new ObjectId (req.params.id);
       const orderDetails = await orderModel.aggregate ([{
         $match : {
@@ -1322,7 +1288,9 @@ module.exports = {
       res.render("users/orderDetailsPage", {
         title: "Order Details",
         user,
-        order : orderDetails
+        order : orderDetails,
+        cartCount,
+        wishlistCount
       });
     } catch (error) {
       console.log(error);
@@ -1385,13 +1353,7 @@ module.exports = {
 getOrderConfirmationPage :async(req,res)=>{
   try{
     const token = req.cookies.UserToken;
-      let user;
-      if (token) {
-        const data = jwt.verify(token, "secretKeyUser");
-        user = data.user;
-      } else {
-        user = false;
-      }
+    const {user,cartCount,wishlistCount} = await userValidation(token);
 
       const orderId = req.params.id ; 
       const orderDetails = await orderModel.aggregate([{$match :{ _id : new ObjectId(orderId)}},
@@ -1416,7 +1378,9 @@ getOrderConfirmationPage :async(req,res)=>{
     {
       title : 'Confirm Order',
       user : user,
-      order : orderDetails ? orderDetails : false 
+      order : orderDetails ? orderDetails : false ,
+      cartCount,
+      wishlistCount
     }
     
     )
@@ -1427,14 +1391,8 @@ getOrderConfirmationPage :async(req,res)=>{
 },
 getUserMyOrders :async(req,res)=>{
   try{
-      const token = req.cookies.UserToken;
-      let user;
-      if (token) {
-        const data = jwt.verify(token, "secretKeyUser");
-        user = data.user;
-      } else {
-        user = false;
-      }
+    const token = req.cookies.UserToken;
+    const {user,cartCount,wishlistCount} = await userValidation(token);
 
       const userId = req.params.id;
 
@@ -1444,7 +1402,9 @@ getUserMyOrders :async(req,res)=>{
       res.render('users/userMyOrders',{
         title : 'Orders',
         orders,
-        user
+        user,
+        cartCount,
+        wishlistCount
       })
 
 
@@ -1473,13 +1433,7 @@ orderCancelationRequest : async(req,res)=>{
 getWishlistPage : async(req,res)=>{
 try{
   const token = req.cookies.UserToken;
-  let user;
-  if (token) {
-    const data = jwt.verify(token, "secretKeyUser");
-    user = data.user;
-  } else {
-    user = false;
-  }
+  const {user,cartCount,wishlistCount} = await userValidation(token);
   const userId = new ObjectId(user._id)
   const wishProducts = await wishlistModel.aggregate([{$match :{
     userId : userId
@@ -1504,7 +1458,9 @@ console.log(wishProducts);
   res.render('users/userwishlist',{
     title : 'Wishlist',
     user,
-    wishlist : wishProducts
+    wishlist : wishProducts,
+    wishlistCount,
+    cartCount
   })
 }catch(error){
   console.log(error);
@@ -2080,21 +2036,24 @@ razorpayVerifyPaymentAndUpdateOrder : async(req,res)=>{
 getUserWallet :async(req,res)=>{
   try{
     const token = req.cookies.UserToken;
-      let user;
-      if (token) {
-        const data = jwt.verify(token, "secretKeyUser");
-        user = data.user;
-      } else {
-        user = false;
-      }
+    const {user,cartCount,wishlistCount} = await userValidation(token);
     const userId = req.params.id ;
     const wallet = await walletModel.findOne({userId : userId});
-    console.log(wallet);
 
+if (wallet && wallet.transactionDetails && wallet.transactionDetails.length > 0) {
+  wallet.transactionDetails.sort((a, b) => {
+      return new Date(b.date) - new Date(a.date);
+  });
+}
+
+
+console.log(wallet);
     res.render('users/userWallet',{
       title : 'User Wallet',
       wallet : wallet ? wallet : false,
       user,
+      cartCount,
+      wishlistCount
     })
   }catch(error){
     console.log(error);
@@ -2127,105 +2086,95 @@ addMoneyToWallet : async(req,res)=>{
   }
 },
 
-applyCoupon : async(req,res)=>{
-  try{
-    const code = req.body.code;
-    const pId = req.body.product;
-    const userId = req.params.id ;
-    // console.log(code,pId);
-    const couponCode  = code.toLowerCase();
+applyCoupon: async (req, res) => {
+  try {
+    const { code, product: pId, walletAmount } = req.body;
+    const userId = req.params.id;
+    const couponCode = code.toLowerCase();
     const currentDate = new Date();
-    currentDate.setHours(0, 0, 0, 0)
-    // console.log(currentDate);
- 
-    const coupon = await couponModel.findOne({code : couponCode,isDeleted : false, expiresAt :{$gt : currentDate}});
-    console.log(coupon);
-    
-if(pId){
-  const product = await productModel.findOne({_id : pId});
-  if(coupon){
-    if(coupon.code === couponCode){
+    currentDate.setHours(0, 0, 0, 0);
+
+    const coupon = await couponModel.findOne({
+      code: couponCode,
+      isDeleted: false,
+      expiresAt: { $gt: currentDate }
+    });
+
+    if (!coupon) {
+      return res.json('errorCode');
+    }
+
+    let totalDiscount = 0;
+
+    if (pId) {
+      const product = await productModel.findOne({ _id: pId });
+
+      if (!product) {
+        return res.json('productError');
+      }
+
+      if (!coupon.eligibleCategory.some(item => item.equals(product.category))) {
+        return res.json('productError');
+      }
+
       const percentage = Number(coupon.value);
-      const discountPrice = (Number(product.productPrice) * (percentage/100)).toFixed(2) ;
-      console.log(discountPrice);
-      let totalDiscount = 0
-      coupon.eligibleCategory.forEach((item)=>{
-        if(item.equals(product.category)){
-           totalDiscount += discountPrice
-        }else{
-         return res.json('productError')
-        }
-      });
+      const discountPrice = (Number(product.productPrice) * (percentage / 100)).toFixed(2);
+      totalDiscount = Number(discountPrice);
       product.productPrice -= totalDiscount;
-      res.json({
+
+      return res.json({
         product,
         totalDiscount
-      })
-    }else{
-      console.log('code doesnt match');
-    }
-   
-  }else{
-   return res.json('errorCode');
-    
-  }
-}else{
-  if(coupon){
-    const cart = await cartModel.aggregate([{$match:{ userId :new ObjectId(userId) }},
-      {$lookup:{
-        from : "products",
-        localField : "products.productId",
-        foreignField: "_id",
-        as : "productInfo"
-  
-      }},{$unwind : "$productInfo"}
-    ]);
-    // console.log(cart);
-  
-    const percent = Number(coupon.value);
-    let totalDiscount = 0 ;
-     cart.forEach((product)=>{
-      let max= 0;
-      coupon.eligibleCategory.forEach((item)=>{
-        if(item.equals(product.productInfo.category)){
-         let currentValue =  (Number(product.productInfo.productPrice) * (percent/100)).toFixed(2);
-         if(currentValue > max){
-          max = currentValue;
-         }else{
-          max = 0;
-          return
-         }
-        }else{
-         return res.json('productError')
-        }
       });
-      totalDiscount = max
-     });
-     console.log(totalDiscount);
-    return res.json({
-      totalDiscount
-     });
+    } else {
+      const cart = await cartModel.aggregate([
+        {
+          $match: { userId: new ObjectId(userId) }
+        },
+        {
+          $lookup: {
+            from: "products",
+            localField: "products.productId",
+            foreignField: "_id",
+            as: "productInfo"
+          }
+        },
+        {
+          $unwind: "$productInfo"
+        }
+      ]);
 
+      const percent = Number(coupon.value);
+      let maxDiscount = 0;
 
-  }else{
-    res.json('errorCode')
+      cart.forEach((cartItem) => {
+        coupon.eligibleCategory.forEach((item) => {
+          if (item.equals(cartItem.productInfo.category)) {
+            const discount = (Number(cartItem.productInfo.productPrice) * (percent / 100)).toFixed(2);
+            if (Number(discount) > maxDiscount) {
+              maxDiscount = Number(discount);
+            }
+          }
+        });
+      });
+
+      totalDiscount = maxDiscount;
+
+      return res.json({
+        totalDiscount
+      });
+    }
+
+  } catch (error) {
+    console.error(error);
+    res.json('An error occurred');
   }
-}
-}catch(error){
-    console.log(error);
-}
 },
 
 getOfferPage : async(req,res)=>{
   try{
     const token = req.cookies.UserToken;
-    let user;
-    if (token) {
-      const data = jwt.verify(token, "secretKeyUser");
-      user = data.user;
-    } else {
-      user = false;
-    }
+    const {user,cartCount,wishlistCount} = await userValidation(token);
 
     const currentDate = new Date()
 
@@ -2281,7 +2230,9 @@ getOfferPage : async(req,res)=>{
   res.render('users/offerPage',{
     title : 'Offers',
     user,
-    offers
+    offers,
+    cartCount,
+    wishlistCount
   })
   }catch(error){
     console.log(error);

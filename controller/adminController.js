@@ -12,6 +12,7 @@ const offerModel = require("../models/offerModel")
 const cahrt = require("chart.js");
 const PDF = require("pdfkit");
 const exceljs = require("exceljs");
+// const { default: products } = require("razorpay/dist/types/products");
 
 module.exports = {
   //get category page
@@ -257,6 +258,7 @@ module.exports = {
       for (let image of req.files) {
         images.push(image.filename);
       }
+    
       console.log(data);
       const category = await categoryModel.findOne({
         categoryName: data.category,
@@ -541,7 +543,7 @@ module.exports = {
         },
         { $unwind: "$address" },
       ]);
-      console.log(orders);
+      // console.log(orders);
 
       let productCount = 0;
 
@@ -556,7 +558,7 @@ module.exports = {
       }, 0);
 
       orders.productCount = productCount;
-      console.log(orders);
+      // console.log(orders);
       res.render("admin/adminOrders", {
         title: "Admin Orders",
         orders: orders ? orders : false,
@@ -785,7 +787,7 @@ module.exports = {
   getEditCoupon: async (req, res) => {
     try {
       const couponId = req.params.id;
-      const coupon = await couponModel.findOne();
+      const coupon = await couponModel.findOne({_id : couponId});
       const category = await categoryModel.find({ isDeleted: false });
       console.log(coupon);
       console.log(category);
@@ -838,7 +840,7 @@ module.exports = {
         },
         {
           $group: {
-            _id: "$orderId",
+            _id: "$orderedAt",
             total: {
               $sum: { $add: ["$grandTotal", { $ifNull: ["$walletMoney", 0] }] },
             },
@@ -851,11 +853,75 @@ module.exports = {
         },
       ]);
 
+
+      //finding the number of products
+      const products = await productModel.aggregate([{
+        $match : {
+          isDeleted : false
+        }
+      },
+      {
+        $group :{
+          _id : null,
+          count : {$sum : 1}
+        },
+        
+      }
+    ]);
+
+    // console.log(products);
+
+    //finding the number of categories
+    const categories = await categoryModel.aggregate([{
+      $match:{
+        isDeleted : false
+      }
+    },{
+      $group :{
+        _id : null,
+        count : {$sum : 1}
+      }
+    }
+  ]);
+
+  //finding total number of blocked users
+  const blockedUsers = await userModel.aggregate([
+   {
+    $match:{
+      is_blocked : true
+    }
+   },{
+    $group : {
+      _id : null,
+      count : {$sum : 1}
+    }
+   }
+])
+
+//finding unblocked users
+const unBlockedUsers = await userModel.aggregate([
+  {
+   $match:{
+     is_blocked : false
+   }
+  },{
+   $group : {
+     _id : null,
+     count : {$sum : 1}
+   }
+  }
+])
+  // console.log(blockedUsers);
+
       // console.log(sales);
       res.render("admin/adminDashboard", {
         title: "Admin Dashboard",
         adminName: req.session.adminName,
         sales: JSON.stringify(sales),
+        category : categories ? categories :'',
+        products : products ? products :'',
+        blockedUsers : blockedUsers? blockedUsers : '',
+        unBlockedUsers : unBlockedUsers ? unBlockedUsers : '',
       });
     } catch (error) {
       console.log(error);
@@ -933,6 +999,27 @@ module.exports = {
 
         //weekly
       } else if (reportOn === "weekly") {
+        let weeks = [];
+        let currentDate = new Date(startDate);
+        const endDateObj = new Date(endDate);
+        // Iterate through weeks until reaching endDate
+        while (currentDate <= endDateObj) {
+          const year = currentDate.getFullYear();
+          const month = String(currentDate.getMonth() + 1).padStart(2, "0"); // Months are 0-based
+          const weekNumber = Math.ceil((currentDate.getDate() - 1 + currentDate.getDay()) / 7);
+      
+          // Create and add a week object to the weeks array
+          const format = `${year}-${month}-${weekNumber.toString().padStart(2, "0")}`
+          weeks.push({
+            _id: format, 
+            total: 0,
+          });
+      
+          // Move to the next week
+          currentDate.setDate(currentDate.getDate() + 7);
+        }
+      console.log('weeks : ',weeks);
+        // Efficiently aggregate sales data using MongoDB aggregation
         const sales = await orderModel.aggregate([
           {
             $match: {
@@ -947,10 +1034,9 @@ module.exports = {
           {
             $group: {
               _id: {
-                $dateToString: {
-                  format: "%Y-%U",
-                  date: "$orderedAt",
-                },
+                year: { $year: "$orderedAt" },
+                month: { $month: "$orderedAt" },
+                day: { $dayOfMonth: "$orderedAt" }
               },
               total: {
                 $sum: {
@@ -960,15 +1046,45 @@ module.exports = {
             },
           },
           {
+            $group: {
+              _id: {
+                year: "$_id.year",
+                month: "$_id.month",
+                week: {
+                  $ceil: {
+                    $divide: [
+                      { $subtract: ["$_id.day", { $subtract: [{ $dayOfWeek: { $dateFromParts: { year: "$_id.year", month: "$_id.month", day: 1 } } }, 1] }] },
+                      7
+                    ]
+                  }
+                }
+              },
+              total: { $sum: "$total" }
+            }
+          },
+          {
             $sort: {
-              _id: 1,
+              "_id.year": 1,
+              "_id.month": 1,
+              "_id.week": 1,
             },
           },
         ]);
-        // console.log(sales);
-        // console.log(weeks);
+      
+       
+        weeks.forEach((week) => {
+          sales.forEach((sale) => {
+            const saleYear = sale._id.year.toString();
+            const saleMonth = sale._id.month.toString().padStart(2, "0");
+            const saleWeek = sale._id.week.toString().padStart(2, "0");
+      
+            if (week._id === `${saleYear}-${saleMonth}-${saleWeek}`) {
+              week.total = sale.total;
+            }
+          });
+        });
+        res.json(weeks); // Return the combined results
 
-        res.json(sales);
       } else if (reportOn === "monthly") {
         let months = [];
         const currentDate = new Date(startDate);
@@ -1236,7 +1352,7 @@ module.exports = {
           const updatedPrice = (item.productPrice  - (item.productPrice * offer.offerValue) / 100).toFixed(2);
           const offerPrice = Number((item.productPrice * offer.offerValue) / 100).toFixed(2);
           
-          item.productPrice = updatedPrice;
+          item.productPrice = Numer(updatedPrice);
   
           if (!item.offer) {
               item.offer = {};
@@ -1245,7 +1361,7 @@ module.exports = {
           item.offer.price = offerPrice;
           item.offer.offerName = offer.offerName;
           item.offer.offerValue = offer.offerValue;
-          item.offer.actualAmount = actualAmount;
+          item.offer.actualAmount = Number(actualAmount);
           
           await item.save();  
       });
@@ -1292,5 +1408,52 @@ module.exports = {
     console.log(error);
   }
 
- }
+ },
+
+
+ getSecondChart : async(req,res)=>{
+  try{
+    const items = await categoryModel.aggregate([
+      {
+        $match : {
+          isDeleted : false
+        }
+    },
+    {
+      $lookup : {
+        from : "products",
+        localField : "_id",
+        foreignField : "category",
+        as : "products"
+      }
+    },{
+      $unwind : "$products"
+    },
+    {
+      $match: {
+          "products.isDeleted": false
+      }
+  }
+    ,{
+      $group: {
+        _id: "$_id",
+        categoryName: { $first: "$categoryName" }, 
+        count: { $sum: 1 }
+    }
+    },
+    {
+      $project :{
+        _id : 0,
+        categoryName : 1,
+        count : 1
+      }
+    }
+
+  ]);
+  // console.log(items);
+  res.json(items);
+  }catch(error){
+  console.log(error);
+  }
+}
 };

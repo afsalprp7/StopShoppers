@@ -2,11 +2,60 @@
 <div class="container mt-5 mb-5">
   <h3>ADMIN DASHBOARD</h3>
 </div>
-<div class="container container1 border p-5 mb-5">
-<div class="mb-5">
+<div class="container container1 border px-5 mb-5">
 
+  <h1 class="mt-4">OVERVIEW</h1>
+<div class="row mb-5">
+  <div class="col-md-6 d-flex justify-content-center">
+    <canvas style="margin-top: 100px;" id="myChart-cat"></canvas>
+  </div>
+  <div class="col-md-6 d-flex justify-content-center mt-5 align-items-center">
+    <ul style="line-height: 50px;">
+      <div class="d-flex mb-4">
+        <li>Total Number Of Category</li>
+        <div style="background-color: #c277ff;" class="border rounded px-5 ms-5">
+          <strong class="text-white"><%=category[0].count%></strong><span class="ms-2 text-white">Categories</span> 
+        </div>
+      </div> 
+      <div class="d-flex mb-4">
+        <li>Total Number Of Products</li>
+        <div style="background-color: #c277ff;" class="border rounded px-5 ms-5">
+          <strong class="text-white"><%=products[0].count%></strong><span class="ms-2 text-white">Products</span> 
+        </div>
+      </div>
+      <div class="d-flex mb-4 ">
+        <li>Number Of Users Active</li>
+        <div style="background-color: #c277ff;" class="border rounded px-5 ms-5">
+          <strong class="text-white"><%=unBlockedUsers.length !==0 ? unBlockedUsers[0].count : 0 %></strong><span class="ms-2 text-white">Users</span> 
+        </div>
+      </div>
+      <div class="d-flex mb-4">
+        <li>Number Of Blocked Users</li>
+        <div style="background-color: #c277ff;" class="border rounded px-5 ms-5">
+          <strong class="text-white"><%=blockedUsers.length !==0 ? blockedUsers[0].count : 0 %></strong><span class="ms-2 text-white">Users</span> 
+        </div>
+      </div>
+    </ul>
+  </div>
 </div>
-<div class="mb-5">
+
+
+
+
+
+
+
+  <hr>
+  <div class="d-flex justify-content-center align-items-center mb-5 mt-5">
+    <div class="">
+      <h1>Total Sales : </h1>
+      </div>
+      <div style="background-color: #c277ff;" class="ms-5 border rounded shadow px-5 py-3">
+        <strong class="text-white totalSales-tag"></strong>
+      </div>
+  </div>
+<hr>
+<div class="mb-5 mt-5">
   <h2>Sales Details</h2>
 </div>
   <div class="d-flex justify-content-between mb-5">
@@ -96,8 +145,53 @@ window.onload = function(){
   const salesData = JSON.parse('<%-sales%>');
   // console.log(salesData);
   initialsale(salesData);
+  chartSecond()
+  const totalSales = document.querySelector('.totalSales-tag');
+ const total =  salesData.reduce((total,curr)=>{
+    total += curr.total
+    return total;
+  },0);
+  totalSales.innerText = total + ' Rs' ;
 };
 
+async function chartSecond(){
+  try{
+    const response = await fetch('/chartCategory',{
+      method : 'POST',
+      headers :{
+        'content-type' : 'application/json'
+      },
+    })
+    if(!response.ok){
+      alert('something went Wrong')
+    }else {
+      const result = await response.json();
+
+      const ctx = document.getElementById('myChart-cat');
+
+      myChart2 = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: result.map(item => item.categoryName),
+          datasets: [{
+            label: 'Total Number Of Products',
+            data: result.map(item => item.count),
+            borderWidth: 1
+          }]
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    }
+  }catch(error){
+    console.log(error);
+  }
+}
 
 
 </script>

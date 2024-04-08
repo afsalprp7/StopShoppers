@@ -14,6 +14,9 @@ const categorySchema = new Schema({
   },
 isDeleted : {
   type : Boolean
+},
+salesCount :{
+  type : Number
 }
 });
 

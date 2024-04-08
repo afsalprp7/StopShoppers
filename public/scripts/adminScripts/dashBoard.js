@@ -160,7 +160,7 @@ async function chart(value, dateFrom, dateTo) {
       return;
     } else {
       const result = await response.json();
-      console.log('dsfsdfs',result);
+      // console.log('dsfsdfs',result);
       salesData = result;
       basis = value
     }

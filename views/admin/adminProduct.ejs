@@ -30,7 +30,7 @@
         <td><%= item.productPrice%></td>
         <td class="d-flex"><a href="/editProduct/<%=item._id %>?_method=PATCH"><span><i class="fa-solid fa-pen-to-square text-primary ms-1"></i></a></i>
             <form id="form" method="post" action="/deleteProduct/<%=item._id %>?_method=PATCH">
-              <button id="button-trash" style="background: none;border: none;" type="submit">
+              <button class="button-trash" style="background: none;border: none;" type="button">
                 <i class="fa-solid fa-trash text-danger ms-3"></i>
               </button>
             </form>
@@ -59,37 +59,35 @@
   </script>
 <script>
 
-document.querySelectorAll('#button-trash').forEach((btn)=>{
-  btn.addEventListener('click',(e)=>{
+document.querySelectorAll('.button-trash').forEach((btn) => {
+  btn.addEventListener('click', (e) => {
     e.preventDefault();
-    const form = document.getElementById('form');
+    const form = btn.closest('form');  // Find the nearest parent form element
     giveAlert(form);
   });
-
 });
 
+async function giveAlert(form) {
+  await Swal.fire({
+    title: "Are you sure?",
+    text: "You won't be able to revert this!",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#3085d6",
+    cancelButtonColor: "#d33",
+    confirmButtonText: "Delete"
+  }).then((result) => {
+    if (result.isConfirmed) {
+      Swal.fire({
+        title: "Deleted!",
+        text: "Your file has been deleted.",
+        icon: "success",
+      });
+      form.submit();
+    }
+  });
+}
 
-  
-  async function giveAlert(form){
-  await  Swal.fire({
-  title: "Are you sure?",
-  text: "You won't be able to revert this!",
-  icon: "warning",
-  showCancelButton: true,
-  confirmButtonColor: "#3085d6",
-  cancelButtonColor: "#d33",
-  confirmButtonText: "Delete"
-}).then((result) => {
-  if (result.isConfirmed) {
-    Swal.fire({
-      title: "Deleted!",
-      text: "Your file has been deleted.",
-      icon: "success",
-    });
-    form.submit();
-  }
-});
-  }
 </script>
 
 <%- include('../includes/admin/adminEnd') %>

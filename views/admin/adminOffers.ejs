@@ -20,7 +20,7 @@
           <tr>
             <td style="text-transform: uppercase"><%=item.offerName%></td>
             <td><%=item.offerValue%>%</td>
-            <td><%=item.expiryDate%></td>
+            <td><%=String(item.expiryDate).split(' ').slice(0, 4).join(' ')%></td>
             <%if(item.status === 'Active'){%>
               <td class="text-success"><%=item.status%></td>
            <%}else{%>

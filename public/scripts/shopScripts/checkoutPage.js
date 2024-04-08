@@ -1,5 +1,6 @@
 let couponDiscount;
 let walletAmount;
+let finalAmount;
 const cartTotal = razorpayBtn.dataset.grandtotal;
 console.log(cartTotal);
 const singlePrice = razorpayBtn.dataset.singleproduct;
@@ -35,7 +36,8 @@ couponBtn.addEventListener("click", async () => {
       },
       body: JSON.stringify({
         code: couponCode,
-        product: productId ? productId : false, 
+        product: productId ? productId : false,
+       
       }),
     });
     const data = await response.json();
@@ -58,7 +60,13 @@ couponBtn.addEventListener("click", async () => {
           couponDiscount = data.totalDiscount;
           const subamount = parseFloat(walletAmount) + parseFloat(couponDiscount);
           const totalAmount = Number(singlePrice) - subamount;
-  
+          if(totalAmount <= 0){
+           return Swal.fire({
+              icon: "error",
+              title: "Cannot apply coupon !",
+              text: "Total Amount Cannot be Zero ",
+            });
+          }
           couponTag.textContent = "₹" + couponDiscount;
           totalPriceSingle.innerHTML = "₹" + totalAmount.toFixed(2);
           walletTag.textContent = "₹" + walletAmount;
@@ -66,13 +74,20 @@ couponBtn.addEventListener("click", async () => {
           couponDiscount = data.totalDiscount;
           couponTag.textContent = "₹" + couponDiscount;
           const totalAmount = singlePrice - couponDiscount;
-          totalPriceSingle.innerHTML = "₹" + totalAmount;
+          totalPriceSingle.innerHTML = "₹" + totalAmount.toFixed(2);
         }
       }else{
         if(walletAmount){
           couponDiscount = data.totalDiscount;
             const subamount = parseFloat(walletAmount) + parseFloat(couponDiscount);
           const totalAmount = Number(cartTotal) - subamount;
+          if(totalAmount <= 0){
+            return Swal.fire({
+               icon: "error",
+               title: "Cannot apply coupon !",
+               text: "Total Amount Cannot be Zero ",
+             });
+           }
           couponTag.textContent = "₹" + couponDiscount;
           totalPriceCart.innerHTML = "₹" + totalAmount.toFixed(2);
           walletTag.textContent = "₹" + walletAmount;
@@ -100,54 +115,81 @@ walletInput.addEventListener("click", async () => {
       inputLabel: "Amount must be",
       inputPlaceholder: "Enter your amount",
     });
-    if (amount <= Number(balanceInWallet.innerText)) {
+    if(amount === ''){
+      walletInput.checked = false;
+    }else if (amount <= Number(balanceInWallet.innerText)) {
       if (totalPriceCart) {
-        const cartTotalValid = (cartTotal * 0.8).toFixed(2);
-        if (amount >= Number(cartTotalValid)) {
-          walletInput.checked = false;
-          return Swal.fire({
-            icon: "error",
-            title: "Error",
-            text: `You can only use wallet for 80% (${cartTotalValid})`,
-          });
-        } else {
-          walletAmount = amount;
-          if(couponDiscount){
-            const subamount = parseFloat(walletAmount) + parseFloat(couponDiscount);
-            const totalAmount = Number(cartTotal) - subamount;
-            totalPriceCart.innerHTML = "₹" + totalAmount.toFixed(2);
-            couponTag.textContent = "₹" + couponDiscount;
-            walletTag.textContent = "₹" + walletAmount;
-          }else if(!couponDiscount && walletAmount){
-            const totalPayableAmount = (cartTotal - walletAmount).toFixed(2);
-            totalPriceCart.innerHTML = "₹" + totalPayableAmount;
-            walletTag.textContent = "₹ " + walletAmount;
+        if(couponDiscount){
+          const subamount = cartTotal - couponDiscount;
+          const cartTotalValid = (subamount * 0.8).toFixed(2);
+          if (amount >= Number(cartTotalValid)) {
+              walletInput.checked = false;
+              return Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: `You can only use wallet for 80% (${cartTotalValid})`,
+              });
+            }else{
+              walletAmount = amount
+              const subamount = parseFloat(walletAmount) + parseFloat(couponDiscount);
+              const totalAmount = Number(cartTotal) - subamount;
+              totalPriceCart.innerHTML = "₹" + totalAmount.toFixed(2);
+              couponTag.textContent = "₹" + couponDiscount;
+              walletTag.textContent = "₹" + walletAmount;
+            }
+        }else{
+          const cartTotalValid = (cartTotal * 0.8).toFixed(2);
+          if (amount >= Number(cartTotalValid)) {
+            walletInput.checked = false;
+               return Swal.fire({
+                 icon: "error",
+                 title: "Error",
+                 text: `You can only use wallet for 80% (${cartTotalValid})`,
+               });
+          }else{
+              walletAmount = amount;
+              const totalPayableAmount = (cartTotal - walletAmount).toFixed(2);
+              totalPriceCart.innerHTML = "₹" + totalPayableAmount;
+              walletTag.textContent = "₹ " + walletAmount;
           }
         }
+        
         //single product
       } else {
-        const singlePriceValid = (singlePrice * 0.8).toFixed(2);
-        if (amount >= Number(singlePriceValid)) {
-          walletInput.checked = false;
-          return Swal.fire({
-            icon: "error",
-            title: "Error",
-            text: `You can only use wallet for 80% (${singlePriceValid})`,
-          });
-        } else {
-          walletAmount = amount;
-          if (couponDiscount) {
+        if(couponDiscount){
+          const subamount = singlePrice - couponDiscount;
+          const singlePriceValid  = (subamount * 0.8).toFixed(2);
+          if(amount >= Number(singlePriceValid)){
+            walletInput.checked = false;
+            return Swal.fire({
+              icon: "error",
+              title: "Error",
+              text: `You can only use wallet for 80% (${singlePriceValid})`,
+            });
+          }else{
+            walletAmount = amount;
             const subamount = parseFloat(walletAmount) + parseFloat(couponDiscount);
             const totalAmount = Number(singlePrice) - subamount;
-            totalPriceSingle.innerHTML = "₹" + totalAmount.toFixed(2);
+            totalPriceSingle.innerHTML = "₹" + (totalAmount).toFixed(2);
             couponTag.textContent = "₹" + couponDiscount;
             walletTag.textContent = "₹" + walletAmount;
-          } else if (!couponDiscount && walletAmount) {
-            const totalAmount = singlePrice - walletAmount;
-            totalPriceSingle.innerHTML = "₹" + totalAmount;
-            walletTag.textContent = "₹" + walletAmount;
           }
+        }else{
+          const singlePriceValid = (singlePrice * 0.8).toFixed(2);
+          if (amount >= Number(singlePriceValid)) {
+            walletInput.checked = false;
+            return Swal.fire({
+              icon: "error",
+              title: "Error",
+              text: `You can only use wallet for 80% (${singlePriceValid})`,
+            });
+        }else{
+          walletAmount = amount
+          const totalAmount = singlePrice - walletAmount;
+          totalPriceSingle.innerHTML = "₹" + totalAmount.toFixed(2);
+          walletTag.textContent = "₹" + walletAmount;
         }
+        }  
       }
     } else {
       walletInput.checked = false;
@@ -157,25 +199,25 @@ walletInput.addEventListener("click", async () => {
         text: `Not enough Balance !`,
       });
     }
-  } else {
+  }else{
     if (totalPriceCart) {
       if (couponDiscount) {
         const total = cartTotal - couponDiscount;
-        totalPriceCart.innerHTML = "₹" + total;
+        totalPriceCart.innerHTML = "₹" + total.toFixed(2);
         walletTag.textContent = "₹-/";
       } else {
-        totalPriceCart.textContent = "₹" + cartTotal;
+        totalPriceCart.textContent = "₹" + cartTotal.toFixed(2);
         walletTag.textContent = "₹-/";
         walletAmount = false;
       }
     } else {
       if (couponDiscount) {
         const total = singlePrice - couponDiscount;
-        totalPriceSingle.innerHTML = "₹" + total;
+        totalPriceSingle.innerHTML = "₹" + total.toFixed(2);
         walletTag.textContent = "₹-/";
       } else {
         walletAmount = false;
-        totalPriceSingle.innerHTML = "₹" + singlePrice;
+        totalPriceSingle.innerHTML = "₹" + singlePrice.toFixed(2);
         walletTag.textContent = "₹-/";
       }
     }

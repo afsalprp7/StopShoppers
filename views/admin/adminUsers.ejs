@@ -10,7 +10,6 @@
         <th scope="col">Username</th>
         <th scope="col">phone</th>
         <th scope="col">Email</th>
-        <th scope="col">Order</th>
         <th scope="col">Action</th>
       </tr>
     </thead>
@@ -20,7 +19,6 @@
         <td><%= item.firstname%> <%= item.lastname%></td>
         <td><%= item.phone%></td>
         <td><%= item.email%></td>
-        <td><a href="#">Orders</a></td>
         <td class="d-flex"><a href="#"><span><i  class="fa-solid fa-circle-info me-3"></i></a>
           <!-- <form action="/blockUser/<%=item._id%>?_method=PATCH" method="post"> -->
             <% if(item.is_blocked === true){ %>

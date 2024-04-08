@@ -67,5 +67,7 @@ router.get('/getAddOffer',validateAdmin,adminController.getAddOfferPage);
 router.post('/addOffer',validateAdmin,adminController.doAddOffer);
 router.delete('/deleteOffer/:id',validateAdmin,adminController.deleteOffer);
 
+router.post('/chartCategory',validateAdmin,adminController.getSecondChart)
+
 
 module.exports = router;
