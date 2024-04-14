@@ -252,21 +252,25 @@ module.exports = {
   doAddProduct: async (req, res) => {
     try {
       const data = req.body;
+      console.log(data);
       const pName = data.productName.toLowerCase();
-      const color = req.body.color.toLowerCase();
+      const color = data.color.toLowerCase();
       const images = [];
       for (let image of req.files) {
         images.push(image.filename);
       }
     
-      console.log(data);
+      // const {productName , color } = req.body
+      // console.log(productName,color);
       const category = await categoryModel.findOne({
         categoryName: data.category,
       });
       const isExists = await productModel.findOne({
-        productName: data.productName,
-        color: color,
+        productName: pName,
+        color: color
       });
+      // console.log(isExists);
+      // console.log(isExists.productName);
       if (isExists) {
         if (isExists.isDeleted === true) {
           await productModel.updateOne(
@@ -493,23 +497,14 @@ module.exports = {
 
   doBlockUsers: async (req, res) => {
     try {
-      if (!req.cookies.token) {
-        res.redirect("/admin");
-      }
       const id = req.params.id;
-      console.log(req.body);
+      // console.log(req.body);
       const data = await userModel.findOne({ _id: id });
-      if (data.is_blocked === false) {
-        await userModel.updateOne({ _id: id }, { $set: { is_blocked: true } });
-        res.json({
-          message: "blocked",
-        });
-      } else {
-        await userModel.updateOne({ _id: id }, { $set: { is_blocked: false } });
-        res.json({
-          message: "unblocked",
-        });
-      }
+     data.is_blocked = !data.is_blocked
+     await data.save()
+     res.json({
+      message : data.is_blocked ? "unblocked" : "blocked"
+     })
     } catch (error) {
       console.log(error);
     }
@@ -911,7 +906,12 @@ const unBlockedUsers = await userModel.aggregate([
    }
   }
 ])
-  // console.log(blockedUsers);
+  
+//finding best selling products
+const bestSellingProducts = await productModel.find({ salesCount: { $exists: true } }).sort({salesCount : -1}).limit(5);
+
+//finding best selling category
+const bestSellingCategory = await categoryModel.find({salesCount : {$exists : true}}).sort({salesCount : -1}).limit(5);
 
       // console.log(sales);
       res.render("admin/adminDashboard", {
@@ -922,6 +922,9 @@ const unBlockedUsers = await userModel.aggregate([
         products : products ? products :'',
         blockedUsers : blockedUsers? blockedUsers : '',
         unBlockedUsers : unBlockedUsers ? unBlockedUsers : '',
+        bestProducts : bestSellingProducts ? bestSellingProducts : '',
+        bestCategories : bestSellingCategory ? bestSellingCategory : ''
+
       });
     } catch (error) {
       console.log(error);
@@ -1215,38 +1218,72 @@ const unBlockedUsers = await userModel.aggregate([
       console.log(req.body);
       const basis = req.body.basis;
       const sales = req.body.salesData;
-
+    
       const doc = new PDF();
-
+    
       res.setHeader("Content-Type", "application/pdf");
       res.setHeader(
         "Content-Disposition",
         `attachment; filename=Sales-Report-on-${basis}-Basis.pdf`
       );
       doc.pipe(res);
-
+    
+      // Set initial y position
+      let y = 50;
+    
       // Add content to the PDF
       doc.fontSize(18).text(`StopShoppers`, {
         align: "center",
       });
-
+    
+      y += 30; // Add space
       doc.fontSize(18).text(`Sales Report on ${basis} Basis`, {
         align: "center",
       });
-
+    
+      y += 30; // Add space
       doc.moveDown();
       doc.fontSize(12).text("Sales Data:", {
         underline: true,
       });
+      doc.moveDown();
+    
+      y += 20;
+// Headers
+doc.fontSize(10).text(`Date`, { y, width: 200 });
+doc.moveUp().text(`Total Sales`, { y, width: 200, align: 'right' });
 
-      sales.forEach((item) => {
-        doc.text(`${item._id}: $${item.total.toFixed(2)}`);
-      });
+y += 20; // Add space
+
+// Sales Data
+doc.moveDown();
+sales.forEach((item) => {
+  
+  doc.fontSize(10).text(`${new Date(item._id).toLocaleDateString()}`, {
+    y,
+    width: 200,
+    align: 'left',  // Align date to the left
+  });
+
+// doc.moveDown();
+ 
+  
+  doc.moveUp().text(`$${item.total.toFixed(2)}`, {
+    y,
+    width: 200,
+    align: 'right', // Align total sales to the right
+  });
+  
+  y += 30; // Add space
+});
 
       doc.end();
+    
     } catch (error) {
       console.log(error);
     }
+    
+    
   },
 
   downloadAsExcel: async (req, res) => {
@@ -1410,6 +1447,55 @@ const unBlockedUsers = await userModel.aggregate([
 
  },
 
+ changeOrderStatus : async(req,res)=>{
+  try{
+    const orderId =  req.params.id;
+    const status = req.body.status;
+    console.log(orderId,status);
+   
+    const order = await orderModel.findOne({_id : orderId});
+    if(status === 'delivered'){
+      if(order.cancelRequested === true){
+       return res.json('alert');
+      }else{
+        await orderModel.updateOne({_id : orderId},{$set:{
+          orderStatus : status
+        }});
+        return res.json('success');    
+      }
+    }else if(status === 'confirmed'){
+      if(order.cancelRequested === true){
+        return res.json('alert');
+       }else{
+         await orderModel.updateOne({_id : orderId},{$set:{
+           orderStatus : status
+         }});
+         return res.json('success');    
+       }
+    }else if(status === 'canceled'){
+      if(order.cancelRequested === true){
+        return res.json('alert');
+       }else{
+         await orderModel.updateOne({_id : orderId},{$set:{
+           orderStatus : status
+         }});
+         return res.json('success');    
+       }
+    }else{
+      if(order.orderStatus === 'pending'){
+        await orderModel.updateOne({_id : orderId},{$set:{
+          orderStatus : status
+        }});
+        return res.json('success');   
+      }
+    }
+
+
+     
+  }catch(error){
+    console.log(error);
+  }
+ },
 
  getSecondChart : async(req,res)=>{
   try{

@@ -14,7 +14,18 @@
   <div class="d-flex justify-content-center"><h2>Order Details</h2></div>
 
   <div class="mt-3 border-bottom ">
-    <h3>Delivery Address : </h3>
+    <div class="d-flex justify-content-between">
+      <h3>Delivery Address : </h3>
+      <div>
+        <select class="form-select px-5 orderStatus" data-orderid="<%=order[0]._id%>">
+          <option value="">Change Order Status</option>
+          <option value="delivered">Delivered</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="pending">Pending</option>
+          <option value="canceled">Canceled</option>
+        </select>
+      </div>
+    </div>
     <div class="ms-1 mt-3 p-div">
       
         <p>Name : <%=order[0].address.firstname%> <%=order[0].address.lastname%></p>
@@ -95,8 +106,8 @@
 
 
 const declineBtn = document.querySelector('.decline-btn');
-
-declineBtn.addEventListener('click',async()=>{
+if(declineBtn){
+  declineBtn.addEventListener('click',async()=>{
   try{
       const { value: text } = await Swal.fire({
       input: "textarea",
@@ -119,6 +130,8 @@ declineBtn.addEventListener('click',async()=>{
   
 
 })
+}
+
 
 
 
@@ -193,6 +206,55 @@ async function cancelAccept(orderId){
     
   }
   
+  }catch(error){
+    console.log(error);
+  }
+}
+
+
+
+const orderStatus = document.querySelector('.orderStatus');
+orderStatus.addEventListener('change',()=>{
+  const orderId = orderStatus.dataset.orderid;
+  const status = orderStatus.value;
+  changeOrderStatus(orderId,status)
+});
+
+
+
+async function changeOrderStatus(orderId,status){
+  try{
+    const response = await fetch(`/changeOrderStatus/${orderId}`,{
+      method : "POST",
+      headers :{
+        'content-type' : 'application/json'
+      },
+      body : JSON.stringify({
+        status
+      })
+    });
+
+    if(!response.ok){
+      console.log('somethig went wrong');
+    }else{
+      const result = await response.json();
+      if(result === 'success'){
+        await Swal.fire({
+          position: "center",
+          icon: "success",
+          title: "Order Status Updated",
+          showConfirmButton: false,
+          timer: 1500
+          });
+          window.location.href = '/adminOrders'
+      }else if(result === 'alert'){
+       await Swal.fire({
+          title: "Cancel Request !",
+          text: "User Requested For Cancel Order",
+          icon: "question"
+        });
+      }
+    }
   }catch(error){
     console.log(error);
   }

@@ -203,21 +203,22 @@ walletInput.addEventListener("click", async () => {
     if (totalPriceCart) {
       if (couponDiscount) {
         const total = cartTotal - couponDiscount;
-        totalPriceCart.innerHTML = "₹" + total.toFixed(2);
+        totalPriceCart.innerHTML = "₹" + Number(total).toFixed(2);
         walletTag.textContent = "₹-/";
       } else {
-        totalPriceCart.textContent = "₹" + cartTotal.toFixed(2);
+        
+        totalPriceCart.textContent = "₹" + Number(cartTotal).toFixed(2);
         walletTag.textContent = "₹-/";
         walletAmount = false;
       }
     } else {
       if (couponDiscount) {
         const total = singlePrice - couponDiscount;
-        totalPriceSingle.innerHTML = "₹" + total.toFixed(2);
+        totalPriceSingle.innerHTML = "₹" + Number(total).toFixed(2);
         walletTag.textContent = "₹-/";
       } else {
         walletAmount = false;
-        totalPriceSingle.innerHTML = "₹" + singlePrice.toFixed(2);
+        totalPriceSingle.innerHTML = "₹" + Number(singlePrice).toFixed(2);
         walletTag.textContent = "₹-/";
       }
     }

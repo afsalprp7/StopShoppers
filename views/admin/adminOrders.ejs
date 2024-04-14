@@ -74,7 +74,15 @@
         <td><%=item.user.phone%></td>
         <td><%=item.totalQuantity%></td>
         <td><%=item.grandTotal%></td>
-        <td><%=item.orderStatus%></td>
+       <%if(item.orderStatus === 'confirmed'){%>
+          <td class="text-success"><%=item.orderStatus%></td>
+        <%}else if(item.orderStatus === 'pending'){%>
+          <td class="text-warning"><%=item.orderStatus%></td>
+        <%}else if(item.orderStatus === 'canceled'){%>
+          <td class="text-danger"><%=item.orderStatus%></td>
+        <%}else if(item.orderStatus === 'delivered'){%>
+          <td class="text-primary"><%=item.orderStatus%></td>
+        <%}%>
         <td><%=String(item.orderedAt).split(' ').slice(0, 4).join(' ')%></td>
         <td class="d-flex">
           <a href="/AdminOrderDetails/<%=item._id%>">

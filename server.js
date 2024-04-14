@@ -5,7 +5,8 @@ require('./dbConfig/database');
 const path = require('path');
 const methodOverride = require('method-override');
 const cookieParser = require('cookie-parser');
-const cors = require('cors')
+const cors = require('cors');
+require('dotenv').config();
 
 
 const session = require('express-session');
@@ -21,7 +22,7 @@ app.set('views',__dirname+'/views');
 // app.set(ejs);
 
 app.use(session({
-  secret:'secret',
+  secret: process.env.SESSION_SECRET_KEY,
   resave:false,
   saveUninitialized:false
 }));

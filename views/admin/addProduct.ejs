@@ -84,7 +84,6 @@
         <div class="mb-3 me-2">
           <label
             for="productName"
-            enctype="multipart/form-data"
             class="form-label"
             >Color</label
           >
@@ -223,73 +222,63 @@
 
 <script src="/scripts/validation/addProductV.js"></script>
 <script>
-  let allFiles = [];
   function displaySelectedImages(input) {
-  const container = document.getElementById("selectedImagesContainer");
+    // const btn = document.getElementById('deletebtn');
+    const container = document.getElementById("selectedImagesContainer");
+    container.innerText = "";
+    // btn.style.display = 'block';
+    if (input.files) {
+      const files = input.files;
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
 
-  // Clear any previous content (optional)
-  // container.innerHTML = ""; // Uncomment if you want to clear previous images
+        const reader = new FileReader();
 
-  if (input.files) {
-    const selectedFiles = Array.from(input.files);
-    allFiles.push(...selectedFiles); // Copy all selected files
-    for (let i = 0; i < allFiles.length; i++) {
-      const file = allFiles[i];
+        reader.onload = function (e) {
+          const imageContainer = document.createElement("div");
+          imageContainer.classList.add("me-2", "border", "p-2");
+          const img = document.createElement("img");
+          img.src = e.target.result;
+          img.style.cssText = "max-width: 120px;height: 100px";
+          img.classList.add("selected-image");
 
-      const reader = new FileReader();
+          const p_tag = document.createElement("p");
+          p_tag.style.cssText = "max-width: 120px;overflow : hidden";
+          p_tag.textContent = file.name;
 
-      reader.onload = function (e) {
-        const imageContainer = document.createElement("div");
-        imageContainer.classList.add("me-2", "border", "p-2");
+          const deleteBtn = document.createElement("button");
+          deleteBtn.classList.add("btn", "btn-primary", "btn-sm", "ms-auto");
+          deleteBtn.innerText = "cancel";
+          deleteBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            clearSelectedImages(file, imageContainer);
+          });
 
-        const img = document.createElement("img");
-        img.src = e.target.result;
-        img.style.cssText = "max-width: 120px;height: 100px";
-        img.classList.add("selected-image");
-
-        const p_tag = document.createElement("p");
-        p_tag.style.cssText = "max-width: 120px;overflow : hidden";
-        p_tag.textContent = file.name;
-
-        const deleteBtn = document.createElement("button");
-        deleteBtn.classList.add("btn", "btn-primary", "btn-sm", "ms-auto");
-        deleteBtn.innerText = "cancel";
-        deleteBtn.addEventListener("click", (e) => {
-          e.preventDefault();
-          clearSelectedImages(file, imageContainer, allFiles); // Pass all files
-        });
-
-        imageContainer.appendChild(img);
-        imageContainer.appendChild(p_tag);
-        imageContainer.appendChild(deleteBtn);
-        container.appendChild(imageContainer);
-      };
-
-      reader.readAsDataURL(file);
+          imageContainer.appendChild(img);
+          imageContainer.appendChild(p_tag);
+          imageContainer.appendChild(deleteBtn);
+          container.appendChild(imageContainer);
+        };
+        
+        reader.readAsDataURL(file);
+      }
     }
   }
-}
 
-
-
-
-function clearSelectedImages(file, imageContainer) {
-  imageContainer.remove(); // Remove the image container from display
-
-  const index = allFiles.indexOf(file);
-  
-  if (index !== -1) {
-    allFiles.splice(index, 1);
-    const dataTransfer = new DataTransfer();
-    for (let i = 0; i < allFiles.length; i++) {
-      dataTransfer.items.add(allFiles[i]);
-    }
-    
+  function clearSelectedImages(file, imageContainer) {
     const input = document.getElementById("photoProduct");
-    input.files = dataTransfer.files;
+    const container = document.getElementById("selectedImagesContainer");
+    const files = Array.from(input.files);
+    const index = files.indexOf(file);
+    if (index !== -1) {
+      files.splice(index, 1);
+      const dataTransfer = new DataTransfer();
+      for (let i = 0; i < files.length; i++) {
+        dataTransfer.items.add(files[i]);
+      }
+      input.files = dataTransfer.files;
+      imageContainer.style.display = "none";
+    }
   }
-}
-
-  
 </script>
 <%- include('../includes/admin/adminEnd') %>

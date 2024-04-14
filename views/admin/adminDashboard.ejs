@@ -54,7 +54,24 @@
         <strong class="text-white totalSales-tag"></strong>
       </div>
   </div>
+  <div class="mb-2">
+    <h5>TOP SELLING PRODUCTS :</h5>
+    <ol style="line-height: 50px;text-transform: capitalize;" class="mt-4">
+      <% bestProducts.forEach((item)=>{%>
+        <strong><li><%=item.productName%></li></strong>
+     <% })%>
+    </ol>
+  </div>
 <hr>
+<div class="mt-4">
+  <h5>TOP SELLING CATEGORIES :</h5>
+  <ol style="line-height: 50px;text-transform: capitalize;" class="mt-4">
+    <% bestCategories.forEach((item)=>{%>
+      <strong><li><%=item.categoryName%></li></strong>
+   <% })%>
+  </ol>
+</div>
+<hr class="mb-5">
 <div class="mb-5 mt-5">
   <h2>Sales Details</h2>
 </div>
@@ -151,7 +168,7 @@ window.onload = function(){
     total += curr.total
     return total;
   },0);
-  totalSales.innerText = total + ' Rs' ;
+  totalSales.innerText = total.toFixed(2) + ' Rs' ;
 };
 
 async function chartSecond(){

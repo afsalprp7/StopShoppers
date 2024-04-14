@@ -1,6 +1,6 @@
 const userModel = require("../models/userModel");
 const adminModel = require("../models/adminModel");
-const verificationController = require("./verificationController");
+const verificationController = require("../helpers/nodemailer");
 const bcrypt = require("bcrypt");
 const flash = require("connect-flash");
 const jwt = require("jsonwebtoken");

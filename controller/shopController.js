@@ -506,6 +506,9 @@ module.exports = {
                     },
                   }
                 );
+                res.json({
+                  message: "success",
+                });
               }
             } else {
               await cartModel.updateOne(
@@ -786,8 +789,8 @@ module.exports = {
       const userId = req.params.id;
       const walletAmount = Number(req.query.walletAmount) ;
       const couponDiscount = Number(req.query.couponDiscount);
-      console.log(typeof(couponDiscount));
-      console.log(typeof(walletAmount));
+      // console.log(typeof(couponDiscount));
+      // console.log(typeof(walletAmount));
       
       const deliveryAddress = await addressModel.findOne({
         userId: userId,
@@ -800,6 +803,7 @@ module.exports = {
       if (Object.keys(req.body).length > 0) {
         // console.log(databody);
       const product = await productModel.findOne({_id : databody.productName});
+     
      
         if(couponDiscount && !walletAmount){
           const price = (databody.price - couponDiscount).toFixed(2) ;
@@ -830,27 +834,22 @@ module.exports = {
             // walletMoney : Number(walletAmount),
             couponDiscount : Number(couponDiscount)
           });
-          // console.log(result);
-          // await walletModel.updateOne({userId : userId},
-          //   {$inc :{balance : -Number(walletAmount)},
-          //     $push :{
-          //       transactionDetails : {
-          //         paymentType : "debited",
-          //         date : new Date(),
-          //         amount : Number(walletAmount)
-          //       } 
-          //     }
-          //   })
-
+         
           //ordered product
           await productModel.updateOne(
             { _id: databody.productName },
             {
               $inc: {
                 quantity: -1,
+                salesCount : 1
               },
+              
             }
           );
+
+          await categoryModel.updateOne({
+            _id : product.category
+          },{$inc : {salesCount : 1 }});
 
         }else if(walletAmount && couponDiscount){
           const subamount = parseFloat(walletAmount) + parseFloat(couponDiscount);
@@ -900,9 +899,15 @@ module.exports = {
             {
               $inc: {
                 quantity: -1,
+                salesCount : 1
               },
+              
             }
           );
+
+          await categoryModel.updateOne({
+            _id : product.category
+          },{$inc : {salesCount : 1 }});
 
         }else if(walletAmount && !couponDiscount){
           const price = databody.price - walletAmount ;
@@ -950,9 +955,14 @@ module.exports = {
             {
               $inc: {
                 quantity: -1,
+                salesCount : 1
               },
+              
             }
           );
+          await categoryModel.updateOne({
+            _id : product.category
+          },{$inc : {salesCount : 1 }});
 
         }else{
           if(databody.price > 1000){
@@ -987,21 +997,28 @@ module.exports = {
             {
               $inc: {
                 quantity: -1,
+                salesCount : 1
               },
+              
             }
           );
+
+          await categoryModel.updateOne({
+            _id : product.category
+          },{$inc : {salesCount : 1 }});
         }
       } else {
         //cart products
-        if(req.session.grandTotal > 1000){
-          req.session.warning = '! Cannot Use Cash on Delivery for the Orders Above 1000rs';
-          return res.redirect(`/checkoutFromCart/${userId}`);
-        }
+        
 
 
         if(walletAmount && couponDiscount){
           const subtotal = parseFloat(walletAmount) + parseFloat(couponDiscount)
           const price = (req.session.grandTotal - subtotal).toFixed(2) ;
+          if(price > 1000){
+            req.session.warning = '! Cannot Use Cash on Delivery for the Orders Above 1000rs';
+            return res.redirect(`/checkoutFromCart/${userId}`);
+          }
           const cartProducts = await cartModel.findOne({ userId: userId });
           // console.log(cartProducts);
           const productDetails = cartProducts.products.map((product) => ({
@@ -1054,21 +1071,36 @@ module.exports = {
             }
           );
   
-          productDetails.forEach(async (item) => {
+          for (const item of productDetails) {
             console.log(item.quantity);
             await productModel.updateOne(
               { _id: item.productId },
               {
                 $inc: {
                   quantity: -Number(item.quantity),
+                  salesCount: Number(item.quantity)
                 },
               }
             );
-          });
+          }
 
+          for(const item of productDetails){
+           const currentProduct =  await productModel.findOne({_id : item.productId});
+           await categoryModel.updateOne({
+            _id :  currentProduct.category
+           },{
+            $inc :{salesCount : Number(item.quantity)}
+           })
+          }
+        
+        
         }else if(couponDiscount&& !walletAmount){
 
           const price = (req.session.grandTotal - couponDiscount).toFixed(2)
+          if(price > 1000){
+            req.session.warning = '! Cannot Use Cash on Delivery for the Orders Above 1000rs';
+            return res.redirect(`/checkoutFromCart/${userId}`);
+          }
           const cartProducts = await cartModel.findOne({ userId: userId });
         // console.log(cartProducts);
         const productDetails = cartProducts.products.map((product) => ({
@@ -1121,20 +1153,35 @@ module.exports = {
           }
         );
 
-        productDetails.forEach(async (item) => {
+        for (const item of productDetails) {
           console.log(item.quantity);
           await productModel.updateOne(
             { _id: item.productId },
             {
               $inc: {
                 quantity: -Number(item.quantity),
+                salesCount: Number(item.quantity)
               },
             }
           );
-        });
+        }
+
+        for(const item of productDetails){
+          const currentProduct =  await productModel.findOne({_id : item.productId});
+          await categoryModel.updateOne({
+           _id :  currentProduct.category
+          },{
+           $inc :{salesCount : Number(item.quantity)}
+          })
+         }
+
 
         }else if(walletAmount && !couponDiscount){
           const price = req.session.grandTotal - walletAmount ;
+          if(price > 1000){
+            req.session.warning = '! Cannot Use Cash on Delivery for the Orders Above 1000rs';
+            return res.redirect(`/checkoutFromCart/${userId}`);
+          }
           const cartProducts = await cartModel.findOne({ userId: userId });
         // console.log(cartProducts);
         const productDetails = cartProducts.products.map((product) => ({
@@ -1186,18 +1233,33 @@ module.exports = {
           }
         );
 
-        productDetails.forEach(async (item) => {
+        for (const item of productDetails) {
           console.log(item.quantity);
           await productModel.updateOne(
             { _id: item.productId },
             {
               $inc: {
                 quantity: -Number(item.quantity),
+                salesCount: Number(item.quantity)
               },
             }
           );
-        });
+        }
+
+        for(const item of productDetails){
+          const currentProduct =  await productModel.findOne({_id : item.productId});
+          await categoryModel.updateOne({
+           _id :  currentProduct.category
+          },{
+           $inc :{salesCount : Number(item.quantity)}
+          })
+         }
+
         }else{
+          if(req.session.grandTotal > 1000){
+            req.session.warning = '! Cannot Use Cash on Delivery for the Orders Above 1000rs';
+            return res.redirect(`/checkoutFromCart/${userId}`);
+          }
           const cartProducts = await cartModel.findOne({ userId: userId });
         // console.log(cartProducts);
         const productDetails = cartProducts.products.map((product) => ({
@@ -1236,17 +1298,28 @@ module.exports = {
           }
         );
 
-        productDetails.forEach(async (item) => {
-          console.log(item.quantity);
-          await productModel.updateOne(
-            { _id: item.productId },
-            {
-              $inc: {
-                quantity: -Number(item.quantity),
-              },
-            }
-          );
-        });
+        for (const item of productDetails) {
+            console.log(item.quantity);
+            await productModel.updateOne(
+              { _id: item.productId },
+              {
+                $inc: {
+                  quantity: -Number(item.quantity),
+                  salesCount: Number(item.quantity)
+                },
+              }
+            );
+          }
+
+          for(const item of productDetails){
+            const currentProduct =  await productModel.findOne({_id : item.productId});
+            await categoryModel.updateOne({
+             _id :  currentProduct.category
+            },{
+             $inc :{salesCount : Number(item.quantity)}
+            })
+           }
+
         }
         
       }
@@ -1581,7 +1654,7 @@ razorpayVerifyPaymentAndUpdateOrder : async(req,res)=>{
       .update(sign.toString()).digest("hex");
 
       if(rzpSignature === expectedSign){
-
+        const product = await findOne({_id : productId});
         if(productId || productSize || productPrice){
           //as single product
           if(couponDiscount && !walletAmount){
@@ -1613,8 +1686,17 @@ razorpayVerifyPaymentAndUpdateOrder : async(req,res)=>{
               cancelRequested : false,
               couponDiscount : Number(couponDiscount)
             });
-            await productModel.updateOne({_id : productId},{$inc:{quantity : -1}});
-            console.log('updated');
+            await productModel.updateOne({_id : productId}, {
+              $inc: {
+                quantity: -1,
+                salesCount: 1
+              }
+            });
+            await categoryModel.updateOne({
+              _id : product.category
+            },{$inc : {salesCount : 1 }});
+  
+            // console.log('updated');
             return res.status(200).json({message : result.insertedId});
 
           }else if(couponDiscount && walletAmount){
@@ -1649,7 +1731,16 @@ razorpayVerifyPaymentAndUpdateOrder : async(req,res)=>{
               walletMoney : Number(walletAmount),
               couponDiscount : Number(couponDiscount)
             });
-            await productModel.updateOne({_id : productId},{$inc:{quantity : -1}});
+            await productModel.updateOne({_id : productId}, {
+              $inc: {
+                quantity: -1,
+                salesCount: 1
+              }
+            });
+            await categoryModel.updateOne({
+              _id : product.category
+            },{$inc : {salesCount : 1 }});
+  
             console.log('updated');
             await walletModel.updateOne({userId : userId},{$inc :{balance : - Number(walletAmount)},
             $push :{
@@ -1693,8 +1784,17 @@ razorpayVerifyPaymentAndUpdateOrder : async(req,res)=>{
               cancelRequested : false,
               walletMoney : Number(walletAmount)
             });
-            await productModel.updateOne({_id : productId},{$inc:{quantity : -1}});
-            console.log('updated');
+            await productModel.updateOne({_id : productId}, {
+              $inc: {
+                quantity: -1,
+                salesCount: 1
+              }
+            });
+            await categoryModel.updateOne({
+              _id : product.category
+            },{$inc : {salesCount : 1 }});
+  
+            // console.log('updated');
             await walletModel.updateOne({userId : userId},{$inc :{balance : - Number(walletAmount)},
             $push :{
               transactionDetails : {
@@ -1733,12 +1833,21 @@ razorpayVerifyPaymentAndUpdateOrder : async(req,res)=>{
               isCanceled : false,
               cancelRequested : false
             });
-            await productModel.updateOne({_id : productId},{$inc:{quantity : -1}});
-            console.log('updated');
+            await productModel.updateOne({_id : productId}, {
+              $inc: {
+                quantity: -1,
+                salesCount: 1
+              }
+            });
+            await categoryModel.updateOne({
+              _id : product.category
+            },{$inc : {salesCount : 1 }});
+  
+            // console.log('updated');
             return res.status(200).json({message : result.insertedId});
           }
         }else{
-          //from ccart with walletamount and  couponAmound
+          //from cart with walletamount and  couponAmound
           if(couponDiscount && walletAmount){  
             const subamount = parseFloat(walletAmount) + parseFloat(couponDiscount);
             let price = (req.session.grandTotal - subamount).toFixed(2);
@@ -1800,17 +1909,27 @@ razorpayVerifyPaymentAndUpdateOrder : async(req,res)=>{
           );
 
           //updating or decrementing the product quantity
-          productDetails.forEach(async (item) => {
+          for (const item of productDetails) {
             console.log(item.quantity);
             await productModel.updateOne(
               { _id: item.productId },
               {
                 $inc: {
                   quantity: -Number(item.quantity),
+                  salesCount : Number(item.quantity)
                 },
               }
             );
-          });
+          }
+
+          for(const item of productDetails){
+            const currentProduct =  await productModel.findOne({_id : item.productId});
+            await categoryModel.updateOne({
+             _id :  currentProduct.category
+            },{
+             $inc :{salesCount : Number(item.quantity)}
+            })
+           }
 
           return res.status(200).json({message : result.insertedId});
           }else if(!walletAmount && couponDiscount){
@@ -1872,17 +1991,27 @@ razorpayVerifyPaymentAndUpdateOrder : async(req,res)=>{
           );
 
           //updating or decrementing the product quantity
-          productDetails.forEach(async (item) => {
+          for (const item of productDetails) {
             console.log(item.quantity);
             await productModel.updateOne(
               { _id: item.productId },
               {
                 $inc: {
                   quantity: -Number(item.quantity),
+                  salesCount : Number(item.quantity)
                 },
               }
             );
-          });
+          }
+
+          for(const item of productDetails){
+            const currentProduct =  await productModel.findOne({_id : item.productId});
+            await categoryModel.updateOne({
+             _id :  currentProduct.category
+            },{
+             $inc :{salesCount : Number(item.quantity)}
+            })
+           }
 
           return res.status(200).json({message : result.insertedId});
 
@@ -1944,17 +2073,27 @@ razorpayVerifyPaymentAndUpdateOrder : async(req,res)=>{
           );
 
           //updating or decrementing the product quantity
-          productDetails.forEach(async (item) => {
+          for (const item of productDetails) {
             console.log(item.quantity);
             await productModel.updateOne(
               { _id: item.productId },
               {
                 $inc: {
                   quantity: -Number(item.quantity),
+                  salesCount : Number(item.quantity)
                 },
               }
             );
-          });
+          }
+
+          for(const item of productDetails){
+            const currentProduct =  await productModel.findOne({_id : item.productId});
+            await categoryModel.updateOne({
+             _id :  currentProduct.category
+            },{
+             $inc :{salesCount : Number(item.quantity)}
+            })
+           }
 
           return res.status(200).json({message : result.insertedId});
           }else{
@@ -2004,17 +2143,27 @@ razorpayVerifyPaymentAndUpdateOrder : async(req,res)=>{
           );
 
           //updating or decrementing the product quantity
-          productDetails.forEach(async (item) => {
+          for (const item of productDetails) {
             console.log(item.quantity);
             await productModel.updateOne(
               { _id: item.productId },
               {
                 $inc: {
                   quantity: -Number(item.quantity),
+                  salesCount : Number(item.quantity)
                 },
               }
             );
-          });
+          }
+
+          for(const item of productDetails){
+            const currentProduct =  await productModel.findOne({_id : item.productId});
+            await categoryModel.updateOne({
+             _id :  currentProduct.category
+            },{
+             $inc :{salesCount : Number(item.quantity)}
+            })
+           }
 
           return res.status(200).json({message : result.insertedId});
           }
@@ -2258,6 +2407,7 @@ createOrderInPaymentFailure : async(req,res)=>{
     
       //from buy now
       if(productId || productSize || productPrice){
+        const product = await findOne({_id : productId});
         //as single product
         if(couponDiscount && !walletAmount){
           let price = (productPrice - couponDiscount).toFixed(2);
@@ -2288,8 +2438,17 @@ createOrderInPaymentFailure : async(req,res)=>{
             cancelRequested : false,
             couponDiscount : Number(couponDiscount)
           });
-          await productModel.updateOne({_id : productId},{$inc:{quantity : -1}});
-          console.log('updated');
+          await productModel.updateOne({_id : productId}, {
+            $inc: {
+              quantity: -1,
+              salesCount: 1
+            }
+          });
+          // console.log('updated');
+          await categoryModel.updateOne({
+            _id : product.category
+          },{$inc : {salesCount : 1 }});
+
           return res.status(200).json({message : result.insertedId});
 
         }else if(couponDiscount && walletAmount){
@@ -2324,7 +2483,12 @@ createOrderInPaymentFailure : async(req,res)=>{
             walletMoney : Number(walletAmount),
             couponDiscount : Number(couponDiscount)
           });
-          await productModel.updateOne({_id : productId},{$inc:{quantity : -1}});
+          await productModel.updateOne({_id : productId}, {
+            $inc: {
+              quantity: -1,
+              salesCount: 1
+            }
+          });
           console.log('updated');
           await walletModel.updateOne({userId : userId},{$inc :{balance : - Number(walletAmount)},
           $push :{
@@ -2334,8 +2498,12 @@ createOrderInPaymentFailure : async(req,res)=>{
               amount : Number(walletAmount)
             }
           }
-        })
-          return res.status(200).json({message : result.insertedId});
+        });
+        await categoryModel.updateOne({
+          _id : product.category
+        },{$inc : {salesCount : 1 }});
+
+        return res.status(200).json({message : result.insertedId});
 
         }else if(walletAmount && !couponDiscount){
           //subtract wallet amount from total amount
@@ -2368,7 +2536,12 @@ createOrderInPaymentFailure : async(req,res)=>{
             cancelRequested : false,
             walletMoney : Number(walletAmount)
           });
-          await productModel.updateOne({_id : productId},{$inc:{quantity : -1}});
+          await productModel.updateOne({_id : productId}, {
+            $inc: {
+              quantity: -1,
+              salesCount: 1
+            }
+          });
           // console.log('updated');
           await walletModel.updateOne({userId : userId},{$inc :{balance : - Number(walletAmount)},
           $push :{
@@ -2378,7 +2551,12 @@ createOrderInPaymentFailure : async(req,res)=>{
               amount : Number(walletAmount)
             }
           }
-        })
+        });
+
+        await categoryModel.updateOne({
+          _id : product.category
+        },{$inc : {salesCount : 1 }});
+
           return res.status(200).json({message : result.insertedId});
         }else{
           result =  await orderModel.collection.insertOne({
@@ -2407,9 +2585,18 @@ createOrderInPaymentFailure : async(req,res)=>{
             isCanceled : false,
             cancelRequested : false
           });
-          await productModel.updateOne({_id : productId},{$inc:{quantity : -1}});
-          console.log('updated');
-          return res.status(200).json({message : result.insertedId});
+          await productModel.updateOne({_id : productId}, {
+            $inc: {
+              quantity: -1,
+              salesCount: 1
+            }
+          });
+          // console.log('updated');
+          await categoryModel.updateOne({
+            _id : product.category
+          },{$inc : {salesCount : 1 }});
+
+        return res.status(200).json({message : result.insertedId});
         }
       }else{
         //from cart
@@ -2474,17 +2661,27 @@ createOrderInPaymentFailure : async(req,res)=>{
         );
 
         //updating or decrementing the product quantity
-        productDetails.forEach(async (item) => {
+        for (const item of productDetails) {
           console.log(item.quantity);
           await productModel.updateOne(
             { _id: item.productId },
             {
               $inc: {
                 quantity: -Number(item.quantity),
+                salesCount : Number(item.quantity)
               },
             }
           );
-        });
+        }
+        
+        for(const item of productDetails){
+          const currentProduct =  await productModel.findOne({_id : item.productId});
+          await categoryModel.updateOne({
+           _id :  currentProduct.category
+          },{
+           $inc :{salesCount : Number(item.quantity)}
+          })
+         };
 
         return res.status(200).json({message : result.insertedId});
         }else if(!walletAmount && couponDiscount){
@@ -2533,18 +2730,28 @@ createOrderInPaymentFailure : async(req,res)=>{
         );
 
         //updating or decrementing the product quantity
-        productDetails.forEach(async (item) => {
+        for (const item of productDetails) {
           console.log(item.quantity);
           await productModel.updateOne(
             { _id: item.productId },
             {
               $inc: {
                 quantity: -Number(item.quantity),
+                salesCount : Number(item.quantity)
               },
             }
           );
-        });
+        }
 
+        for(const item of productDetails){
+          const currentProduct =  await productModel.findOne({_id : item.productId});
+          await categoryModel.updateOne({
+           _id :  currentProduct.category
+          },{
+           $inc :{salesCount : Number(item.quantity)}
+          })
+         }
+        
         return res.status(200).json({message : result.insertedId});
 
         }else if(walletAmount && !couponDiscount){
@@ -2605,17 +2812,27 @@ createOrderInPaymentFailure : async(req,res)=>{
         );
 
         //updating or decrementing the product quantity
-        productDetails.forEach(async (item) => {
+        for (const item of productDetails) {
           console.log(item.quantity);
           await productModel.updateOne(
             { _id: item.productId },
             {
               $inc: {
                 quantity: -Number(item.quantity),
+                salesCount : Number(item.quantity)
               },
             }
           );
-        });
+        }
+        
+        for(const item of productDetails){
+          const currentProduct =  await productModel.findOne({_id : item.productId});
+          await categoryModel.updateOne({
+           _id :  currentProduct.category
+          },{
+           $inc :{salesCount : Number(item.quantity)}
+          })
+         }
 
         return res.status(200).json({message : result.insertedId});
         }else{
@@ -2665,17 +2882,28 @@ createOrderInPaymentFailure : async(req,res)=>{
         );
 
         //updating or decrementing the product quantity
-        productDetails.forEach(async (item) => {
+        for (const item of productDetails) {
           console.log(item.quantity);
           await productModel.updateOne(
             { _id: item.productId },
             {
               $inc: {
                 quantity: -Number(item.quantity),
+                salesCount : Number(item.quantity)
               },
             }
           );
-        });
+        }
+        
+        //updating the 
+        for(const item of productDetails){
+            const currentProduct =  await productModel.findOne({_id : item.productId});
+            await categoryModel.updateOne({
+             _id :  currentProduct.category
+            },{
+             $inc :{salesCount : Number(item.quantity)}
+            })
+           };
 
         return res.status(200).json({message : result.insertedId});
         }
