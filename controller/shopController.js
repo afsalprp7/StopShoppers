@@ -29,10 +29,10 @@ async function userValidation(token){
         const data = jwt.verify(token, process.env.SECRET_KEY_USERTOKEN );
         
         user = data.user;
-        console.log(user)
+       
         const  cart = await cartModel.findOne({userId : user._id});
 
-       console.log(cart);
+     
         cartCount = cart.products.length
 
         const wishlist = await wishlistModel.findOne({userId : user._id});
@@ -41,14 +41,14 @@ async function userValidation(token){
       } else {
         user = false;
       }
-      console.log(cartCount);
+      
       return {user : user ? user : '', cartCount : cartCount ? cartCount : 0 ,wishlistCount : wishlistCount ? wishlistCount : 0}
     }
    
 
 
 module.exports = {
-  getHomePage: async (req, res) => {
+  getHomePage: async (req, res , next) => {
     try {
       const token = req.cookies.UserToken;
       const {user,cartCount,wishlistCount} = await userValidation(token);
@@ -86,43 +86,49 @@ module.exports = {
       });
     } catch (error) {
       console.log(error);
+      next(error);
     }
   },
 
-  getProductDetailpage: async (req, res) => {
-    const token = req.cookies.UserToken;
-    const {user,cartCount,wishlistCount} = await userValidation(token);
-
-    const id = req.params.id;
-    const allProducts = await productModel.find({
-      _id: { $ne: id },
-      isDeleted: false,
-    }).limit(8);
-    console.log('detailPage',allProducts);
-    const productInfo = await productModel.findOne({ _id: id });
-    if(productInfo){
-      if (productInfo.quantity <= 0) {
-        req.session.detailpageError = true;
-      } else {
-        req.session.detailpageError = false;
+  getProductDetailpage: async (req, res ,next) => {
+    try{
+      const token = req.cookies.UserToken;
+      const {user,cartCount,wishlistCount} = await userValidation(token);
+  
+      const id = req.params.id;
+      const allProducts = await productModel.find({
+        _id: { $ne: id },
+        isDeleted: false,
+      }).limit(8);
+      console.log('detailPage',allProducts);
+      const productInfo = await productModel.findOne({ _id: id });
+      if(productInfo){
+        if (productInfo.quantity <= 0) {
+          req.session.detailpageError = true;
+        } else {
+          req.session.detailpageError = false;
+        }
       }
+      res.render("users/productDetailPage", {
+        title: "Product Detail",
+        product: productInfo,
+        allProducts: allProducts,
+        user: user,
+        cartCount,
+        wishlistCount,
+        error: req.session.detailpageError ? req.session.detailpageError : false,
+      });
+      req.session.quantityError = false;
+    }catch(error){
+      console.log(error);
+      next(error);
     }
-    res.render("users/productDetailPage", {
-      title: "Product Detail",
-      product: productInfo,
-      allProducts: allProducts,
-      user: user,
-      cartCount,
-      wishlistCount,
-      error: req.session.detailpageError ? req.session.detailpageError : false,
-    });
-    req.session.quantityError = false;
   },
 
-  getUserProfilePage: async (req, res) => {
+  getUserProfilePage: async (req, res , next) => {
     try {
       const token = req.cookies.UserToken;
-    const {user,cartCount,wishlistCount} = await userValidation(token);
+      const {user,cartCount,wishlistCount} = await userValidation(token);
 
       const Id = req.params.id;
       const userId = new mongoose.Types.ObjectId(Id);
@@ -140,51 +146,64 @@ module.exports = {
       });
     } catch (error) {
       console.log(error);
+      next(error)
     }
   },
 
-  getAddAddressPage: async(req, res) => {
-    const token = req.cookies.UserToken;
-    const {user,cartCount,wishlistCount} = await userValidation(token);
-    const id = req.params.id;
-    res.render("users/addAddress", {
-      title: "Add Address",
-      user: user,
-      cartCount,
-      wishlistCount,
-      userid: id,
-    });
+  getAddAddressPage: async(req, res , next) => {
+    try{
+      const token = req.cookies.UserToken;
+      const {user,cartCount,wishlistCount} = await userValidation(token);
+      const id = req.params.id;
+      res.render("users/addAddress", {
+        title: "Add Address",
+        user: user,
+        cartCount,
+        wishlistCount,
+        userid: id,
+      });
+    }catch(error){
+      console.log(error);
+      next(error);
+    }
   },
 
-  doAddAddress: async (req, res) => {
+  doAddAddress: async (req, res , next) => {
     try {
       const id = req.params.id;
       console.log(id);
-      const data = req.body;
+      const {
+        firstname,
+        lastname,
+        address,
+        state,
+        district,
+        city,
+        locality,
+        postalCode,
+        phone,
+      } = req.body;
+      
       const result = await addressModel.collection.insertOne({
         userId: new ObjectId(id),
-        firstname: data.firstname,
-        lastname: data.lastname,
-        address: data.address, //street/home address
-        state: data.state,
-        district: data.district,
-        city: data.city,
-        locality: data.locality,
-        postalcode: data.postalCode,
-        phone: data.phone,
+        firstname,
+        lastname,
+        address, 
+        state,
+        district,
+        city,
+        locality,
+        postalcode: postalCode, 
+        phone,
       });
-      console.log(result);
-      // await userModel.updateOne(
-      //   { _id: id },
-      //   { $addToSet: { address_id: result.insertedId } }
-      // );
       res.redirect(`/userProfile/${id}`);
     } catch (error) {
       console.log(error);
+      next(error);
     }
   },
 
-  getEditAddress: async (req, res) => {
+  getEditAddress: async (req, res , next) => {
     try {
       const token = req.cookies.UserToken;
     const {user,cartCount,wishlistCount} = await userValidation(token);
@@ -204,39 +223,49 @@ module.exports = {
       });
     } catch (error) {
       console.log(error);
+      next(error)
     }
   },
 
-  doEditAddress: async (req, res) => {
+  doEditAddress: async (req, res, next) => {
     try {
       const userid = req.query.id;
       const id = req.params.id;
-      const adrress = addressModel.findOne({ _id: id });
-      const data = req.body; //coming data
-
-      await addressModel.updateOne(
-        { _id: id },
-        {
-          $set: {
-            firstname: data.firstname !== "" ? data.firstname : undefined,
-            lastname: data.lastname !== "" ? data.lastname : undefined,
-            address: data.address !== "" ? data.address : undefined,
-            state: data.state !== "" ? data.state : undefined,
-            district: data.district !== "" ? data.district : undefined,
-            city: data.city !== "" ? data.city : undefined,
-            locality: data.locality !== "" ? data.locality : undefined,
-            postalcode: data.postalCode !== "" ? data.postalCode : undefined,
-            phone: data.phone !== "" ? data.phone : undefined,
-          },
-        }
-      );
+      
+      const {
+        firstname,
+        lastname,
+        address,
+        state,
+        district,
+        city,
+        locality,
+        postalCode,
+        phone,
+      } = req.body;
+    
+      const updateFields = {
+        firstname: firstname !== "" ? firstname : undefined,
+        lastname: lastname !== "" ? lastname : undefined,
+        address: address !== "" ? address : undefined,
+        state: state !== "" ? state : undefined,
+        district: district !== "" ? district : undefined,
+        city: city !== "" ? city : undefined,
+        locality: locality !== "" ? locality : undefined,
+        postalcode: postalCode !== "" ? postalCode : undefined,
+        phone: phone !== "" ? phone : undefined,
+      };
+    
+      await addressModel.updateOne({ _id: id }, { $set: updateFields });
+      
       res.redirect(`/userProfile/${userid}`);
     } catch (error) {
       console.log(error);
-    }
+      next(error)
+    }    
   },
 
-  doDeleteAddress: async (req, res) => {
+  doDeleteAddress: async (req, res , next) => {
     try {
       const id = req.params.id;
       const userId = req.query.userId;
@@ -246,39 +275,28 @@ module.exports = {
       res.redirect(`/userProfile/${userId}`);
     } catch (error) {
       console.log(error);
+      next(error);
     }
   },
 
-  setAsPrimary: async (req, res) => {
+  setAsPrimary: async (req, res, next) => {
     try {
       const id = req.params.id;
       const userid = req.query.userId;
-      const primaryExists = await addressModel.findOne({ isPrimary: true }); //
-      console.log(id);
-      if (primaryExists) {
-        console.log("exists");
-        await addressModel.updateOne(
-          { _id: primaryExists._id },
-          { $set: { isPrimary: false } }
-        );
-        await addressModel.updateOne(
-          { _id: id },
-          { $set: { isPrimary: true } }
-        );
-      } else {
-        await addressModel.updateOne(
-          { _id: id },
-          { $set: { isPrimary: true } }
-        );
-      }
-      console.log("hi");
+
+
+    await addressModel.updateMany({}, { $set: { isPrimary: false } });
+
+    await addressModel.updateOne({ _id: id }, { $set: { isPrimary: true } });
+      
       res.redirect(`/userProfile/${userid}`);
     } catch (error) {
       console.log(error);
+      next(error);
     }
   },
 
-  getEditProfilePage: async (req, res) => {
+  getEditProfilePage: async (req, res , next) => {
     try {
       const token = req.cookies.UserToken;
       const {user,cartCount,wishlistCount} = await userValidation(token);
@@ -293,34 +311,39 @@ module.exports = {
       });
     } catch (error) {
       console.log(error);
+      next(error)
     }
   },
 
-  doPatchEditProfile: async (req, res) => {
+  doPatchEditProfile: async (req, res ,next) => {
     try {
       const id = req.params.id;
-      const formData = req.body;
-      console.log(formData);
-      await userModel.updateOne(
-        { _id: id },
-        {
-          $set: {
-            firstname:
-              formData.firstname !== "" ? formData.firstname : undefined,
-            lastname: formData.lastname !== "" ? formData.lastname : undefined,
-            email: formData.email !== "" ? formData.email : undefined,
-            phone: formData.phone !== "" ? formData.phone : undefined,
-          },
-        }
-      );
+      const {
+        firstname = "",
+        lastname = "",
+        email = "",
+        phone = "",
+      } = req.body;
+    
+      const updateFields = {
+        firstname: firstname !== "" ? firstname : undefined,
+        lastname: lastname !== "" ? lastname : undefined,
+        email: email !== "" ? email : undefined,
+        phone: phone !== "" ? phone : undefined,
+      };
+    
+      await userModel.updateOne({ _id: id }, { $set: updateFields });
+    
       res.redirect(`/userProfile/${id}`);
     } catch (error) {
       console.log(error);
+      next(error);
     }
+    
   },
 
   //search product
-  searchProductHome: async (req, res) => {
+  searchProductHome: async (req, res ,next) => {
     try {
       const string = req.body.string;
 
@@ -336,10 +359,11 @@ module.exports = {
       });
     } catch (error) {
       console.log(error);
+      next(error)
     }
   },
 
-  getShopPage: async (req, res) => {
+  getShopPage: async (req, res ,next) => {
     try {
       const token = req.cookies.UserToken;
       const {user,cartCount,wishlistCount} = await userValidation(token);
@@ -377,15 +401,14 @@ module.exports = {
       });
     } catch (error) {
       console.log(error);
+      next(error)
     }
   },
 
-  getCartPage: async (req, res) => {
+  getCartPage: async (req, res ,next) => {
     try {
       const token = req.cookies.UserToken;
-    const {user,cartCount,wishlistCount} = await userValidation(token);
-
-      const cart = await cartModel.find();
+      const {user,cartCount,wishlistCount} = await userValidation(token);
       const productDetails = await cartModel.aggregate([
         { $match: { userId: new ObjectId(user._id) } },
         { $unwind: "$products" },
@@ -399,15 +422,13 @@ module.exports = {
         },
         { $unwind: "$productDetails" },
       ]);
-      // console.log(productDetails);
+      
       // Calculate the total price for each product in the cart
       productDetails.forEach((cartItem) => {
         const quantity = cartItem.products.quantity;
         const price = cartItem.productDetails.productPrice;
-        // console.log("Quantity:", quantity);
-        // console.log("Price:", price);
+       
         if (isNaN(quantity) || isNaN(price)) {
-          // console.log("Error: Quantity or price is not a number");
           cartItem.totalPrice = "Not a Number";
         } else {
           cartItem.totalPrice = quantity * price;
@@ -416,9 +437,7 @@ module.exports = {
       const grandTotal = productDetails.reduce((total, item) => {
         return total + item.totalPrice;
       }, 0);
-      // console.log(grandTotal);
-
-      // console.log(productDetails);
+      
       res.render("users/cartPage", {
         title: "Cart",
         user: user,
@@ -429,227 +448,175 @@ module.exports = {
       });
     } catch (error) {
       console.log(error);
+      next(error)
     }
   },
 
-  AddToCart: async (req, res) => {
+  AddToCart: async (req, res,next) => {
     try {
-      if (!req.cookies.UserToken) {
-        return res.redirect("/login");
-      } else {
-        //body
-        const body = req.body;
-
-        const productid = req.params.id;
-        const user = req.query.userId;
-        const userId = new ObjectId(user);
-
-        const product = await productModel.findOne({ _id: productid });
-
-        const existingCart = await cartModel.findOne({ userId: userId });
-        if (existingCart) {
-          const pExists = await cartModel.findOne({
-            "products.productId": product._id,
-            "products.color": product.color,
-            "products.size": body.size,
-          });
-
-          if (pExists) {
-            const pId = product._id;
-            const index = pExists.products.findIndex((product) => {
-              return (
-                product.productId.equals(new ObjectId(pId)) &&
-                product.size === body.size
-              );
-            });
-            const checkQuantity =
-              product.quantity - pExists.products[index].quantity;
-            if (checkQuantity <= 0) {
-              // req.session.quantityError = true;
-              // return res.redirect(`/productDetail/${product._id}`);
-
-              res.json({
-                message: "failed",
-              });
-            } else {
-              console.log(index);
-              await cartModel.updateOne(
-                { userId: userId },
-                {
-                  $inc: {
-                    [`products.${index}.quantity`]: 1,
-                  },
-                }
-              );
-              res.json({
-                message: "success",
-              });
-            }
-          } else {
-            const productlreadyIn = await cartModel.findOne({
-              "products.productId": product._id,
-            });
-            if (productlreadyIn) {
-              const checkQuantity = product.quantity - 1;
-              if (checkQuantity <= 0) {
-                // req.session.quantityError = true;
-                // return res.redirect(`/productDetail/${product._id}`);
-                res.json({
-                  message: "failed",
-                });
-              } else {
-                await cartModel.updateOne(
-                  { userId: userId },
-                  {
-                    $push: {
-                      products: {
-                        productId: product._id,
-                        quantity: 1,
-                        color: product.color,
-                        size: body.size,
-                      },
-                    },
-                  }
-                );
-                res.json({
-                  message: "success",
-                });
-              }
-            } else {
-              await cartModel.updateOne(
-                { userId: userId },
-                {
-                  $push: {
-                    products: {
-                      productId: product._id,
-                      quantity: 1,
-                      color: product.color,
-                      size: body.size,
-                    },
-                  },
-                }
-              );
-              res.json({
-                message: "success",
-              });
-            }
+      const { size } = req.body;
+      const productid = req.params.id;
+      const userId = new ObjectId(req.query.userId);
+    
+      const product = await productModel.findOne({ _id: productid });
+      const existingCart = await cartModel.findOne({ userId });
+    
+      if (existingCart) {
+        const pExists = existingCart.products.find(
+          (prod) =>
+            prod.productId.equals(new ObjectId(productid)) && prod.size === size
+        );
+    
+        if (pExists) {
+          const index = existingCart.products.findIndex(
+            (prod) =>
+              prod.productId.equals(new ObjectId(productid)) && prod.size === size
+          );
+          const checkQuantity = product.quantity - pExists.quantity;
+          
+          if (checkQuantity <= 0) {
+            return res.json({ message: "failed" });
           }
-        } else {
+    
           await cartModel.updateOne(
-            { userId: userId },
-            {
-              $push: {
-                products: {
-                  productId: product._id,
-                  color: product.color,
-                  quantity: 1,
-                  size: body.size,
-                },
+            { userId },
+            { $inc: { [`products.${index}.quantity`]: 1 } }
+          );
+          return res.json({ message: "success" });
+        }
+    
+        const productAlreadyIn = existingCart.products.some(
+          (prod) => prod.productId.equals(new ObjectId(productid))
+        );
+    
+        const checkQuantity = product.quantity - 1;
+        if (productAlreadyIn && checkQuantity <= 0) {
+          return res.json({ message: "failed" });
+        }
+    
+        await cartModel.updateOne(
+          { userId },
+          {
+            $push: {
+              products: {
+                productId: productid,
+                quantity: 1,
+                color: product.color,
+                size,
               },
             },
-            { upsert: true }
-          );
-          res.json({
-            message: "success",
-          });
-        }
-
-        // return res.redirect("/cartPage");
+          }
+        );
+        return res.json({ message: "success" });
       }
+    
+      await cartModel.updateOne(
+        { userId },
+        {
+          $push: {
+            products: {
+              productId: productid,
+              color: product.color,
+              quantity: 1,
+              size,
+            },
+          },
+        },
+        { upsert: true }
+      );
+      return res.json({ message: "success" });
     } catch (error) {
       console.log(error);
+      next(error)
     }
+    
   },
 
-  cartUpdateFetch: async (req, res) => {
+  cartUpdateFetch: async (req, res,next) => {
     try {
       const { productId, userId } = req.params;
       const { quantity, size } = req.body;
-      console.log(req.body);
-      // Find the cart item
-      let cartItem = await cartModel.findOne({
-        userId: userId,
+    
+      const cartItem = await cartModel.findOne({
+        userId,
         "products.productId": productId,
       });
-      // console.log(cartItem);
-
+    
       if (!cartItem) {
-        return res
-          .status(404)
-          .json({ success: false, message: "Cart item not found" });
+        return res.status(404).json({ success: false, message: "Cart item not found" });
       }
-
+    
       const productInfo = await productModel.findOne({ _id: productId });
-      // Update the quantity of the product in the cart
+    
       if (productInfo.quantity < quantity) {
-        res.json('error');
-      } else {
-        const productIndex = cartItem.products.findIndex((product) => {
-          return (
-            product.productId.equals(new ObjectId(productId)) &&
-            product.size === size
-          );
-        });
-
-        // console.log();
-        console.log(productIndex);
-        cartItem.products[productIndex].quantity = quantity;
-
-        // Save the updated cart item it is an mongoose function.
-        await cartItem.save();
-
-        res.json('success');
-
+        return res.json('error');
       }
+    
+      const productIndex = cartItem.products.findIndex(
+        (product) => product.productId.equals(new ObjectId(productId)) && product.size === size
+      );
+    
+      if (productIndex === -1) {
+        return res.status(404).json({ success: false, message: "Product not found in cart" });
+      }
+    
+      cartItem.products[productIndex].quantity = quantity;
+      await cartItem.save();
+    
+      return res.json('success');
+    
     } catch (error) {
       console.error(error);
+      next(error);
     }
+    
   },
 
-  removeFromCart: async (req, res) => {
+  removeFromCart: async (req, res,next) => {
     try {
       req.session.productInfo = "";
-
       req.session.productDetails = "";
       req.session.grandTotal = "";
-
+    
       const { productId, size } = req.body;
       const userId = req.params.id;
-      console.log(userId);
-      console.log(productId);
-      console.log(size);
+    
       const cartItem = await cartModel.findOne({
-        userId: userId,
+        userId,
         "products.productId": productId,
       });
-      console.log(cartItem);
+    
       if (!cartItem) {
         console.log("Cart Item Not Found");
+        return res.status(404).json({ success: false, message: "Cart item not found" });
       }
-
-      const index = cartItem.products.findIndex((product) => {
-        return (
-          product.productId.equals(new ObjectId(productId)) &&
-          product.size === size
-        );
-      });
-      console.log(index);
+    
+      const index = cartItem.products.findIndex(
+        (product) => product.productId.equals(new ObjectId(productId)) && product.size === size
+      );
+    
+      if (index === -1) {
+        console.log("Product Not Found in Cart");
+        return res.status(404).json({ success: false, message: "Product not found in cart" });
+      }
+    
       cartItem.products.splice(index, 1);
       await cartItem.save();
-      res.json('success');
+    
+      return res.json('success');
+    
     } catch (error) {
-      console.log(error);
+      console.error(error);
+      next(error);
     }
+    
   },
 
-  getCheckoutPage: async (req, res) => {
+  getCheckoutPage: async (req, res,next) => {
     try {
       const token = req.cookies.UserToken;
       const {user,cartCount,wishlistCount} = await userValidation(token);
-      // console.log(user._id);
-      //function route starts
-
-      // console.log(products);
+      
       const addressPrimary = await addressModel.findOne({
         userId: user._id,
         isPrimary: true,
@@ -673,55 +640,66 @@ module.exports = {
       });
     } catch (error) {
       console.log(error);
+      next(error);
     }
   },
 
-  doAddAddressCheckout: async (req, res) => {
+  doAddAddressCheckout: async (req, res, next) => {
     try {
-      const data = req.body;
-      const id = req.params.id;
-      console.log(id);
+      const {
+        firstname,
+        lastname,
+        address,
+        state,
+        district,
+        city,
+        locality,
+        postalCode,
+        phone,
+      } = req.body;
+      
+      const userId = req.params.id;
+    
       const result = await addressModel.collection.insertOne({
-        userId: new ObjectId(id),
-        firstname: data.firstname,
-        lastname: data.lastname,
-        address: data.address, //street/home address
-        state: data.state,
-        district: data.district,
-        city: data.city,
-        locality: data.locality,
-        postalcode: data.postalCode,
-        phone: data.phone,
+        userId: new ObjectId(userId),
+        firstname,
+        lastname,
+        address,
+        state,
+        district,
+        city,
+        locality,
+        postalcode: postalCode, 
+        phone,
       });
-
+    
       const primaryExists = await addressModel.findOne({
-        userId: new ObjectId(id),
+        userId: new ObjectId(userId),
         isPrimary: true,
       });
-      console.log(primaryExists);
+    
       if (primaryExists) {
         await addressModel.updateOne(
           { _id: primaryExists._id },
           { $set: { isPrimary: false } }
         );
-        await addressModel.updateOne(
-          { _id: result.insertedId },
-          { $set: { isPrimary: true } }
-        );
-        res.json("success");
-      } else {
-        await addressModel.updateOne(
-          { _id: result.insertedId },
-          { $set: { isPrimary: true } }
-        );
-        res.json("success");
       }
+    
+      await addressModel.updateOne(
+        { _id: result.insertedId },
+        { $set: { isPrimary: true } }
+      );
+    
+      res.json("success");
+    
     } catch (error) {
-      console.log(error);
+      console.error(error);
+      next(error);
     }
+    
   },
 
-  checkoutDirectFromDetailPage: async (req, res) => {
+  checkoutDirectFromDetailPage: async (req, res ,next) => {
     try {
       const productId = req.params.id;
       const size = req.query.size;
@@ -732,18 +710,17 @@ module.exports = {
         { $match: { sizes: size } },
       ]);
 
-      console.log(productInfo);
-
       req.session.productDetails = "";
       req.session.grandTotal = "";
       req.session.productInfo = productInfo;
       res.redirect("/checkoutPage");
     } catch (error) {
       console.log(error);
+      next(error);
     }
   },
 
-  checkoutFromCart: async (req, res) => {
+  checkoutFromCart: async (req, res ,next) => {
     try {
       const userId = req.params.id;
       const productDetails = await cartModel.aggregate([
@@ -759,13 +736,10 @@ module.exports = {
         },
         { $unwind: "$productDetails" },
       ]);
-      // console.log(addressPrimary);
-
+     
       productDetails.forEach((cartItem) => {
         const quantity = cartItem.products.quantity;
         const price = cartItem.productDetails.productPrice;
-        console.log("Quantity:", quantity);
-        console.log("Price:", price);
         if (isNaN(quantity) || isNaN(price)) {
           console.log("Error: Quantity or price is not a number");
           cartItem.totalPrice = "Not a Number";
@@ -778,25 +752,23 @@ module.exports = {
       }, 0);
 
       req.session.productInfo = "";
-
       req.session.productDetails = productDetails;
       req.session.grandTotal = grandTotal;
       res.redirect("/checkoutPage");
     } catch (error) {
       console.log(error);
+      next(error)
     }
   },
 
-  doPlaceOrder: async (req, res) => {
+  doPlaceOrder: async (req, res,next) => {
     try {
       let result;
       const databody = req.body;
       const userId = req.params.id;
       const walletAmount = Number(req.query.walletAmount) ;
       const couponDiscount = Number(req.query.couponDiscount);
-      // console.log(typeof(couponDiscount));
-      // console.log(typeof(walletAmount));
-      
+     
       const deliveryAddress = await addressModel.findOne({
         userId: userId,
         isPrimary: true,
@@ -804,9 +776,9 @@ module.exports = {
       const paymentDetails = {
         method : "COD"
       }
-      // console.log(deliveryAddress);
+      
       if (Object.keys(req.body).length > 0) {
-        // console.log(databody);
+        
       const product = await productModel.findOne({_id : databody.productName});
      
      
@@ -1332,10 +1304,11 @@ module.exports = {
       res.redirect(`/confirmOrder/${result.insertedId}`);
     } catch (error) {
       console.log(error);
+      next(error);
     }
   },
 
-  getOrderDetailpage: async (req, res) => {
+  getOrderDetailpage: async (req, res ,next) => {
     try {
       const token = req.cookies.UserToken;
       const {user,cartCount,wishlistCount} = await userValidation(token);
@@ -1371,10 +1344,11 @@ module.exports = {
       });
     } catch (error) {
       console.log(error);
+      next(error);
     }
   },
 
-  filterCategory: async (req, res) => {
+  filterCategory: async (req, res,next) => {
     try {
       const criteria = req.body.categoryValue;
       let priceSort = req.body.priceSortvalue === "low to high" ? 1 : -1;
@@ -1415,8 +1389,6 @@ module.exports = {
         products = await productModel.find({color : {$in: colors},category: { $in: criteria }});
 
       }
-
-
         res.json({
           result: products,
         });
@@ -1424,10 +1396,11 @@ module.exports = {
     
     } catch (error) {
       console.log(error);
+      next(error)
     }
   },
 
-getOrderConfirmationPage :async(req,res)=>{
+getOrderConfirmationPage :async(req,res,next)=>{
   try{
     const token = req.cookies.UserToken;
     const {user,cartCount,wishlistCount} = await userValidation(token);
@@ -1449,8 +1422,7 @@ getOrderConfirmationPage :async(req,res)=>{
 
         }},{$unwind : "$address"},
 
-      ])
-        console.log(orderDetails);
+      ]);
     res.render('users/productConfirmPage',
     {
       title : 'Confirm Order',
@@ -1463,10 +1435,11 @@ getOrderConfirmationPage :async(req,res)=>{
     )
   }catch(error){
     console.log(error);
+    next(error)
   }
 
 },
-getUserMyOrders :async(req,res)=>{
+getUserMyOrders :async(req,res,next)=>{
   try{
     const token = req.cookies.UserToken;
     const {user,cartCount,wishlistCount} = await userValidation(token);
@@ -1474,7 +1447,7 @@ getUserMyOrders :async(req,res)=>{
       const userId = req.params.id;
 
       const orders = await orderModel.find({userId : userId});
-      console.log(orders);
+      
 
       res.render('users/userMyOrders',{
         title : 'Orders',
@@ -1487,15 +1460,16 @@ getUserMyOrders :async(req,res)=>{
 
   }catch(error){
     console.log(error);
+    next(error)
   }
 
 },
 
-orderCancelationRequest : async(req,res)=>{
+orderCancelationRequest : async(req,res,next)=>{
   try{
     const orderId = req.params.id ; 
     const reason = req.body.reason ;
-    const order = await orderModel.updateOne({_id : orderId},{ $set : 
+    await orderModel.updateOne({_id : orderId},{ $set : 
       { cancelRequested : true , cancellationReason : reason,orderStatus : "pending"}});
       
         res.json('success')
@@ -1503,11 +1477,12 @@ orderCancelationRequest : async(req,res)=>{
 
   }catch(error){
     console.log(error);
+    next(error)
   }
 
 },
 
-getWishlistPage : async(req,res)=>{
+getWishlistPage : async(req,res,next)=>{
 try{
   const token = req.cookies.UserToken;
   const {user,cartCount,wishlistCount} = await userValidation(token);
@@ -1529,7 +1504,7 @@ try{
 ])
 
 
-console.log(wishProducts);
+
 
 
   res.render('users/userwishlist',{
@@ -1541,10 +1516,11 @@ console.log(wishProducts);
   })
 }catch(error){
   console.log(error);
+  next(error)
 }
 },
 
-addToWishlist: async (req, res) => {
+addToWishlist: async (req, res,next) => {
   try {
     const productId = new ObjectId(req.params.id);
     const userId = new ObjectId(req.body.userId);
@@ -1569,7 +1545,7 @@ addToWishlist: async (req, res) => {
         return res.json('success');
       }
     } else {
-      const wishlistItem = await wishlistModel.create({
+        await wishlistModel.create({
         userId: userId,
         productDetails: [{ productId: productId }]
       });
@@ -1577,24 +1553,24 @@ addToWishlist: async (req, res) => {
     }
   } catch (error) {
     console.log(error);
-    return res.status(500).json('error');
+    next(error);
   }
 },
 
-removeFromWishlist : async(req,res)=>{
+removeFromWishlist : async(req,res,next)=>{
   try{
     const productId = new ObjectId(req.params.id);
-    console.log(productId);
+    
     const userId = new ObjectId(req.body.userId);
     const wishlist = await wishlistModel.findOne({userId : userId});
-    console.log(wishlist);
+    
    
     const index = wishlist.productDetails.findIndex((product)=>{
       return product.productId.equals(new ObjectId(productId))
     })
 
 
-    console.log(index);
+    
     wishlist.productDetails.splice(index,1);
     await wishlist.save();
     
@@ -1602,11 +1578,12 @@ removeFromWishlist : async(req,res)=>{
 
   }catch(error){
     console.log(error);
+    next(error)
   }
 
 },
 
-createOrderRzp : async(req,res)=>{
+createOrderRzp : async(req,res,next)=>{
   try{
     const totalAmount = Number(req.body.totalAmount);
     // console.log(totalAmount);
@@ -1629,11 +1606,12 @@ createOrderRzp : async(req,res)=>{
     })
   }catch(error){
     console.log(error);
+    next(error)
   }
 
 },
 
-razorpayVerifyPaymentAndUpdateOrder : async(req,res)=>{
+razorpayVerifyPaymentAndUpdateOrder : async(req,res,next)=>{
   try{
     let result ;
     const userId = req.params.id
@@ -1700,7 +1678,7 @@ razorpayVerifyPaymentAndUpdateOrder : async(req,res)=>{
               _id : product.category
             },{$inc : {salesCount : 1 }});
   
-            // console.log('updated');
+            
             return res.status(200).json({message : result.insertedId});
 
           }else if(couponDiscount && walletAmount){
@@ -1745,7 +1723,7 @@ razorpayVerifyPaymentAndUpdateOrder : async(req,res)=>{
               _id : product.category
             },{$inc : {salesCount : 1 }});
   
-            console.log('updated');
+            
             await walletModel.updateOne({userId : userId},{$inc :{balance : - Number(walletAmount)},
             $push :{
               transactionDetails : {
@@ -1857,7 +1835,7 @@ razorpayVerifyPaymentAndUpdateOrder : async(req,res)=>{
             let price = (req.session.grandTotal - subamount).toFixed(2);
             console.log(price);
             const cartProducts = await cartModel.findOne({ userId: userId });
-          // console.log(cartProducts);
+          
           const productDetails = cartProducts.products.map((product) => ({
             productId: product.productId,
             quantity: product.quantity,
@@ -1868,7 +1846,7 @@ razorpayVerifyPaymentAndUpdateOrder : async(req,res)=>{
             return total = total + current.quantity;
           },0)
   
-          // console.log(productDetails);
+          
             result =  await orderModel.collection.insertOne({
             userId: new ObjectId(userId),
             orderId : v4(),
@@ -1938,9 +1916,9 @@ razorpayVerifyPaymentAndUpdateOrder : async(req,res)=>{
           return res.status(200).json({message : result.insertedId});
           }else if(!walletAmount && couponDiscount){
             let price = (req.session.grandTotal - couponDiscount).toFixed(2);
-            // console.log(price);
+            
             const cartProducts = await cartModel.findOne({ userId: userId });
-          // console.log(cartProducts);
+          
           const productDetails = cartProducts.products.map((product) => ({
             productId: product.productId,
             quantity: product.quantity,
@@ -1951,7 +1929,7 @@ razorpayVerifyPaymentAndUpdateOrder : async(req,res)=>{
             return total = total + current.quantity;
           },0)
   
-          // console.log(productDetails);
+          
             result =  await orderModel.collection.insertOne({
             userId: new ObjectId(userId),
             orderId : v4(),
@@ -1973,18 +1951,7 @@ razorpayVerifyPaymentAndUpdateOrder : async(req,res)=>{
             couponDiscount : Number(couponDiscount)
           });
 
-          // //subtract the amount from wallet and add the details
-          // await  walletModel.updateOne({userId : userId},{$inc:{
-          //   balance : - Number(walletAmount)},
-          //   $push : {
-          //     transactionDetails :{
-          //       paymentType : "debited",
-          //       date : new Date(),
-          //       amount : Number(walletAmount)
-          //     }
-          //   }
-          // })
-          //clear products from cart
+         
           await cartModel.updateOne(
             { userId: userId },
             {
@@ -1994,7 +1961,7 @@ razorpayVerifyPaymentAndUpdateOrder : async(req,res)=>{
             }
           );
 
-          //updating or decrementing the product quantity
+          
           for (const item of productDetails) {
             console.log(item.quantity);
             await productModel.updateOne(
@@ -2022,7 +1989,7 @@ razorpayVerifyPaymentAndUpdateOrder : async(req,res)=>{
           }else if(walletAmount && !couponDiscount){
             const price = req.session.grandTotal - walletAmount;
             const cartProducts = await cartModel.findOne({ userId: userId });
-          // console.log(cartProducts);
+          
           const productDetails = cartProducts.products.map((product) => ({
             productId: product.productId,
             quantity: product.quantity,
@@ -2033,7 +2000,7 @@ razorpayVerifyPaymentAndUpdateOrder : async(req,res)=>{
             return total = total + current.quantity;
           },0)
   
-          // console.log(productDetails);
+          
             result =  await orderModel.collection.insertOne({
             userId: new ObjectId(userId),
             orderId : v4(),
@@ -2180,13 +2147,14 @@ razorpayVerifyPaymentAndUpdateOrder : async(req,res)=>{
     
   }catch(error){
     console.log(error);
+    next(error);
 
   }
 
 },
 
 
-getUserWallet :async(req,res)=>{
+getUserWallet :async(req,res,next)=>{
   try{
     const token = req.cookies.UserToken;
     const {user,cartCount,wishlistCount} = await userValidation(token);
@@ -2200,7 +2168,7 @@ if (wallet && wallet.transactionDetails && wallet.transactionDetails.length > 0)
 }
 
 
-console.log(wallet);
+
     res.render('users/userWallet',{
       title : 'User Wallet',
       wallet : wallet ? wallet : false,
@@ -2210,10 +2178,11 @@ console.log(wallet);
     })
   }catch(error){
     console.log(error);
+    next(error);
   }
 },
 
-addMoneyToWallet : async(req,res)=>{
+addMoneyToWallet : async(req,res,next)=>{
   try{
     const userId = req.params.id ;
     const amount = req.body.amount;
@@ -2236,10 +2205,11 @@ addMoneyToWallet : async(req,res)=>{
     // console.log('finished');
   }catch(error){
     console.log(error);
+    next(error);
   }
 },
 
-applyCoupon: async (req, res) => {
+applyCoupon: async (req, res,next) => {
   try {
     const { code, product: pId, walletAmount } = req.body;
     const userId = req.params.id;
@@ -2320,11 +2290,11 @@ applyCoupon: async (req, res) => {
 
   } catch (error) {
     console.error(error);
-    res.json('An error occurred');
+    next(error);
   }
 },
 
-getOfferPage : async(req,res)=>{
+getOfferPage : async(req,res,next)=>{
   try{
     const token = req.cookies.UserToken;
     const {user,cartCount,wishlistCount} = await userValidation(token);
@@ -2384,7 +2354,7 @@ getOfferPage : async(req,res)=>{
     ]);
     
     
-    console.log(offers);
+   
 
   res.render('users/offerPage',{
     title : 'Offers',
@@ -2395,12 +2365,13 @@ getOfferPage : async(req,res)=>{
   })
   }catch(error){
     console.log(error);
+    next(error)
   }
 
 },
 
 
-createOrderInPaymentFailure : async(req,res)=>{
+createOrderInPaymentFailure : async(req,res,next)=>{
   try{
     let result ;
     const userId = req.params.id;
@@ -2454,7 +2425,7 @@ createOrderInPaymentFailure : async(req,res)=>{
               salesCount: 1
             }
           });
-          // console.log('updated');
+          
           await categoryModel.updateOne({
             _id : product.category
           },{$inc : {salesCount : 1 }});
@@ -2499,7 +2470,7 @@ createOrderInPaymentFailure : async(req,res)=>{
               salesCount: 1
             }
           });
-          console.log('updated');
+          
           await walletModel.updateOne({userId : userId},{$inc :{balance : - Number(walletAmount)},
           $push :{
             transactionDetails : {
@@ -2552,7 +2523,7 @@ createOrderInPaymentFailure : async(req,res)=>{
               salesCount: 1
             }
           });
-          // console.log('updated');
+          
           await walletModel.updateOne({userId : userId},{$inc :{balance : - Number(walletAmount)},
           $push :{
             transactionDetails : {
@@ -2601,7 +2572,7 @@ createOrderInPaymentFailure : async(req,res)=>{
               salesCount: 1
             }
           });
-          // console.log('updated');
+          
           await categoryModel.updateOne({
             _id : product.category
           },{$inc : {salesCount : 1 }});
@@ -2615,7 +2586,7 @@ createOrderInPaymentFailure : async(req,res)=>{
           let price = (req.session.grandTotal - subamount).toFixed(2);
           console.log(price);
           const cartProducts = await cartModel.findOne({ userId: userId });
-        // console.log(cartProducts);
+        
         const productDetails = cartProducts.products.map((product) => ({
           productId: product.productId,
           quantity: product.quantity,
@@ -2626,7 +2597,7 @@ createOrderInPaymentFailure : async(req,res)=>{
           return total = total + current.quantity;
         },0)
 
-        // console.log(productDetails);
+        
           result =  await orderModel.collection.insertOne({
           userId: new ObjectId(userId),
           orderId : v4(),
@@ -2696,9 +2667,9 @@ createOrderInPaymentFailure : async(req,res)=>{
         return res.status(200).json({message : result.insertedId});
         }else if(!walletAmount && couponDiscount){
           let price = (req.session.grandTotal - couponDiscount).toFixed(2);
-          // console.log(price);
+          
           const cartProducts = await cartModel.findOne({ userId: userId });
-        // console.log(cartProducts);
+        
         const productDetails = cartProducts.products.map((product) => ({
           productId: product.productId,
           quantity: product.quantity,
@@ -2709,7 +2680,7 @@ createOrderInPaymentFailure : async(req,res)=>{
           return total = total + current.quantity;
         },0)
 
-        // console.log(productDetails);
+        
           result =  await orderModel.collection.insertOne({
           userId: new ObjectId(userId),
           orderId : v4(),
@@ -2741,7 +2712,7 @@ createOrderInPaymentFailure : async(req,res)=>{
 
         //updating or decrementing the product quantity
         for (const item of productDetails) {
-          console.log(item.quantity);
+          
           await productModel.updateOne(
             { _id: item.productId },
             {
@@ -2767,7 +2738,7 @@ createOrderInPaymentFailure : async(req,res)=>{
         }else if(walletAmount && !couponDiscount){
           const price = req.session.grandTotal - walletAmount;
           const cartProducts = await cartModel.findOne({ userId: userId });
-        // console.log(cartProducts);
+        
         const productDetails = cartProducts.products.map((product) => ({
           productId: product.productId,
           quantity: product.quantity,
@@ -2778,7 +2749,7 @@ createOrderInPaymentFailure : async(req,res)=>{
           return total = total + current.quantity;
         },0)
 
-        // console.log(productDetails);
+        
           result =  await orderModel.collection.insertOne({
           userId: new ObjectId(userId),
           orderId : v4(),
@@ -2920,10 +2891,11 @@ createOrderInPaymentFailure : async(req,res)=>{
       }
   }catch(error){
     console.log(error);
+    next(error);
   }
 },
 
-updateOrderFromOrderDetailPage: async(req,res)=>{
+updateOrderFromOrderDetailPage: async(req,res,next)=>{
   try{
     const orderId = req.params.id;
     const dataBody = req.body;
@@ -2932,7 +2904,7 @@ updateOrderFromOrderDetailPage: async(req,res)=>{
       paymentId : dataBody.rzpPaymentId,
       orderId : dataBody.rzpOrderId
     }
-    // console.log(orderId , dataBody);
+    
     await orderModel.updateOne({_id : orderId},{$set :{
     grandTotal : Number(dataBody.amount),
     paymentDetails : payment,   
@@ -2944,10 +2916,11 @@ updateOrderFromOrderDetailPage: async(req,res)=>{
 
   }catch(error){
     console.log(error);
+    next(error);
   }
 },
 
-downloadInvoiceAsPdf : async(req,res)=>{
+downloadInvoiceAsPdf : async(req,res,next)=>{
   try {
     const orderId =new ObjectId(req.params.id) ;
     const order =  await orderModel.aggregate ([{
@@ -3023,12 +2996,12 @@ downloadInvoiceAsPdf : async(req,res)=>{
 
 } catch (error) {
     console.error(error);
-    res.status(500).send('Internal Server Error');
+    next(error);
 }
 
 },
 
-cancelProductIndividually : async (req,res)=>{
+cancelProductIndividually : async (req,res,next)=>{
   try{
     let {pId , pSize , orderId , productQuanity , productPrice , pNumber} = req.body;
     orderId = new ObjectId(orderId);
@@ -3071,13 +3044,13 @@ cancelProductIndividually : async (req,res)=>{
         }else{
           await walletModel.updateOne({userId : order.userId},{
             $inc :{
-              balance : Number(order.walletMoney)
+              balance : productPrice
             },
             $push:{
               transactionDetails :{
                 paymentType : 'credited',
                 date : new Date(),
-                amount : Number(order.walletMoney)
+                amount : productPrice
               }
             }
           });
@@ -3209,13 +3182,20 @@ cancelProductIndividually : async (req,res)=>{
     res.json('success');
   }catch(error){
     console.log(error);
+    next(error);
   }
 },
 
 
-userLogout: (req, res) => {
+userLogout: (req, res,next) => {
+  try {
     delete req.session.user;
     res.clearCookie("UserToken");
     res.redirect("/");
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+   
   },
 };

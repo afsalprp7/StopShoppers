@@ -12,25 +12,32 @@ const offerModel = require("../models/offerModel")
 const cahrt = require("chart.js");
 const PDF = require("pdfkit");
 const exceljs = require("exceljs");
-// const { default: products } = require("razorpay/dist/types/products");
+
 
 module.exports = {
   //get category page
-  getCategoryPage: async (req, res) => {
-    const admin = await adminModel.findOne();
-    req.session.adminName = admin.name;
-    const data = await categoryModel.find({ isDeleted: false });
-    res.render("admin/categoryPage", {
-      title: "Admin Category",
-      data: data,
-      success: req.flash("success"),
-      adminName: req.session.adminName,
-    });
+  getCategoryPage: async (req, res,next) => {
+    try {
+      const admin = await adminModel.findOne();
+      req.session.adminName = admin.name;
+      const data = await categoryModel.find({ isDeleted: false });
+      res.render("admin/categoryPage", {
+        title: "Admin Category",
+        data: data,
+        success: req.flash("success"),
+        adminName: req.session.adminName,
+      });
+    } catch (error) {
+      next(error);
+    }
+
+   
   },
 
   //post category page
-  doAddCategoryPage: async (req, res) => {
-    const catName = req.body.name.toLowerCase();
+  doAddCategoryPage: async (req, res,next) => {
+    try {
+      const catName = req.body.name.toLowerCase();
     const categoryExists = await categoryModel.findOne({
       categoryName: catName,
     });
@@ -65,19 +72,29 @@ module.exports = {
       });
       res.redirect("/adminCategory");
     }
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
+    
   },
 
   //get add category page.
-  getAddCategoryPage: (req, res) => {
-    res.render("admin/addCategory", {
-      title: "Add Category",
-      error: req.flash("error"),
-      adminName: req.flash("adminName"),
-    });
+  getAddCategoryPage: (req, res ,next) => {
+    try{
+      res.render("admin/addCategory", {
+        title: "Add Category",
+        error: req.flash("error"),
+        adminName: req.flash("adminName"),
+      });
+    }catch(error){
+      console.log(error);
+      next(error);
+    }
   },
 
   //get edit category page
-  getEditCategoryPage: async (req, res) => {
+  getEditCategoryPage: async (req, res,next) => {
     try {
       if (!req.cookies.token) {
         res.redirect("/admin");
@@ -93,17 +110,18 @@ module.exports = {
       });
     } catch (error) {
       console.log(error);
+      next(error);
     }
   },
 
   //edit category
-  patchEditCategory: async (req, res) => {
+  patchEditCategory: async (req, res,next) => {
     try {
       const id = req.params.id;
       // console.log(id);
       // console.log(req.body);
       const newName = req.body.name.toLowerCase();
-      console.log(newName);
+     
       const exists = await categoryModel.findOne({ categoryName: newName });
       const data = await categoryModel.findOne({ _id: id });
       if (exists && newName !== data.categoryName) {
@@ -171,19 +189,25 @@ module.exports = {
       }
     } catch (error) {
       console.log(error);
+      next(error)
     }
   },
 
   //delete category
-  deleteCategory: async (req, res) => {
-    const id = req.params.id;
-    const data = await categoryModel.findOne({ _id: id });
-    await categoryModel.updateOne({ _id: id }, { $set: { isDeleted: true } });
-    res.redirect("/adminCategory");
+  deleteCategory: async (req, res,next) => {
+    try {
+      const id = req.params.id;
+      const data = await categoryModel.findOne({ _id: id });
+      await categoryModel.updateOne({ _id: id }, { $set: { isDeleted: true } });
+      res.redirect("/adminCategory");
+    } catch (error) {
+      console.log(error);
+    }
+   
   },
 
   // delete the image from the
-  patchDeleteCatImg: async (req, res) => {
+  patchDeleteCatImg: async (req, res,next) => {
     try {
       const id = req.params.id;
       const categoryInfo = await categoryModel.findOne({ _id: id });
@@ -192,67 +216,78 @@ module.exports = {
       res.redirect(`/editCategory/${id}`);
     } catch (error) {
       res.send(error);
+      next(error);
     }
   },
 
   //get productpage.
-  getProductPage: async (req, res) => {
-    // const productsData = await productModel.find({isDeleted : false});
-    const productsData = await productModel.aggregate([
-      {
-        $match: { isDeleted: false },
-      },
-      {
-        $lookup: {
-          from: "categories",
-          localField: "category",
-          foreignField: "_id",
-          as: "categoryInfo",
+  getProductPage: async (req, res, next) => {
+    try {
+      const productsData = await productModel.aggregate([
+        {
+          $match: { isDeleted: false },
         },
-      },
-      { $unwind: "$categoryInfo" },
-    ]);
-    // console.log(productsData);
-    res.render("admin/adminproduct", {
-      title: "Admin Product",
-      products: productsData,
-      adminName: req.session.adminName,
-    });
+        {
+          $lookup: {
+            from: "categories",
+            localField: "category",
+            foreignField: "_id",
+            as: "categoryInfo",
+          },
+        },
+        { $unwind: "$categoryInfo" },
+      ]);
+      // console.log(productsData);
+      res.render("admin/adminproduct", {
+        title: "Admin Product",
+        products: productsData,
+        adminName: req.session.adminName,
+      });
+    } catch (error) {
+      console.log(error);
+      next(error);
+    } 
   },
 
   //get add product page.
-  getAddProductPage: async (req, res) => {
-    const catData = await categoryModel.find({ isDeleted: false });
-    res.render("admin/addProduct", {
-      title: "Add Product",
-      catData: catData,
-      error: req.flash("error"),
-      adminName: req.session.adminName,
-    });
+  getAddProductPage: async (req, res,next) => {
+    try {
+      const catData = await categoryModel.find({ isDeleted: false });
+      res.render("admin/addProduct", {
+        title: "Add Product",
+        catData: catData,
+        error: req.flash("error"),
+        adminName: req.session.adminName,
+      });
+    } catch (error) {
+      console.log(error);
+      next(error)
+    }
   },
 
   // get edit product page.
-  getEditProductPage: async (req, res) => {
-    if (!req.cookies.token) {
-      res.redirect("/admin");
-    }
-    const catData = await categoryModel.find({ isDeleted: false });
-    const paramId = req.params.id;
-    const productData = await productModel.findOne({ _id: paramId });
-    res.render("admin/editProduct", {
+  getEditProductPage: async (req, res,next) => {
+    try {
+      const catData = await categoryModel.find({ isDeleted: false });
+      const paramId = req.params.id;
+      const productData = await productModel.findOne({ _id: paramId });
+      res.render("admin/editProduct", {
       title: "Edit Product",
       catData: catData,
       data: productData,
       error: req.flash("error"),
       adminName: req.session.adminName,
     });
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
   },
 
   //post product form(add product)
-  doAddProduct: async (req, res) => {
+  doAddProduct: async (req, res,next) => {
     try {
       const data = req.body;
-      console.log(data);
       const pName = data.productName.toLowerCase();
       const color = data.color.toLowerCase();
       const images = [];
@@ -260,7 +295,6 @@ module.exports = {
         images.push(image.filename);
       }
     
-      // const {productName , color } = req.body
       // console.log(productName,color);
       const category = await categoryModel.findOne({
         categoryName: data.category,
@@ -269,8 +303,7 @@ module.exports = {
         productName: pName,
         color: color
       });
-      // console.log(isExists);
-      // console.log(isExists.productName);
+    
       if (isExists) {
         if (isExists.isDeleted === true) {
           await productModel.updateOne(
@@ -323,10 +356,11 @@ module.exports = {
       }
     } catch (error) {
       console.log(error);
+      next(error)
     }
   },
 
-  DeleteProduct: async (req, res) => {
+  DeleteProduct: async (req, res,next) => {
     try {
       const id = req.params.id;
       const productData = await productModel.findOne({ _id: id });
@@ -338,14 +372,13 @@ module.exports = {
       res.redirect("/adminProduct");
     } catch (error) {
       console.log(error);
+      next(error)
     }
   },
 
-  doEditProduct: async (req, res) => {
+  doEditProduct: async (req, res,next) => {
     try {
-      if (!req.cookies.token) {
-        res.redirect("/admin");
-      }
+     
       const editData = req.body;
       console.log(editData);
       const id = req.params.id;
@@ -455,19 +488,20 @@ module.exports = {
       }
     } catch (error) {
       console.log(error);
+      next(error)
     }
   },
 
   //deleting the images from edit product page
-  deleteImageEditProduct: async (req, res) => {
+  deleteImageEditProduct: async (req, res,next) => {
     try {
       if (!req.cookies.token) {
         res.redirect("/admin");
       }
       const filename = req.body.filename;
-      console.log(filename);
+      
       const id = req.params.id;
-      console.log(id);
+      
       const productCollection = await productModel.findOne({ _id: id });
       if (productCollection && productCollection.image !== "") {
         await productModel.updateOne(
@@ -479,10 +513,11 @@ module.exports = {
       }
     } catch (error) {
       console.log(error);
+      next(error)
     }
   },
 
-  getAdminUsersPage: async (req, res) => {
+  getAdminUsersPage: async (req, res,next) => {
     try {
       const users = await userModel.find();
       res.render("admin/adminUsers", {
@@ -492,13 +527,14 @@ module.exports = {
       });
     } catch (error) {
       console.log(error);
+      next(error);
     }
   },
 
-  doBlockUsers: async (req, res) => {
+  doBlockUsers: async (req, res,next) => {
     try {
       const id = req.params.id;
-      // console.log(req.body);
+      
       const data = await userModel.findOne({ _id: id });
      data.is_blocked = !data.is_blocked
      await data.save()
@@ -507,10 +543,11 @@ module.exports = {
      })
     } catch (error) {
       console.log(error);
+      next(error);
     }
   },
 
-  getAdminOrders: async (req, res) => {
+  getAdminOrders: async (req, res,next) => {
     try {
       const orders = await orderModel.aggregate([
         {
@@ -553,7 +590,7 @@ module.exports = {
       }, 0);
 
       orders.productCount = productCount;
-      // console.log(orders);
+      
       res.render("admin/adminOrders", {
         title: "Admin Orders",
         orders: orders ? orders : false,
@@ -561,10 +598,11 @@ module.exports = {
       });
     } catch (error) {
       console.log(error);
+      next(error)
     }
   },
 
-  getAdminOrderDetailpage: async (req, res) => {
+  getAdminOrderDetailpage: async (req, res,next) => {
     try {
       const Id = new ObjectId(req.params.id);
       const order = await orderModel.aggregate([
@@ -606,10 +644,11 @@ module.exports = {
       });
     } catch (error) {
       console.log(error);
+      next(error);
     }
   },
 
-  acceptCancelOrder: async (req, res) => {
+  acceptCancelOrder: async (req, res,next) => {
     try {
       const orderId = req.params.id;
       console.log(orderId);
@@ -686,10 +725,11 @@ module.exports = {
       }
     } catch (error) {
       console.log(error);
+      next(error)
     }
   },
 
-  declineCancelOrder: async (req, res) => {
+  declineCancelOrder: async (req, res,next) => {
     try {
       const orderId = req.params.id;
 
@@ -706,13 +746,14 @@ module.exports = {
       res.json("success");
     } catch (error) {
       console.log(error);
+      next(error)
     }
   },
 
-  getAdminCouponPage: async (req, res) => {
+  getAdminCouponPage: async (req, res,next) => {
     try {
       const coupons = await couponModel.find({ isDeleted: false });
-      console.log(req.session.success);
+      
       res.render("admin/adminCoupon", {
         title: "Admin Coupon",
         adminName: req.session.adminName,
@@ -722,9 +763,10 @@ module.exports = {
       delete req.session.success;
     } catch (error) {
       console.log(error);
+      next(error);
     }
   },
-  getAddCouponForm: async (req, res) => {
+  getAddCouponForm: async (req, res,next) => {
     try {
       const category = await categoryModel.find({ isDeleted: false });
 
@@ -735,13 +777,14 @@ module.exports = {
       });
     } catch (error) {
       console.log(error);
+      next(error);
     }
   },
 
-  doAddCouponForm: async (req, res) => {
+  doAddCouponForm: async (req, res,next) => {
     try {
       const databody = req.body;
-      // console.log(databody);
+      
       if (!Array.isArray(databody.categoryId)) {
         databody.categoryId = [databody.categoryId];
       }
@@ -761,10 +804,11 @@ module.exports = {
       res.redirect("/adminCoupon");
     } catch (error) {
       console.log(error);
+      next(error)
     }
   },
 
-  deleteCoupon: async (req, res) => {
+  deleteCoupon: async (req, res,next) => {
     try {
       const couponId = req.params.id;
       await couponModel.updateOne(
@@ -776,16 +820,16 @@ module.exports = {
       res.json("success");
     } catch (error) {
       console.log(error);
+      next(error)
     }
   },
 
-  getEditCoupon: async (req, res) => {
+  getEditCoupon: async (req, res,next) => {
     try {
       const couponId = req.params.id;
       const coupon = await couponModel.findOne({_id : couponId});
       const category = await categoryModel.find({ isDeleted: false });
-      console.log(coupon);
-      console.log(category);
+      
       res.render("admin/editCoupon", {
         title: "Edit Coupon",
         coupon,
@@ -794,21 +838,20 @@ module.exports = {
       });
     } catch (error) {
       console.log(error);
+      next(error)
     }
   },
-  doEditCoupon: async (req, res) => {
+  doEditCoupon: async (req, res,next) => {
     try {
       const couponId = req.params.id;
       const dataBody = req.body;
-      // console.log(couponId);
-      // console.log(dataBody);
+      
       const categories = dataBody.category.map((cat) => {
         return new ObjectId(cat);
       });
 
-      // console.log(typeof dataBody.date);
       const dateValue = new Date(dataBody.date);
-      const result = await couponModel.updateOne(
+       await couponModel.updateOne(
         { _id: couponId },
         {
           code: dataBody.couponCode,
@@ -817,14 +860,14 @@ module.exports = {
           eligibleCategory: categories,
         }
       );
-      // console.log(result);
       res.json("success");
     } catch (error) {
       console.log(error);
+      next(error)
     }
   },
 
-  getAdminDashboard: async (req, res) => {
+  getAdminDashboard: async (req, res,next) => {
     try {
       const sales = await orderModel.aggregate([
         {
@@ -864,7 +907,6 @@ module.exports = {
       }
     ]);
 
-    // console.log(products);
 
     //finding the number of categories
     const categories = await categoryModel.aggregate([{
@@ -928,10 +970,11 @@ const bestSellingCategory = await categoryModel.find({salesCount : {$exists : tr
       });
     } catch (error) {
       console.log(error);
+      next(error)
     }
   },
 
-  createChartSalesReport: async (req, res) => {
+  createChartSalesReport: async (req, res,next) => {
     try {
       const reportOn = req.body.salesValue;
       const startDate = req.body.startDate;
@@ -988,7 +1031,7 @@ const bestSellingCategory = await categoryModel.find({salesCount : {$exists : tr
             },
           },
         ]);
-        // console.log(sales);
+        
         days.forEach((item) => {
           sales.forEach((sale) => {
             if (item._id === sale._id) {
@@ -996,7 +1039,7 @@ const bestSellingCategory = await categoryModel.find({salesCount : {$exists : tr
             }
           });
         });
-        // console.log(days);
+        
 
         res.json(days);
 
@@ -1210,10 +1253,11 @@ const bestSellingCategory = await categoryModel.find({salesCount : {$exists : tr
       }
     } catch (error) {
       console.log(error);
+      next(error);
     }
   },
 
-  downloadReportPdf: async (req, res) => {
+  downloadReportPdf: async (req, res,next) => {
     try {
       console.log(req.body);
       const basis = req.body.basis;
@@ -1281,16 +1325,17 @@ sales.forEach((item) => {
     
     } catch (error) {
       console.log(error);
+      next(error)
     }
     
     
   },
 
-  downloadAsExcel: async (req, res) => {
+  downloadAsExcel: async (req, res,next) => {
     try {
       const sales = req.body.salesData;
       const basis = req.body.basis;
-      console.log(req.body);
+      
 
       const workbook = new exceljs.Workbook();
       const worksheet = workbook.addWorksheet("Stop Shoppers Sales Data");
@@ -1316,21 +1361,28 @@ sales.forEach((item) => {
       res.send(buffer);
     } catch (error) {
       console.log(error);
+      next(error)
     }
   },
 
-  getAddOfferPage : async(req,res)=>{
-    const category = await categoryModel.find({isDeleted : false})
+  getAddOfferPage : async(req,res,next)=>{
+    try {
+      const category = await categoryModel.find({isDeleted : false})
 
-    res.render('admin/addOffer',{
+      res.render('admin/addOffer',{
       title : 'Add Offer',
       adminName: req.session.adminName,
       category,
       error : req.session.error ? req.session.error : ''
-    })
+    });
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
+    
   },
   
-  getAdminOffer : async(req,res)=>{
+  getAdminOffer : async(req,res,next)=>{
     try{
       const offers = await offerModel.find({isDeleted : false});
       
@@ -1342,15 +1394,16 @@ sales.forEach((item) => {
       })
     }catch(error){
       console.log(error);
+      next(error)
 
     }
 
   },
 
-  doAddOffer : async(req,res)=>{
+  doAddOffer : async(req,res,next)=>{
     try{
       const databody = req.body
-      // console.log(databody); 
+       
       if (!Array.isArray(databody.categoryId)) {
         databody.categoryId = [new ObjectId(databody.categoryId)];
       }else{ 
@@ -1360,7 +1413,7 @@ sales.forEach((item) => {
       }
       console.log(databody.categoryId);
       const existingOffers = await offerModel.findOne({isDeleted:false,categories:{ $all : databody.categoryId}});
-      console.log(existingOffers);
+    
       
       if(existingOffers){
         req.session.error = "Offer Already Exists to the Category";
@@ -1383,7 +1436,7 @@ sales.forEach((item) => {
           category : {$in : offer.categories}
         });
   
-        // console.log(products);
+       
         products.forEach(async (item) => {
           const actualAmount  = Number(item.productPrice);
           const updatedPrice = (item.productPrice  - (item.productPrice * offer.offerValue) / 100).toFixed(2);
@@ -1403,17 +1456,18 @@ sales.forEach((item) => {
           await item.save();  
       });
       
-        // console.log(products);
+        
         res.redirect('/adminOffer');
       }
     
     }catch(error){
       console.log(error);
+      next(error)
     }
 
   },
 
- deleteOffer : async(req,res)=>{
+ deleteOffer : async(req,res,next)=>{
   try{
     // console.log('hello');
     const offerId = req.params.id ;
@@ -1443,11 +1497,12 @@ sales.forEach((item) => {
     res.json('success');
   }catch(error){
     console.log(error);
+    next(error);
   }
 
  },
 
- changeOrderStatus : async(req,res)=>{
+ changeOrderStatus : async(req,res,next)=>{
   try{
     const orderId =  req.params.id;
     const status = req.body.status;
@@ -1494,10 +1549,11 @@ sales.forEach((item) => {
      
   }catch(error){
     console.log(error);
+    next(error)
   }
  },
 
- getSecondChart : async(req,res)=>{
+ getSecondChart : async(req,res,next)=>{
   try{
     const items = await categoryModel.aggregate([
       {
@@ -1540,6 +1596,7 @@ sales.forEach((item) => {
   res.json(items);
   }catch(error){
   console.log(error);
+  next(error);
   }
 }
 };

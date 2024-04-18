@@ -30,7 +30,7 @@ const updateExpiredOffers = async (req, res, next) => {
             await item.save();
           }
         }
-        // console.log(products);
+        
       }
       next();
   } catch (error) {
