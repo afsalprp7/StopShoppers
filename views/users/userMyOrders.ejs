@@ -135,10 +135,10 @@ line-height: 50px;
                ID : <%=item.orderId%>
               </div>
               <div>
-                Status : <span class="order-status"><%=item.orderStatus%></span>
+                Status : <span class="order-status" style="text-transform: capitalize;"><%=item.orderStatus%></span>
               </div>
               <div>
-                Qty : <%=item.totalQuantity%>
+                Qty : <%=item.productsDetails.length%>
               </div>
               <div>
                 <i class="fa-solid fa-angle-right"></i>
@@ -161,12 +161,15 @@ line-height: 50px;
 <script>
   const status = document.querySelectorAll('.order-status');
   status.forEach((item)=>{
-   if(item.innerText === 'canceled'){
+   if(item.innerText === 'Canceled'){
     item.classList.add('text-danger');
-   }else if(item.innerText === 'pending'){
+   }else if(item.innerText === 'Pending'){
     item.classList.add('text-warning');
-   }else if(item.innerText === 'confirmed'){
+   }else if(item.innerText === 'Confirmed'){
     item.classList.add('text-success');
+   }else{
+    item.classList.add('text-primary');
+
    }
   })
 </script>

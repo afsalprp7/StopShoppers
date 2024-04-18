@@ -1389,7 +1389,7 @@ sales.forEach((item) => {
           const updatedPrice = (item.productPrice  - (item.productPrice * offer.offerValue) / 100).toFixed(2);
           const offerPrice = Number((item.productPrice * offer.offerValue) / 100).toFixed(2);
           
-          item.productPrice = Numer(updatedPrice);
+          item.productPrice = Number(updatedPrice);
   
           if (!item.offer) {
               item.offer = {};

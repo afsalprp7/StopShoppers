@@ -222,15 +222,19 @@
 
 <script src="/scripts/validation/addProductV.js"></script>
 <script>
+
+  let allFiles = [];
   function displaySelectedImages(input) {
-    // const btn = document.getElementById('deletebtn');
     const container = document.getElementById("selectedImagesContainer");
     container.innerText = "";
-    // btn.style.display = 'block';
     if (input.files) {
-      const files = input.files;
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
+      for (const item of input.files){
+        allFiles.push(item)
+      }
+
+
+      for (let i = 0; i < allFiles.length; i++) {
+        const file = allFiles[i];
 
         const reader = new FileReader();
 
@@ -268,7 +272,7 @@
   function clearSelectedImages(file, imageContainer) {
     const input = document.getElementById("photoProduct");
     const container = document.getElementById("selectedImagesContainer");
-    const files = Array.from(input.files);
+    const files = Array.from(allFiles);
     const index = files.indexOf(file);
     if (index !== -1) {
       files.splice(index, 1);

@@ -17,6 +17,8 @@ const walletModel = require('../models/walletModel');
 const couponModel = require("../models/couponModel");
 const offerModel  = require('../models/offerModel');
 const PDF = require('pdfkit');
+const { pid } = require("process");
+const { json } = require("express");
 
 async function userValidation(token){
 
@@ -42,6 +44,9 @@ async function userValidation(token){
       console.log(cartCount);
       return {user : user ? user : '', cartCount : cartCount ? cartCount : 0 ,wishlistCount : wishlistCount ? wishlistCount : 0}
     }
+   
+
+
 module.exports = {
   getHomePage: async (req, res) => {
     try {
@@ -1357,7 +1362,6 @@ module.exports = {
 
 
     ]);
-    console.log(orderDetails);
       res.render("users/orderDetailsPage", {
         title: "Order Details",
         user,
@@ -1647,15 +1651,15 @@ razorpayVerifyPaymentAndUpdateOrder : async(req,res)=>{
     } = req.body;
 
 
-    
       //payment success
       const sign = rzpOrderId + "|" + rzpPaymentId;
       const expectedSign = crypto.createHmac("sha256",process.env.RAZORPAY_SECRET_KEY)
       .update(sign.toString()).digest("hex");
 
       if(rzpSignature === expectedSign){
-        const product = await findOne({_id : productId});
         if(productId || productSize || productPrice){
+        const product = await productModel.findOne({_id : productId});
+
           //as single product
           if(couponDiscount && !walletAmount){
             let price = (productPrice - couponDiscount).toFixed(2);
@@ -2360,6 +2364,11 @@ getOfferPage : async(req,res)=>{
         }
       },
       {
+        $match: {
+          "productInfo.isDeleted": false
+        }
+      },
+      {
         $group: {
           _id: "$_id",
           offerName: { $first: "$offerName" },
@@ -2373,6 +2382,7 @@ getOfferPage : async(req,res)=>{
         }
       }
     ]);
+    
     
     console.log(offers);
 
@@ -2407,7 +2417,7 @@ createOrderInPaymentFailure : async(req,res)=>{
     
       //from buy now
       if(productId || productSize || productPrice){
-        const product = await findOne({_id : productId});
+        const product = await productModel.findOne({_id : productId});
         //as single product
         if(couponDiscount && !walletAmount){
           let price = (productPrice - couponDiscount).toFixed(2);
@@ -3017,6 +3027,192 @@ downloadInvoiceAsPdf : async(req,res)=>{
 }
 
 },
+
+cancelProductIndividually : async (req,res)=>{
+  try{
+    let {pId , pSize , orderId , productQuanity , productPrice , pNumber} = req.body;
+    orderId = new ObjectId(orderId);
+    pId = new ObjectId(pId);
+    productPrice = Number(productPrice)
+    const order = await orderModel.findOne({_id : orderId});
+    const product = await productModel.findOne({_id : pId});
+    const category = await categoryModel.findOne({_id : product.category});
+  
+    if(order.paymentDetails.method === 'razorpay'){
+      if(order.walletMoney){
+        if(order.walletMoney >= productPrice){
+          await walletModel.updateOne({userId : order.userId},{
+            $inc :{
+              balance : productPrice
+            },
+            $push:{
+              transactionDetails :{
+                paymentType : 'credited',
+                date : new Date(),
+                amount : productPrice
+              }
+            }
+          });
+          const walletMoneyLeft = Number(order.walletMoney) - productPrice ;
+          order.walletMoney = walletMoneyLeft.toFixed(2);
+
+          const index =  order.productsDetails.findIndex((item)=>{
+            return (item.size === pSize && item.productId.toString() === pId.toString());
+          });
+
+          order.productsDetails.splice(index,1);
+          await order.save();
+           
+          product.quantity += 1;
+          product.salesCount -= 1;
+          await product.save();
+          category.salesCount -=1
+          await category.save();
+        }else{
+          await walletModel.updateOne({userId : order.userId},{
+            $inc :{
+              balance : Number(order.walletMoney)
+            },
+            $push:{
+              transactionDetails :{
+                paymentType : 'credited',
+                date : new Date(),
+                amount : Number(order.walletMoney)
+              }
+            }
+          });
+          const balance = productPrice - Number(order.walletMoney) ;
+          order.grandTotal -= balance;
+          order.walletMoney = 0;
+
+          const index =  order.productsDetails.findIndex((item)=>{
+            return (item.size === pSize && item.productId.toString() === pId.toString());
+          });
+
+          order.productsDetails.splice(index,1);
+          await order.save();
+
+
+          //updating prdouct quantity
+          product.quantity += 1;
+          product.salesCount -= 1
+          await product.save();
+          category.salesCount -=1
+          await category.save();
+        }
+      }else{
+          order.grandTotal -= productPrice;
+
+          await walletModel.updateOne({userId : order.userId},{
+            $inc :{
+              balance : productPrice
+            },
+            $push:{
+              transactionDetails :{
+                paymentType : 'credited',
+                date : new Date(),
+                amount : productPrice
+              }
+            }
+          });
+
+          const index =  order.productsDetails.findIndex((item)=>{
+            return (item.size === pSize && item.productId.toString() === pId.toString());
+          });
+          order.productsDetails.splice(index,1);
+          await order.save();
+          product.quantity += 1;
+          product.salesCount -= 1
+          await product.save();
+          category.salesCount -=1
+          await category.save();
+
+      }
+    }else{
+      if(order.walletMoney){
+        if(order.walletMoney >= productPrice){
+          await walletModel.updateOne({userId : order.userId},{
+            $inc :{
+              balance : productPrice
+            },
+            $push:{
+              transactionDetails :{
+                paymentType : 'credited',
+                date : new Date(),
+                amount : productPrice
+              }
+            }
+          });
+          const walletMoneyLeft = Number(order.walletMoney) - productPrice ;
+          order.walletMoney = walletMoneyLeft.toFixed(2);
+
+          const index =  order.productsDetails.findIndex((item)=>{
+            return (item.size === pSize && item.productId.toString() === pId.toString());
+          });
+
+          order.productsDetails.splice(index,1);
+          await order.save();
+           
+          product.quantity += 1;
+          product.salesCount -= 1
+          await product.save();
+          category.salesCount -=1
+          await category.save();
+        }else{
+          await walletModel.updateOne({userId : order.userId},{
+            $inc :{
+              balance : Number(order.walletMoney)
+            },
+            $push:{
+              transactionDetails :{
+                paymentType : 'credited',
+                date : new Date(),
+                amount : Number(order.walletMoney)
+              }
+            }
+          });
+          const balance = productPrice - Number(order.walletMoney) ;
+          order.grandTotal -= balance;
+          order.walletMoney = 0;
+
+          const index =  order.productsDetails.findIndex((item)=>{
+            return (item.size === pSize && item.productId.toString() === pId.toString());
+          });
+
+          order.productsDetails.splice(index,1);
+          await order.save();
+
+
+          //updating prdouct quantity
+          product.quantity += 1;
+          product.salesCount -= 1
+          await product.save();
+          category.salesCount -=1
+          await category.save();
+        }
+      }else{
+        //if no payment from wallet
+        order.grandTotal -= productPrice ;
+        const index =  order.productsDetails.findIndex((item)=>{
+          return (item.size === pSize && item.productId.toString() === pId.toString());
+        });
+
+        order.productsDetails.splice(index,1);
+        await order.save(); 
+        product.quantity += 1;
+        product.salesCount -= 1
+        await product.save();
+        category.salesCount -=1
+        await category.save();
+      }
+    }
+    res.json('success');
+  }catch(error){
+    console.log(error);
+  }
+},
+
+
 userLogout: (req, res) => {
     delete req.session.user;
     res.clearCookie("UserToken");
