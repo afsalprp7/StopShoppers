@@ -1,6 +1,11 @@
 
 
 <%- include('../includes/admin/adminHead.ejs') %>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" rel="stylesheet">
+
+
+
+
 <div class="container mt-5 mb-5">
   <h3>EDIT PRODUCTS</h3>
 </div>
@@ -173,7 +178,7 @@
 
 
 
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
 <script>
 
 let existingSizes = "<%= data.sizes %>";
@@ -190,7 +195,6 @@ inputSizes.forEach((checkbox)=>{
 
 const image = '<%=data.image %>';
 const imageArray = image.split(",");
-console.log(imageArray);
 const imagePreview = document.getElementById('previewImage');
 const file = document.getElementById('photoProduct');
 
@@ -222,6 +226,8 @@ imageArray.forEach((element)=>{
 });
 
 let allFiles = [];
+let cropper;
+
 function displaySelectedImages(input) {
     const container = document.getElementById('imagePreviewSelected');
     if (input.files) {
@@ -252,10 +258,18 @@ function displaySelectedImages(input) {
             clearSelectedImages(file,imageContainer);
           })
 
+          const cropBtn = document.createElement("button");
+        cropBtn.innerText = 'crop'
+        cropBtn.classList.add("btn", "btn-primary", "btn-sm","ms-3");
+        cropBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          cropImage(img, file,imageContainer,cropBtn,deleteBtn);
+        });
 
           imageContainer.appendChild(img);
           imageContainer.appendChild(p_tag);
           imageContainer.appendChild(deleteBtn);
+          imageContainer.appendChild(cropBtn);
           container.appendChild(imageContainer);
         };
 
@@ -311,6 +325,104 @@ function deleteImage(imageName){
   })
 
 }
+
+
+
+
+function cropImage(img, file,imageContainer,cropBtn,deleteBtn) {
+  if (cropper) {
+    cropper.destroy();
+  }
+
+  cropper = new Cropper(img, {
+    aspectRatio: 1,
+    viewMode: 1,
+    crop(event) {
+      // add cropping event handling here if needed
+    },
+  });
+
+  const cancelBtn = document.createElement("button");
+  const saveBtn = document.createElement("button");
+  const cancelCroppedImageBtn = document.createElement("button");
+  cancelCroppedImageBtn.classList.add("btn", "btn-primary", "btn-sm", "ms-3");
+  cancelCroppedImageBtn.innerText = "Cancel Image"
+
+  saveBtn.classList.add("btn", "btn-primary", "btn-sm", "ms-3");
+  saveBtn.innerText = "Save";
+  saveBtn.addEventListener("click", (e) => {
+    e.preventDefault()
+    const canvas = cropper.getCroppedCanvas();
+    canvas.toBlob((blob) => {
+      const croppedFile = new File([blob], file.name, {
+        type: 'image/jpeg',
+        lastModified: Date.now(),
+      });
+      const croppedImg = document.createElement("img");
+      croppedImg.style.cssText = "max-width: 120px;height: 100px";
+      
+      // Set the cropped canvas data URL as the source for the new image element
+      croppedImg.src = canvas.toDataURL();
+
+      // Remove the original image from the container
+      img.remove();
+
+      imageContainer.appendChild(croppedImg);
+      imageContainer.appendChild(cancelCroppedImageBtn);
+      
+
+      // Update the input files
+      allFiles.push(croppedFile);
+
+      cancelCroppedImageBtn.addEventListener('click',(e)=>{
+      const input = document.getElementById("photoProduct");
+        e.preventDefault();
+       const index =  allFiles.indexOf(croppedFile);
+       allFiles.splice(index,1);
+       const dataTransfer = new DataTransfer();
+        for (let i = 0; i < allFiles.length; i++) {
+          dataTransfer.items.add(allFiles[i]);
+        }
+        input.files = dataTransfer.files;
+        imageContainer.remove()
+      })
+
+
+      updateInputFiles(file);
+      cropper.destroy();
+      saveBtn.style.display = 'none'
+      cancelBtn.style.display = 'none'
+      cropBtn.style.display = 'none'
+      deleteBtn.style.display = 'none'
+    }, 'image/jpeg');
+  });
+
+  cancelBtn.classList.add("btn", "btn-secondary", "btn-sm", "ms-3");
+  cancelBtn.innerText = "Cancel croping";
+  cancelBtn.addEventListener("click", (e) => {
+    e.preventDefault()
+    cropper.destroy();
+    cancelBtn.style.display = 'none'
+    saveBtn.style.display = 'none'
+  });
+
+  
+  imageContainer.appendChild(cancelBtn);
+  imageContainer.appendChild(saveBtn);
+}
+
+
+function updateInputFiles(file) {
+  const input = document.getElementById("photoProduct");
+  const index =  allFiles.indexOf(file);
+  allFiles.splice(index,1);
+  const dataTransfer = new DataTransfer();
+  for (let i = 0; i < allFiles.length; i++) {
+    dataTransfer.items.add(allFiles[i]);
+  }
+  input.files = dataTransfer.files;
+}
+
 </script>
 <script src="/scripts/validation/editProductV.js"></script>
 <%- include('../includes/admin/adminEnd') %>

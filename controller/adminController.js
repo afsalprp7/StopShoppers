@@ -1259,10 +1259,9 @@ const bestSellingCategory = await categoryModel.find({salesCount : {$exists : tr
 
   downloadReportPdf: async (req, res,next) => {
     try {
-      console.log(req.body);
+      // console.log(req.body);
       const basis = req.body.basis;
       const sales = req.body.salesData;
-    
       const doc = new PDF();
     
       res.setHeader("Content-Type", "application/pdf");
@@ -1302,27 +1301,112 @@ y += 20; // Add space
 // Sales Data
 doc.moveDown();
 sales.forEach((item) => {
+  if(item.total !==null){
+    doc.fontSize(10).text(`${new Date(item._id).toLocaleDateString()}`, {
+      y,
+      width: 200,
+      align: 'left',  // Align date to the left
+    });
   
-  doc.fontSize(10).text(`${new Date(item._id).toLocaleDateString()}`, {
+  // doc.moveDown();
+   
+    
+    doc.moveUp().text(`$${item.total.toFixed(2)}`, {
+      y,
+      width: 200,
+      align: 'right', // Align total sales to the right
+    });
+    
+    y += 30; // Add space
+  }else{
+    doc.fontSize(10).text(`${new Date(item._id).toLocaleDateString()}`, {
+      y,
+      width: 200,
+      align: 'left',  // Align date to the left
+    });
+  
+  // doc.moveDown();
+  doc.moveUp().text(`"Payment Pending"`, {
     y,
     width: 200,
-    align: 'left',  // Align date to the left
+    align: 'right',
+    color:'red' // Align total sales to the right
   });
-
-// doc.moveDown();
- 
+    
+    y += 30; // Add space
+  }
   
-  doc.moveUp().text(`$${item.total.toFixed(2)}`, {
-    y,
-    width: 200,
-    align: 'right', // Align total sales to the right
-  });
-  
-  y += 30; // Add space
 });
 
+doc.moveDown();
+const topProducts = await productModel.find({salesCount : {$exists : true}}).sort({salesCount : -1}).limit(5);
+  // Add top selling products
+  y += 40; // Add space
+  doc.fontSize(12).text("Top Selling Products:", {
+    underline: true,
+  });
+
+  let productCount = 1;
+  topProducts.forEach((product) => {
+    doc.fontSize(10).text(`${productCount}. ${product.productName}`, {
+      y,
+      width: 200,
+      align: 'left',
+    });
+
+    y += 30; // Add space
+    productCount++ ;
+  });
+
+  //top selling category
+
+  doc.moveDown();
+
+  const topCategories = await categoryModel.find({salesCount :{$exists : true}}).sort({salesCount : -1}).limit(5);
+  y += 30; // Add space
+  doc.fontSize(12).text("Top Selling Categories:", {
+    underline: true,
+  });
+  y += 20;
+
+  let categoryCount = 1;
+  topCategories.forEach((category) => {
+    doc.fontSize(10).text(`${categoryCount}. ${category.categoryName}`, {
+      y,
+      width: 200,
+      align: 'left',
+    });
+   
+    y += 20; // Add space
+    categoryCount++;
+  });
+
+  doc.moveDown();
+
+
+  doc.fontSize(12).text("Total sales:", {
+    underline: true,
+  });
+  y += 20;
+
+  doc.moveDown();
+
+  //total sales
+ const totalSales =  sales.reduce((totalAcc,curr)=>{
+    if(curr.total !== null){
+      totalAcc += curr.total
+    }
+    return totalAcc ;
+  },0)
+
+  doc.fontSize(10).text(`${totalSales}`, {
+    y,
+    width: 200,
+    align: 'left',
+  });
+
       doc.end();
-    
+
     } catch (error) {
       console.log(error);
       next(error)
