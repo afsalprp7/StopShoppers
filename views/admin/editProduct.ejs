@@ -11,7 +11,7 @@
       <div class="col-md-6 mt-4">
         <div class="mb-3 me-2">
           <label for="productName" enctype="multipart/form-data" class="form-label">Product Name</label>
-          <input value="<%= data.productName%>" type="text" class="form-control p-3" id="productName" name="productName" placeholder="Name of the Product" />
+          <input value="<%= data.productName%>" type="text" class="form-control p-4" id="productName" name="productName" placeholder="Name of the Product" />
           <div class="mt-1">
             <p style="font-size: small; color: red" class="warn"></p>
           </div>
@@ -20,7 +20,7 @@
       <div class="col-md-6 mt-4">
         <div class="mb-3">
           <label for="productPrice" class="form-label">Price</label>
-          <input value="<%= data.productPrice %>" class="form-control p-3" id="Price" name="productPrice" placeholder="Price of the Product" />
+          <input value="<%= data.productPrice %>" class="form-control p-4" id="Price" name="productPrice" placeholder="Price of the Product" />
           <div class="mt-1">
             <p style="font-size: small; color: red" class="warn"></p>
           </div>
@@ -72,7 +72,7 @@
       <div class="col-md-6 mt-4">
         <div class="mb-3 me-2">
           <label for="productName" enctype="multipart/form-data" class="form-label">Color</label>
-          <input value="<%= data.color%>" type="text" class="form-control p-3" id="color" name="color" placeholder="Color" />
+          <input value="<%= data.color%>" type="text" class="form-control p-4" id="color" name="color" placeholder="Color" />
           <div class="mt-1">
             <p style="font-size: small; color: red" class="warn"></p>
           </div>
@@ -115,7 +115,7 @@
       <div class="col-md-6 mt-4">
         <div class="mb-3">
           <label for="productPrice" class="form-label">Quantity</label>
-          <input value="<%= data.quantity %>" type="number" class="form-control p-3" id="Quantity" name="Quantity" placeholder="Quantity of the Product" />
+          <input value="<%= data.quantity %>" type="number" class="form-control p-4" id="Quantity" name="Quantity" placeholder="Quantity of the Product" />
           <div class="mt-0">
             <p style="font-size: small; color: red" class="warn"></p>
           </div>
@@ -126,7 +126,7 @@
       <div class="col-md-6 mt-4">
         <div class="mb-3 " id="photoParent">
           <label for="productPhoto" class="form-label">Upload Photo</label>
-          <input value="<%= data.image %>" type="file" class="form-control p-3" id="photoProduct" name="productPhoto" multiple onchange="displaySelectedImages(this)"/>
+          <input value="<%= data.image %>" type="file" class="form-control" id="photoProduct" name="productPhoto" multiple onchange="displaySelectedImages(this)"/>
           <div class="mt-1">
             <p style="font-size: small; color: red" class="warn"></p>
           </div>
@@ -221,14 +221,11 @@ imageArray.forEach((element)=>{
   imagePreview.append(imageContainer);
 });
 
-
+let allFiles = [];
 function displaySelectedImages(input) {
-  
     const container = document.getElementById('imagePreviewSelected');
-    container.innerText = '';
-    
     if (input.files) {
-      const files = input.files;
+      const files = Array.from(input.files);
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         const reader = new FileReader();
@@ -260,28 +257,38 @@ function displaySelectedImages(input) {
           imageContainer.appendChild(p_tag);
           imageContainer.appendChild(deleteBtn);
           container.appendChild(imageContainer);
-        }
-  
+        };
+
+
+        allFiles.push(file);
         reader.readAsDataURL(file);
+        const dataTransfer = new DataTransfer();
+      for (let i = 0; i < allFiles.length; i++) {
+        dataTransfer.items.add(allFiles[i]);
+      }
+      input.files = dataTransfer.files;
       }
     }
   }
   
   function clearSelectedImages(file, imageContainer) {
-  const input = document.getElementById('photoProduct');
-  const container = document.getElementById('selectedImagesContainer');
-  const files = Array.from(input.files);
-  const index = files.indexOf(file);
+  const input = document.getElementById("photoProduct");
+  const container = document.getElementById("selectedImagesContainer");
+
+  // Remove the file from the allFiles array
+  const index = allFiles.indexOf(file);
   if (index !== -1) {
-    files.splice(index, 1);
-    const dataTransfer = new DataTransfer();
-    console.log(dataTransfer);
-    for (let i = 0; i < files.length; i++) {
-      dataTransfer.items.add(files[i]);
-    }
-    input.files = dataTransfer.files;
-    imageContainer.style.display = 'none';
+    allFiles.splice(index, 1);
   }
+
+  // Update the file input with the remaining files
+  const dataTransfer = new DataTransfer();
+  for (let i = 0; i < allFiles.length; i++) {
+    dataTransfer.items.add(allFiles[i]);
+  }
+  input.files = dataTransfer.files;
+  // Remove the image container
+  imageContainer.remove();
 }
 
 

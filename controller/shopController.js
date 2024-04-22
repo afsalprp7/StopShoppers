@@ -17,8 +17,7 @@ const walletModel = require('../models/walletModel');
 const couponModel = require("../models/couponModel");
 const offerModel  = require('../models/offerModel');
 const PDF = require('pdfkit');
-const { pid } = require("process");
-const { json } = require("express");
+
 
 async function userValidation(token){
 
@@ -32,12 +31,14 @@ async function userValidation(token){
        
         const  cart = await cartModel.findOne({userId : user._id});
 
-     
-        cartCount = cart.products.length
+        if(cart){
+          cartCount = cart.products.length
+        }
 
         const wishlist = await wishlistModel.findOne({userId : user._id});
-
-        wishlistCount = wishlist.productDetails.length ;
+        if(wishlist){
+          wishlistCount = wishlist.productDetails.length ;
+        }
       } else {
         user = false;
       }
@@ -71,6 +72,9 @@ module.exports = {
         isDeleted: false,
       });
 
+      const categories = await categoryModel.find({isDeleted : false});
+      
+
       // Render the view with products and pagination data
       res.render("users/userHome", {
         allProducts: products,
@@ -78,6 +82,7 @@ module.exports = {
         user: user,
         cartCount,
         wishlistCount,
+        category : categories,
         pagination: {
           currentPage: page,
           totalPages: Math.ceil(totalCount / limit),
@@ -100,7 +105,6 @@ module.exports = {
         _id: { $ne: id },
         isDeleted: false,
       }).limit(8);
-      console.log('detailPage',allProducts);
       const productInfo = await productModel.findOne({ _id: id });
       if(productInfo){
         if (productInfo.quantity <= 0) {
@@ -132,10 +136,10 @@ module.exports = {
 
       const Id = req.params.id;
       const userId = new mongoose.Types.ObjectId(Id);
-      console.log(userId);
+      
       const userDetails = await userModel.findOne({ _id: userId });
       const userAddress = await addressModel.find({ userId: Id });
-      console.log(userAddress);
+      
       res.render("users/userProfile", {
         title: "User Profile",
         userInfo: userDetails,
@@ -352,6 +356,7 @@ module.exports = {
           {productName: { $regex: string, $options: "i" } },
           {description: { $regex: string, $options: "i" } },
           {color : {$regex : string , $options : "i"}},
+          {userType : {$regex : string , $options : "i"}},
         ],
       });
       res.json({
@@ -622,21 +627,40 @@ module.exports = {
         isPrimary: true,
       });
 
-      const wallet = await walletModel.findOne({userId : user._id})
+      const wallet = await walletModel.findOne({userId : user._id});
+      let coupon ;
+      if(req.session.productInfo ){
+        const currentDateUTC = new Date().toISOString();
+        coupon = await couponModel.find({
+        isDeleted : false,
+        expiresAt :{$gte : currentDateUTC} ,
+        eligibleCategory  : {$in: new ObjectId(req.session.productInfo[0].category)}});
+
+      }else if(req.session.productDetails){
+        const details = req.session.productDetails ;
+        const currentDateUTC = new Date().toISOString();
+        let eligibleCategories = details.map(item => new ObjectId(item.productDetails.category));
+          coupon = await couponModel.find({
+          isDeleted: false,
+          expiresAt: { $gte: currentDateUTC },
+          eligibleCategory: { $in: eligibleCategories }
+      });
+        
+        
+      }
 
       res.render("users/checkoutPage", {
         title: "Checkout",
         user: user,
         addressPrimary,
         grandTotal: req.session.grandTotal ? req.session.grandTotal : false,
-        cartProducts: req.session.productDetails
-          ? req.session.productDetails
-          : false,
+        cartProducts: req.session.productDetails ? req.session.productDetails : false,
         productInfo: req.session.productInfo ? req.session.productInfo : false,
         wallet,
         error : req.session.warning ? req.session.warning : '',
         cartCount,
-        wishlistCount
+        wishlistCount,
+        coupons : coupon ? coupon : [] 
       });
     } catch (error) {
       console.log(error);
@@ -1444,9 +1468,9 @@ getUserMyOrders :async(req,res,next)=>{
     const token = req.cookies.UserToken;
     const {user,cartCount,wishlistCount} = await userValidation(token);
 
-      const userId = req.params.id;
+      
 
-      const orders = await orderModel.find({userId : userId});
+      const orders = await orderModel.find({userId : user._id});
       
 
       res.render('users/userMyOrders',{

@@ -57,7 +57,7 @@ router.get('/myOrders/:id',validateUser,shopController.getUserMyOrders);
 
 router.patch('/cancelOrder/:id',validateUser,shopController.orderCancelationRequest);
 
-router.get('/wishlist/:id',validateUser,checkExpiryOffer,shopController.getWishlistPage);
+router.get('/wishlist',validateUser,checkExpiryOffer,shopController.getWishlistPage);
 router.post('/addToWishlist/:id',validateUser,shopController.addToWishlist);
 router.patch('/removeFromWishlist/:id',validateUser,shopController.removeFromWishlist);
 router.post('/createOrderRzp',validateUser,shopController.createOrderRzp);

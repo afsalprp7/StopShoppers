@@ -1,4 +1,7 @@
 <%- include('../includes/admin/adminHead.ejs') %>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" rel="stylesheet">
+
+
 <div class="container mt-5 mb-5">
   <h3>ADD PRODUCTS</h3>
 </div>
@@ -220,69 +223,185 @@
   </form>
 </div>
 
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
 <script src="/scripts/validation/addProductV.js"></script>
 <script>
+let allFiles = [];
+let cropper;
+function displaySelectedImages(input) {
+  const container = document.getElementById("selectedImagesContainer");
+  if (input.files) {
+    const files = Array.from(input.files);
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
 
-  let allFiles = [];
-  function displaySelectedImages(input) {
-    const container = document.getElementById("selectedImagesContainer");
-    container.innerText = "";
-    if (input.files) {
-      for (const item of input.files){
-        allFiles.push(item)
-      }
+      const reader = new FileReader();
 
+      reader.onload = function (e) {
+        const imageContainer = document.createElement("div");
+        imageContainer.classList.add("me-2", "border", "p-2");
+        const img = document.createElement("img");
+        img.src = e.target.result;
+        img.style.cssText = "max-width: 120px;height: 100px";
+        img.classList.add("selected-image");
 
-      for (let i = 0; i < allFiles.length; i++) {
-        const file = allFiles[i];
+        const p_tag = document.createElement("p");
+        p_tag.style.cssText = "max-width: 120px;overflow : hidden";
+        p_tag.textContent = file.name;
 
-        const reader = new FileReader();
+        const deleteBtn = document.createElement("button");
+        deleteBtn.classList.add("btn", "btn-primary", "btn-sm", "ms-auto");
+        deleteBtn.innerText = "cancel";
+        deleteBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          clearSelectedImages(file, imageContainer);
+        });
 
-        reader.onload = function (e) {
-          const imageContainer = document.createElement("div");
-          imageContainer.classList.add("me-2", "border", "p-2");
-          const img = document.createElement("img");
-          img.src = e.target.result;
-          img.style.cssText = "max-width: 120px;height: 100px";
-          img.classList.add("selected-image");
+        const cropBtn = document.createElement("button");
+        cropBtn.innerText = 'crop'
+        cropBtn.classList.add("btn", "btn-primary", "btn-sm","ms-3");
+        cropBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          cropImage(img, file,imageContainer,cropBtn,deleteBtn);
+        });
 
-          const p_tag = document.createElement("p");
-          p_tag.style.cssText = "max-width: 120px;overflow : hidden";
-          p_tag.textContent = file.name;
+        imageContainer.appendChild(img);
+        imageContainer.appendChild(p_tag);
+        imageContainer.appendChild(deleteBtn);
+        imageContainer.appendChild(cropBtn);
+        container.appendChild(imageContainer);
+      };
 
-          const deleteBtn = document.createElement("button");
-          deleteBtn.classList.add("btn", "btn-primary", "btn-sm", "ms-auto");
-          deleteBtn.innerText = "cancel";
-          deleteBtn.addEventListener("click", (e) => {
-            e.preventDefault();
-            clearSelectedImages(file, imageContainer);
-          });
-
-          imageContainer.appendChild(img);
-          imageContainer.appendChild(p_tag);
-          imageContainer.appendChild(deleteBtn);
-          container.appendChild(imageContainer);
-        };
-        
-        reader.readAsDataURL(file);
-      }
-    }
-  }
-
-  function clearSelectedImages(file, imageContainer) {
-    const input = document.getElementById("photoProduct");
-    const container = document.getElementById("selectedImagesContainer");
-    const files = Array.from(allFiles);
-    const index = files.indexOf(file);
-    if (index !== -1) {
-      files.splice(index, 1);
+      
+      // Add the newly selected image to the allFiles array
+      allFiles.push(file);
+      reader.readAsDataURL(file);
       const dataTransfer = new DataTransfer();
-      for (let i = 0; i < files.length; i++) {
-        dataTransfer.items.add(files[i]);
+      for (let i = 0; i < allFiles.length; i++) {
+        dataTransfer.items.add(allFiles[i]);
       }
       input.files = dataTransfer.files;
-      imageContainer.style.display = "none";
     }
   }
+}
+
+function clearSelectedImages(file, imageContainer) {
+  const input = document.getElementById("photoProduct");
+  const container = document.getElementById("selectedImagesContainer");
+
+  // Remove the file from the allFiles array
+  const index = allFiles.indexOf(file);
+  if (index !== -1) {
+    allFiles.splice(index, 1);
+  }
+
+  // Update the file input with the remaining files
+  const dataTransfer = new DataTransfer();
+  for (let i = 0; i < allFiles.length; i++) {
+    dataTransfer.items.add(allFiles[i]);
+  }
+  input.files = dataTransfer.files;
+  // Remove the image container
+  imageContainer.remove();
+  if (cropper) {
+    cropper.destroy();
+  }
+}
+
+
+function cropImage(img, file,imageContainer,cropBtn,deleteBtn) {
+  if (cropper) {
+    cropper.destroy();
+  }
+
+  cropper = new Cropper(img, {
+    aspectRatio: 1,
+    viewMode: 1,
+    crop(event) {
+      // You can add cropping event handling here if needed
+    },
+  });
+
+  const cancelBtn = document.createElement("button");
+  const saveBtn = document.createElement("button");
+  const cancelCroppedImageBtn = document.createElement("button");
+  cancelCroppedImageBtn.classList.add("btn", "btn-primary", "btn-sm", "ms-3");
+  cancelCroppedImageBtn.innerText = "Cancel Image"
+
+  saveBtn.classList.add("btn", "btn-primary", "btn-sm", "ms-3");
+  saveBtn.innerText = "Save";
+  saveBtn.addEventListener("click", (e) => {
+    e.preventDefault()
+    const canvas = cropper.getCroppedCanvas();
+    canvas.toBlob((blob) => {
+      const croppedFile = new File([blob], file.name, {
+        type: 'image/jpeg',
+        lastModified: Date.now(),
+      });
+      const croppedImg = document.createElement("img");
+      croppedImg.style.cssText = "max-width: 120px;height: 100px";
+      
+      // Set the cropped canvas data URL as the source for the new image element
+      croppedImg.src = canvas.toDataURL();
+
+      // Remove the original image from the container
+      img.remove();
+
+      imageContainer.appendChild(croppedImg);
+      imageContainer.appendChild(cancelCroppedImageBtn);
+      
+
+      // Update the input files
+      allFiles.push(croppedFile);
+
+      cancelCroppedImageBtn.addEventListener('click',(e)=>{
+      const input = document.getElementById("photoProduct");
+        e.preventDefault();
+       const index =  allFiles.indexOf(croppedFile);
+       allFiles.splice(index,1);
+       const dataTransfer = new DataTransfer();
+        for (let i = 0; i < allFiles.length; i++) {
+          dataTransfer.items.add(allFiles[i]);
+        }
+        input.files = dataTransfer.files;
+        imageContainer.remove()
+      })
+
+
+      updateInputFiles(file);
+      cropper.destroy();
+      saveBtn.style.display = 'none'
+      cancelBtn.style.display = 'none'
+      cropBtn.style.display = 'none'
+      deleteBtn.style.display = 'none'
+    }, 'image/jpeg');
+  });
+
+  cancelBtn.classList.add("btn", "btn-secondary", "btn-sm", "ms-3");
+  cancelBtn.innerText = "Cancel croping";
+  cancelBtn.addEventListener("click", (e) => {
+    e.preventDefault()
+    cropper.destroy();
+    cancelBtn.style.display = 'none'
+    saveBtn.style.display = 'none'
+  });
+
+  
+  imageContainer.appendChild(cancelBtn);
+  imageContainer.appendChild(saveBtn);
+}
+
+
+function updateInputFiles(file) {
+  const input = document.getElementById("photoProduct");
+  const index =  allFiles.indexOf(file);
+  allFiles.splice(index,1);
+  const dataTransfer = new DataTransfer();
+  for (let i = 0; i < allFiles.length; i++) {
+    dataTransfer.items.add(allFiles[i]);
+  }
+  input.files = dataTransfer.files;
+}
 </script>
 <%- include('../includes/admin/adminEnd') %>
