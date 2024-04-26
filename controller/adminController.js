@@ -37,7 +37,8 @@ module.exports = {
   //post category page
   doAddCategoryPage: async (req, res,next) => {
     try {
-      const catName = req.body.name.toLowerCase();
+      let catName = req.body.name ;
+      catName = catName.toLowerCase();
     const categoryExists = await categoryModel.findOne({
       categoryName: catName,
     });
@@ -120,16 +121,18 @@ module.exports = {
       const id = req.params.id;
       // console.log(id);
       // console.log(req.body);
-      const newName = req.body.name.toLowerCase();
-     
-      const exists = await categoryModel.findOne({ categoryName: newName });
-      const data = await categoryModel.findOne({ _id: id });
+      let newName = req.body.name;
+
+      newName = newName.toLowerCase();
+                                   
+      const exists = await categoryModel.findOne({ categoryName : newName });
+      const data = await categoryModel.findOne({ _id: id });         
       if (exists && newName !== data.categoryName) {
-        if (exists.isDeleted === true) {
-          await categoryModel.deleteOne({ categoryName: newName });
-          await categoryModel.updateOne(
-            { _id: id },
-            { $set: { categoryName: newName } }
+        if (exists.isDeleted === true) {          
+          await categoryModel.deleteOne({ categoryName: newName });           
+          await categoryModel.updateOne(                                          
+            { _id: id },                                                                                   
+            { $set: { categoryName: newName } }                              
           );
           fs.unlink(`uploadedImages/categoryImg/${exists.image}`, (error) => {
             if (error) {
@@ -238,7 +241,7 @@ module.exports = {
         { $unwind: "$categoryInfo" },
       ]);
       // console.log(productsData);
-      res.render("admin/adminproduct", {
+      res.render("admin/adminProduct", {
         title: "Admin Product",
         products: productsData,
         adminName: req.session.adminName,

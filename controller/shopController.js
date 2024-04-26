@@ -1359,7 +1359,7 @@ module.exports = {
 
 
     ]);
-      res.render("users/orderDetailsPage", {
+      res.render("users/orderDetailspage", {
         title: "Order Details",
         user,
         order : orderDetails,
@@ -1525,13 +1525,13 @@ try{
   }},{
     $unwind : "$productInfo"
   }
-])
+]);
 
 
 
 
 
-  res.render('users/userwishlist',{
+  res.render('users/userWishlist',{
     title : 'Wishlist',
     user,
     wishlist : wishProducts,
