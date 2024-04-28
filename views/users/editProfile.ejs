@@ -13,6 +13,46 @@
 }
 
 </style>
+<div class="modal fade " id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered ">
+    <div class="modal-content">
+      <div style="background-color: #b04fff;" class="modal-header">
+        <h1 class="modal-title fs-5 text-white" id="exampleModalLabel">Change Password</h1>
+        <!-- <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button> -->
+      </div>
+      <div class="modal-body">
+        <div class="input-container">
+          <div class="mt-4">
+              <label for="password">Enter the Existing Password</label>
+              <input id="password" class="form-control existing-pass" type="password" name="password" class="input-field" placeholder="Existing Password">
+              <p class="warn text-danger"></p>
+          </div>
+          <div class="mt-4">
+            <label for="password2">Enter the New Password</label>
+            <input id="password2" class="form-control new-pass" type="password" name="password2" class="input-field" placeholder="New Password">
+            <p class="warn text-danger"></p>
+        </div>
+        <div class="mt-4">
+          <label for="password3">Enter the New Password</label>
+          <input id="password3" class="form-control confirm-pass" type="password" name="password2" class="input-field" placeholder="Confirm Password">
+          <p class="warn text-danger"></p>
+      </div>
+      </div>
+      </div>
+      <div class="modal-footer d-flex justify-content-between mt-3">
+        <a href="/otpEmail">
+          Forgot Password ?
+        </a>
+        <div>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button data-userid="<%=user._id%>" style="background-color: #b04fff;" type="button" class="btn text-white changePass-btn">Submit</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <div class="container container-main mb-5 p-5 border">
   <h2>EDIT PROFILE</h2>
   <form id="form" action="/editProfile/<%= userDetails._id%>?_method=PATCH" method="post">
@@ -20,7 +60,7 @@
     <div class="col-md-6 mt-5">
       <div>
           <label for=""><strong>Firstname</strong></label>
-          <input id="firstname" type="text" value="<%= userDetails.firstname %>" name="firstname" class="form-control p-3 mt-1 form-input" placeholder="Enter the firstname">
+          <input id="firstname" type="text" value="<%= userDetails.firstname %>" name="firstname" class="form-control p-3 mt-1 form-input"  placeholder="Enter the firstname">
           <p style="font-size: smaller;" class="mt-2 text-danger warn"></p>
         </div>
     </div>
@@ -37,7 +77,6 @@
     <div class="col-md-6 mt-5">
       <div>
         <label for=""><strong>Email</strong></label>
-
           <input id="email" type="text" value="<%= userDetails.email %>" name="email" class="form-control p-3 mt-1 form-input" placeholder="Enter the email">
           <p style="font-size: smaller;" class="mt-2 text-danger warn"></p>
         </div>
@@ -52,9 +91,7 @@
   </div>
   <div class="d-flex justify-content-end">
   <button type="submit" style="color: #ffffff;background-color: #b04fff;" class="btn mt-4">Make Changes</button>
-  <a href="/otpEmail">
-  <button type="button" style="color: #ffffff;background-color: hsl(0, 0%, 0%);" class="btn mt-4 ms-4">Change Password</button>
-</a>
+  <button type="button" style="color: #ffffff;background-color: hsl(0, 0%, 0%);" class="btn mt-4 ms-4" data-bs-toggle="modal" data-bs-target="#exampleModal">Change Password</button>
 </div>
 </form>
 </div>
@@ -132,6 +169,125 @@ let lettersOnlyRegex = /^[A-Za-z\s]*$/;
     setError(email,'');
   }
   return isError;
+}
+
+const existingPassword = document.querySelector('.existing-pass');
+const newPassword = document.querySelector('.new-pass');
+const confirmPassword = document.querySelector('.confirm-pass');
+const submitButton = document.querySelector('.changePass-btn');
+let existingPasswordValue ;
+let newPasswordValue ;
+let confirmPasswordValue ;
+
+submitButton.addEventListener('click',()=>{
+  const userId = submitButton.dataset.userid ;
+  if(!validatePassword()){
+    changePassword(userId,existingPasswordValue,newPasswordValue,confirmPasswordValue);
+    
+  }
+})
+
+
+function setError(element,message){
+  const parentDiv = element.parentElement;
+  const messageTag = parentDiv.querySelector('.warn');
+  messageTag.innerText = message;
+}
+
+function validatePassword(){
+  let isError = false ;
+  existingPasswordValue = existingPassword.value.trim();
+  newPasswordValue = newPassword.value.trim();
+  confirmPasswordValue = confirmPassword.value.trim();
+
+
+  let passwordUppercase = /^(?=.*?[A-Z])/;
+  let passwordLower = /^(?=.*?[a-z])/;
+  let passwordDigit = /^(?=.*?[0-9])/;
+  let passwordSpecial = /^(?=.*?[#?!@$%^&*-])/;
+
+  if(existingPasswordValue === ''){
+    setError(existingPassword,'This field cannot be empty');
+    isError = true
+  }else if(!passwordUppercase.test(existingPasswordValue)){
+    setError(existingPassword,'Password have atleast one uppercase');
+    isError = true
+  }else if(!passwordLower.test(existingPasswordValue)){
+    setError(existingPassword,'Password have atleast one Lowercase');
+    isError = true
+  }else if(!passwordDigit.test(existingPasswordValue)){
+    setError(existingPassword,'Password have atleast one Number');
+    isError = true
+  }else if(!passwordSpecial.test(existingPasswordValue)){
+    setError(existingPassword,'Password have atleast one special Character');
+    isError = true
+  }else{
+    setError(existingPassword,'');
+  }
+
+  if(newPasswordValue ===''){
+    setError(newPassword,'This field Cannot be empty');
+    isError = true
+  }else if(!passwordDigit.test(newPasswordValue)){
+    setError(newPassword,'Password need Atleast One Number');
+    isError = true
+  }else if(!passwordDigit.test(newPasswordValue)){
+    setError(newPassword,'Password have atleast one Number');
+    isError = true
+  }else if(!passwordSpecial.test(newPasswordValue)){
+    setError(newPassword,'Password have atleast one special Character');
+    isError = true
+  }else{
+    setError(newPassword,'');
+  }
+
+
+  if(confirmPasswordValue === ''){
+    setError(confirmPassword,'This fiels cannot be empty');
+    isError = true
+  }else if(confirmPasswordValue !== newPasswordValue){
+    setError(confirmPassword,'Password Doesnt Match');
+    isError = true
+  }else{
+    setError(confirmPassword,'');
+  }
+  return isError;
+}
+
+
+async function changePassword(userId,existingPass,newPass,confirmPass){
+  try{
+    const response = await fetch(`/changePassword/${userId}`,{
+      method : 'PATCH',
+      headers :{
+        'content-type' : 'application/json'
+      },
+      body : JSON.stringify({
+        existingPass,
+        newPass,
+        confirmPass
+      })
+    });
+    if(!response.ok){
+      console.log('something went wrong');
+    }else{
+      const result = await response.json();
+      if(result.message === 'success'){
+        Swal.fire({
+        position: "center",
+        icon: "success",
+        title: "Password Changed Successfully",
+        showConfirmButton: false,
+        timer: 1500
+      });
+
+      }else{
+        setError(existingPassword,result.message);
+      }
+    }
+  }catch(error){
+    console.log(error);
+  }
 }
 </script>
 <%- include('../includes/usersPartials/userEnd.ejs') %>

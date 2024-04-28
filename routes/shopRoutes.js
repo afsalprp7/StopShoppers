@@ -79,6 +79,7 @@ router.patch('/updateOrderFromOrderDetail/:id',validateUser,shopController.updat
 router.get('/downloadInvoiceAsPdf/:id',validateUser,shopController.downloadInvoiceAsPdf);
 
 
-router.patch('/cancelProductIndividually',validateUser,shopController.cancelProductIndividually)
+router.patch('/cancelProductIndividually',validateUser,shopController.cancelProductIndividually);
+router.patch('/changePassword/:id',validateUser,shopController.changePassword);
 
 module.exports = router;

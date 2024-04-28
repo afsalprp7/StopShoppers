@@ -31,7 +31,7 @@ module.exports = {
           if (compare) {
             //setting the token
             const payload = {
-              user
+              user,
             };
             const token = jwt.sign(payload, "secretKeyUser", {
               expiresIn: "24h",
@@ -142,7 +142,7 @@ module.exports = {
 
   //post signup page.
   doUserSignup: async (req, res) => {
-    console.log(req.body);
+    
     try {
       const userExists = await userModel.collection.findOne({
         email: req.body.email,

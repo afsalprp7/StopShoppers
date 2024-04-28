@@ -17,6 +17,7 @@ const walletModel = require('../models/walletModel');
 const couponModel = require("../models/couponModel");
 const offerModel  = require('../models/offerModel');
 const PDF = require('pdfkit');
+const bcrypt = require('bcrypt');
 
 
 async function userValidation(token){
@@ -3210,6 +3211,28 @@ cancelProductIndividually : async (req,res,next)=>{
   }
 },
 
+changePassword : async(req,res,next)=>{
+  try {
+    const userId = req.params.id ;
+    const {existingPass,newPass,confirmPass} = req.body;
+    const hashedNewPassword = await bcrypt.hash(newPass,10);
+    const user = await userModel.findOne({_id: userId});
+    const compare = await bcrypt.compare(existingPass,user.password);
+    if(compare){
+      user.password = hashedNewPassword ;
+      await user.save();
+      res.json({message : 'success'})
+    }else{
+      res.json({
+        message : 'Existing Password Incorrect'
+      })
+    }
+
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+},
 
 userLogout: (req, res,next) => {
   try {
@@ -3220,6 +3243,5 @@ userLogout: (req, res,next) => {
     console.log(error);
     next(error);
   }
-   
   },
 };

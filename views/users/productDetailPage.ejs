@@ -29,8 +29,17 @@ Home/Product Details
     
     </div>
     <div class="col-12  col-md-6">
+      <div class="d-flex justify-content-end ">
+        <div class="p-3">
+          <%if(user){%>
+          <i style="font-size: larger;font-weight: 900;cursor: pointer;" class="fa-regular fa-heart heart-wishlist" data-productid="<%= product._id %>"
+          data-userid="<%=user._id%>"> Add to wishlist</i>
+           <% }%>
+        </div>
+      </div>
       <div class="me-5">
       <div class=" p-5 me-2">
+        
         <h2 style="text-transform: capitalize;"><%= product.productName %></h2>
         <%if(product.offer.actualAmount){%>
         <h4 class="mt-3 ">Price : <s style="font-size: medium;" class="">₹<%=product.offer.actualAmount%></s>
@@ -282,6 +291,45 @@ const buyNowLink = document.getElementById('buy-link');
   });
 
   
+  const wishlistBtn = document.querySelectorAll('.heart-wishlist');
+
+wishlistBtn.forEach((item)=>{
+const productId = item.dataset.productid ;
+const userId = item.dataset.userid ;
+
+item.addEventListener('click',async()=>{
+//   console.log(userId);
+// console.log(productId);
+  const response = await fetch(`/addToWishlist/${productId}`,{
+    method : "POST",
+    headers:{
+      'content-type' : 'application/json'
+    },
+    body : JSON.stringify({
+      userId
+    })
+  })
+  const result = await response.json();
+  console.log(result);
+  if(!response.ok){
+    // const icon = item.querySelector('.wishlist-icon');
+    // icon.setAttribute('src','/images/icons/icon-heart-02.png');
+    console.log('failed to do task');
+  }
+  if(result === 'success'){
+  await Swal.fire({
+  position: "center",
+  icon: "success",
+  title: "Added to wishlist",
+  showConfirmButton: false,
+  timer: 1500
+});
+  }else if(result === 'error'){
+    Swal.fire('Product Already Exists')
+  }
+})
+})
+
  
 </script>
 <%- include('../includes/usersPartials/userEnd.ejs') %>
