@@ -263,6 +263,7 @@ function displaySelectedImages(input) {
         cropBtn.classList.add("btn", "btn-primary", "btn-sm","ms-3");
         cropBtn.addEventListener("click", (e) => {
           e.preventDefault();
+          cropBtn.disabled = true ;
           cropImage(img, file,imageContainer,cropBtn,deleteBtn);
         });
 
@@ -404,6 +405,7 @@ function cropImage(img, file,imageContainer,cropBtn,deleteBtn) {
     cropper.destroy();
     cancelBtn.style.display = 'none'
     saveBtn.style.display = 'none'
+    cropBtn.disabled = false ;
   });
 
   

@@ -263,6 +263,7 @@ function displaySelectedImages(input) {
         cropBtn.classList.add("btn", "btn-primary", "btn-sm","ms-3");
         cropBtn.addEventListener("click", (e) => {
           e.preventDefault();
+          cropBtn.disabled = true ;
           cropImage(img, file,imageContainer,cropBtn,deleteBtn);
         });
 
@@ -326,7 +327,7 @@ function cropImage(img, file,imageContainer,cropBtn,deleteBtn) {
   const cancelBtn = document.createElement("button");
   const saveBtn = document.createElement("button");
   const cancelCroppedImageBtn = document.createElement("button");
-  cancelCroppedImageBtn.classList.add("btn", "btn-primary", "btn-sm", "ms-3");
+  cancelCroppedImageBtn.classList.add("btn", "btn-primary", "btn-sm", "ms-3","mb-4");
   cancelCroppedImageBtn.innerText = "Cancel Image"
 
   saveBtn.classList.add("btn", "btn-primary", "btn-sm", "ms-3");
@@ -356,7 +357,8 @@ function cropImage(img, file,imageContainer,cropBtn,deleteBtn) {
       allFiles.push(croppedFile);
 
       cancelCroppedImageBtn.addEventListener('click',(e)=>{
-      const input = document.getElementById("photoProduct");
+        
+        const input = document.getElementById("photoProduct");
         e.preventDefault();
        const index =  allFiles.indexOf(croppedFile);
        allFiles.splice(index,1);
@@ -385,12 +387,13 @@ function cropImage(img, file,imageContainer,cropBtn,deleteBtn) {
     cropper.destroy();
     cancelBtn.style.display = 'none'
     saveBtn.style.display = 'none'
+    cropBtn.disabled = false ;
   });
 
   
   imageContainer.appendChild(cancelBtn);
   imageContainer.appendChild(saveBtn);
-}
+}                                                            
 
 
 function updateInputFiles(file) {
