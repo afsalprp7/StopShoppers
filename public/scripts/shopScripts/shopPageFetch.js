@@ -31,7 +31,7 @@ async function searchProducts(input) {
         <div class="col-sm-6 col-md-4 col-lg-3 p-b-35 isotope-item women">
         <!-- Block2 -->
         <div class="block2">
-            <div style="max-height: 400px;" class="block2-pic hov-img0">
+            <div style="max-height: 260px;" class="block2-pic hov-img0">
                 <a href="/productDetail/${item._id}">
                     <img src="/productImg/${item.image[0]}" alt="IMG-PRODUCT">
                 </a>
@@ -143,7 +143,7 @@ async function filterFunction(exampleArray, sortValue, colors) {
         <div class="col-sm-6 col-md-4 col-lg-3 p-b-35 isotope-item women">
         <!-- Block2 -->
         <div class="block2">
-            <div style="max-height: 400px;" class="block2-pic hov-img0">
+            <div style="max-height: 260px;" class="block2-pic hov-img0">
                 <a href="/productDetail/${item._id}">
                     <img src="/productImg/${item.image[0]}" alt="IMG-PRODUCT">
                 </a>
